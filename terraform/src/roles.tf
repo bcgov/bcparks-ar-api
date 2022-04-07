@@ -76,7 +76,7 @@ resource "aws_iam_role_policy" "parks-ar-config" {
             "dynamodb:DescribeTable",
             "dynamodb:Get*",
             "dynamodb:Query",
-            "dynamodb:Scan",
+            "dynamodb:Scan"
         ],
         "Resource": "${aws_dynamodb_table.ar_table.arn}"
       }
