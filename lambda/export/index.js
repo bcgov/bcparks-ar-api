@@ -748,7 +748,7 @@ function generateRowsArray(groupedReports) {
 
 async function uploadToS3() {
   // Get file as buffer
-  const buffer = fs.readFileSync("/tmp/A&R_Export.xlsx");
+  const buffer = fs.readFileSync(FILE_PATH + FILE_NAME);
 
   const params = {
     Bucket: process.env.S3_BUCKET_DATA,
