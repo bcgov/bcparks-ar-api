@@ -89,6 +89,11 @@ resource "aws_iam_role_policy_attachment" "databaseReadRoleCloudWatchLogs" {
   policy_arn = aws_iam_policy.lambda_logging.arn
 }
 
+resource "aws_iam_role_policy_attachment" "lambda_invoke_function" {
+  role       = aws_iam_role.exportRole.name
+  policy_arn = aws_iam_policy.lambda_invoke_function.arn
+}
+
 resource "aws_api_gateway_account" "ARAPIGateway" {
   cloudwatch_role_arn = aws_iam_role.cloudwatch.arn
 }
