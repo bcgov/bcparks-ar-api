@@ -143,3 +143,28 @@ resource "aws_iam_role_policy" "cloudwatch" {
 }
 EOF
 }
+
+resource "aws_iam_policy" "lambda_invoke_function" {
+  name        = "lambda_invoke_function"
+  path        = "/"
+  description = "IAM policy for Lambda to invoke another Lambda"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1464440182000",
+            "Effect": "Allow",
+            "Action": [
+                "lambda:InvokeAsync",
+                "lambda:InvokeFunction"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}
+EOF
+}

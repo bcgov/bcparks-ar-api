@@ -16,7 +16,7 @@ resource "aws_lambda_function" "export" {
       TABLE_NAME = data.aws_ssm_parameter.db_name.value,
       FILE_PATH = "/env/",
       FILE_NAME = "A&R_Export.xlsx",
-      S3_BUCKET_DATA = data.aws_s3_bucket.bcgov-parks-reso-assets.id
+      S3_BUCKET_DATA = aws_s3_bucket.bcgov-parks-ar-assets.id
     }
   }
   role = aws_iam_role.exportRole.arn
