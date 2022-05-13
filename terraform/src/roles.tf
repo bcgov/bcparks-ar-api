@@ -89,8 +89,8 @@ resource "aws_iam_role_policy" "databaseReadRolePolicy" {
   EOF
 }
 
-resource "aws_iam_role" "exportRole" {
-  name = "lambdaExportRole"
+resource "aws_iam_role" "lambdaExportRole" {
+  name = "lambdaExportRole-${random_string.postfix.result}"
 
   assume_role_policy = <<EOF
 {
@@ -105,6 +105,30 @@ resource "aws_iam_role" "exportRole" {
       "Sid": ""
     }
   ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "lambdaExportPolicy" {
+  name        = "lambdaExportRolePolicy-${random_string.postfix.result}"
+  role        = aws_iam_role.lambdaExportRole.id
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1464440182000",
+            "Effect": "Allow",
+            "Action": [
+                "lambda:InvokeAsync",
+                "dynamodb:Scan"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
 }
 EOF
 }
