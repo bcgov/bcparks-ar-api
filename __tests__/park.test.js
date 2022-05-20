@@ -57,7 +57,7 @@ describe('Pass Succeeds', () => {
   test('Handler - 200 Receive park specific information', async () => {
     let specificSubAreas = [];
     for(const area of SUBAREAS) {
-      if (area.pk === "park::0041") {
+      if (area.pk === "subarea::0041") {
         specificSubAreas.push(area);
       }
     }
