@@ -30,7 +30,7 @@
   "SUBAREA_INFORMATION": [
     {
       "sk": "0087",
-      "pk": "subarea::0041",
+      "pk": "park::0041",
       "parkName": "Cultus Lake Park",
       "activities": [
         "Frontcountry Camping",
@@ -42,8 +42,8 @@
   ],
   "SUBAREAS": [
     {
-      "pk": "0087",
-      "sk": "subarea::0041",
+      "pk": "park::0041",
+      "sk": "0087",
       "activities": [
         "Frontcountry Camping",
         "Day Use"
@@ -53,7 +53,7 @@
       "subAreaName": "Maple Bay"
     },
     {
-      "pk": "subarea::0041",
+      "pk": "park::0041",
       "sk": "0089",
       "activities": [
         "Day Use"
@@ -63,7 +63,7 @@
       "subAreaName": "Teapot Hill"
     },
     {
-      "pk": "subarea::6161",
+      "pk": "park::6161",
       "sk": "0074",
       "activities": [
         "Day Use"
@@ -78,10 +78,8 @@
       "sk": "202204",
       "parkName": "Cultus Lake Park",
       "picnicRevenue": 2.5,
-      "pplCalculations": {
-        "vehicleModifier": 3.5,
-        "busModifier": 40
-      },
+      "attendanceVehicleModifier": 3.5,
+      "attendanceBusModifier": 40,
       "pplVehicleCount": 12,
       "subAreaName": "Maple Bay",
       "otherHotSpringsRevenue": 5.55,
@@ -97,10 +95,8 @@
       "sk": "202204",
       "parkName": "Cultus Lake Park",
       "picnicRevenue": 2.5,
-      "pplCalculations": {
-        "vehicleModifier": 3.5,
-        "busModifier": 40
-      },
+      "attendanceVehicleModifier": 3.5,
+      "attendanceBusModifier": 40,
       "pplVehicleCount": 12,
       "subAreaName": "Maple Bay",
       "otherHotSpringsRevenue": 5.55,

@@ -129,7 +129,7 @@ async function doMigration() {
 
       // 2. Add the subarea /w activities record
       const parkSubAreaRecord = {
-        pk: AWS.DynamoDB.Converter.input('subarea::'+ parkRecord.sk.S),
+        pk: AWS.DynamoDB.Converter.input('park::'+ parkRecord.sk.S),
         sk: AWS.DynamoDB.Converter.input(subAreaId),
         region: AWS.DynamoDB.Converter.input(row['Region']),
         section: AWS.DynamoDB.Converter.input(row['Section']),
@@ -142,7 +142,7 @@ async function doMigration() {
       };
       await putItem(parkSubAreaRecord, true);
 
-      // 3. For each activity, add the config for that orc::subarea::activity
+      // 3. For each activity, add the config for that subAreaId::activity
       for (const activity of activities) {
         let activityRecord = {
           pk: {S: 'config::'+ subAreaId},

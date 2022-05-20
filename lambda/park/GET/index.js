@@ -27,7 +27,7 @@ exports.handler = async (event, context) => {
     } else if (event.queryStringParameters?.orcs) {
       // Get me a list of this parks' subareas with activities details, including config details
       queryObj.ExpressionAttributeValues = {};
-      queryObj.ExpressionAttributeValues[':pk'] = { S: 'subarea::'+ event.queryStringParameters?.orcs };
+      queryObj.ExpressionAttributeValues[':pk'] = { S: 'park::'+ event.queryStringParameters?.orcs };
       queryObj.KeyConditionExpression = 'pk =:pk';
 
       if (event?.queryStringParameters?.subAreaId) {
