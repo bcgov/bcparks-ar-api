@@ -139,8 +139,8 @@ describe('Subarea Test', () => {
         },
         body: JSON.stringify({
           orcs: SUBAREA_ENTRIES[0].orcs,
-          subAreaName: SUBAREA_ENTRIES[0].subAreaName,
-          activity: SUBAREA_ENTRIES[0].pk.split("::")[2],
+          subAreaId: SUBAREA_ENTRIES[0].pk.split("::")[0],
+          activity: SUBAREA_ENTRIES[0].pk.split("::")[1],
           date: "2022" // Invalid
         })
       }, null);
