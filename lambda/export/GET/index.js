@@ -3,6 +3,7 @@ const AWS = require("aws-sdk");
 const options = {};
 if (process.env.IS_OFFLINE) {
   options.region = "local-env";
+  // For local we use port 3002 because we're hitting an invokable
   options.endpoint = "http://localhost:3002";
 }
 const lambda = new AWS.Lambda(options);
