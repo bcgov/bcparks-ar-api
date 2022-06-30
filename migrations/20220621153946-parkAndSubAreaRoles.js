@@ -86,7 +86,7 @@ async function updateAllParks() {
       await processPark(park);
     }
   } catch (err) {
-    logger.error(err);
+    console.log(err);
     throw err;
   }
   console.log("------------------------------------------------------------------");
@@ -153,7 +153,7 @@ async function processSubArea(park, subArea) {
     completedSubAreas.push(subArea.id);
   } catch (e) {
     console.log("E:", e)
-    logger.error("Failed to update subarea: ", subArea.id);
+    console.log("Failed to update subarea: ", subArea.id);
     subAreaErrors.push(subArea.name);
   }
 }
@@ -182,7 +182,7 @@ async function setParkRoleProperty(park) {
     completedParks.push(parkData.Attributes?.orcs.S);
   } catch (e) {
     console.log("E:", e)
-    logger.error("Failed to update park/subarea: ", park.parkName);
+    console.log("Failed to update park/subarea: ", park.parkName);
     parkErrors.push(park.parkName);
   }
 }
