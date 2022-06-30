@@ -86,7 +86,7 @@ const verifyToken = function (token, callback, sendError) {
 function verifySecret(tokenString, secret, callback, sendError) {
   jwt.verify(tokenString, secret, function (verificationError, decodedToken) {
     // check if the JWT was verified correctly
-    if (verificationError == null && decodedToken && decodedToken.resource_access["attendance-and-revenue"].roles) {
+    if (verificationError == null && decodedToken && decodedToken.resource_access["attendance-and-revenue"] && decodedToken.resource_access["attendance-and-revenue"].roles) {
       logger.debug('JWT decoded');
 
       logger.debug('decoded token:', decodedToken);
