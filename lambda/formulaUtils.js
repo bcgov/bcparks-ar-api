@@ -27,7 +27,7 @@ function arraySum(arr) {
 }
 
 function deductPercentage(value, percentage) {
-  const result = (value * (100 - percentage)) / 100;
+  const result = (value * 100) / (100 + percentage)
   return result;
 }
 
