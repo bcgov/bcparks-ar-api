@@ -61,7 +61,7 @@ async function deleteEntries() {
     }
     console.log(`Successfully deleted ${completed} config objects.`);
   } catch (err) {
-    console.log('There was an error deleting config objects');
+    console.log('There was an error deleting config objects:', err);
   }
 }
 
