@@ -29,7 +29,6 @@ async function getDateConfig(year) {
   // check db for fiscalYearEnd object
   try {
     let fiscalYearEnd = await getOne('fiscalYearEnd', year);
-    // fiscalYearEnd = AWS.DynamoDB.Converter.unmarshall(fiscalYearEnd);
     logger.debug('fiscalYearEnd object:', fiscalYearEnd);
     return fiscalYearEnd;
   } catch (err) {

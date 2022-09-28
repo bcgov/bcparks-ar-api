@@ -166,7 +166,7 @@ describe('Subarea Test', () => {
     expect(response.statusCode).toBe(200);
   });
 
-  test('HandlePost - 403 POST to locked record', async () => {
+  test('HandlePost - 409 POST to locked record', async () => {
     const response = await subareaPOST.handlePost(
       {
         headers: {
@@ -179,7 +179,7 @@ describe('Subarea Test', () => {
           date: "201901" // should be locked as per previous test
         })
       }, null);
-    expect(response.statusCode).toBe(403);
+    expect(response.statusCode).toBe(409);
   });
 
   test('HandleUnlock - 200 POST unlock record', async () => {

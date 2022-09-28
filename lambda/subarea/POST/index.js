@@ -53,7 +53,7 @@ async function main(event, context, lock = null) {
     const unlocking = lock === false ? true : false;
     const existingRecord = await getOne(`${body.subAreaId}::${body.activity}`, body.date);
     if (existingRecord?.isLocked && !unlocking) {
-      return sendResponse(403, { msg: 'Record is locked.' });
+      return sendResponse(409, { msg: 'Record is locked.' });
     }
 
     // handle locking/unlocking existing records
@@ -105,6 +105,7 @@ async function handleLockUnlock(record, lock, context) {
       sk: { S: record.sk }
     },
     UpdateExpression: 'set isLocked = :isLocked',
+    ConditionExpression: 'isLocked <> :isLocked',
     ExpressionAttributeValues: {
       ':isLocked': { BOOL: lock }
     },
@@ -114,9 +115,12 @@ async function handleLockUnlock(record, lock, context) {
     const res = await dynamodb.updateItem(updateObj).promise();
     logger.debug(`Updated record pk: ${record.pk}, sk: ${record.sk} `);
     const s = lock ? 'locked' : 'unlocked';
-    return sendResponse(200, {msg: `Record successfully ${s}`, data: AWS.DynamoDB.Converter.unmarshall(res.Attributes)});
+    return sendResponse(200, { msg: `Record successfully ${s}`, data: AWS.DynamoDB.Converter.unmarshall(res.Attributes) });
   } catch (err) {
-    return sendResponse(400, {msg: 'Record lock/unlock failed: ', error: err});
+    if (err.code === 'ConditionalCheckFailedException') {
+      return sendResponse(409, { msg: 'Record is already locked/unlocked', error: err });
+    }
+    return sendResponse(400, { msg: 'Record lock/unlock failed: ', error: err });
   }
 }
 
