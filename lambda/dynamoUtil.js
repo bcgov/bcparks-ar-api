@@ -151,8 +151,8 @@ async function getSubAreas(orcs) {
 // pass the full subarea object.
 // pass filter = false to look for every possible activity
 async function getRecords(subArea, filter = true) {
-  records = [];
-  filteredActivityList = RECORD_ACTIVITY_LIST;
+  let records = [];
+  let filteredActivityList = RECORD_ACTIVITY_LIST;
   if (filter && subArea.activites) {
     filteredActivityList = AWS.DynamoDB.Converter.unmarshall(subArea.activites);
   }

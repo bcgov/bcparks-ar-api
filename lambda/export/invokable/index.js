@@ -128,11 +128,11 @@ async function getAllRecords(queryObj) {
   let subareas = [];
   try {
     const parks = await getParks();
-    for (let park of parks) {
-      const parkSubAreas = await getSubAreas(park.sk)
+    for (const park of parks) {
+      const parkSubAreas = await getSubAreas(park.sk);
       subareas = subareas.concat(parkSubAreas);
     }
-    for (let subarea of subareas) {
+    for (const subarea of subareas) {
       const subAreaRecords = await getRecords(subarea, true);
       records = records.concat(subAreaRecords);
     }
