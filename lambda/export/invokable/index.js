@@ -126,7 +126,8 @@ exports.handler = async (event, context) => {
 async function getAllRecords(queryObj) {
   queryObj.ExpressionAttributeValues = {};
   queryObj.ExpressionAttributeValues[":prefixDate"] = { S: "20" };
-  queryObj.FilterExpression = "begins_with(sk, :prefixDate)";
+  queryObj.ExpressionAttributeValues[":fiscalYearEnd"] = { S: 'fiscalYearEnd'};
+  queryObj.FilterExpression = "begins_with(sk, :prefixDate) AND pk <> :fiscalYearEnd";
   return await runScan(queryObj);
 }
 
