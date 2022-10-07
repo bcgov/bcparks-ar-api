@@ -47,7 +47,7 @@ const CSV_SYSADMIN_SCHEMA = [
     value: (report) => report.section,
   },
   {
-    column: "Bundle",
+    column: "Bundle/Agreement",
     type: String,
     value: (report) => report.bundle,
   },
@@ -62,7 +62,7 @@ const CSV_SYSADMIN_SCHEMA = [
     value: (report) => report.subAreaName,
   },
   {
-    column: "Year",
+    column: "Calendar Year",
     type: Number,
     value: (report) => report.year,
   },
@@ -85,7 +85,7 @@ const CSV_SYSADMIN_SCHEMA = [
     value: (report) => report.campingPartyNightsAttendanceSenior,
   },
   {
-    column: "Frontcountry Camping - Camping Party Nights - Social",
+    column: "Frontcountry Camping - Camping Party Nights - SSCFE",
     type: Number,
     width: 63,
     value: (report) => report.campingPartyNightsAttendanceSocial,
@@ -133,7 +133,7 @@ const CSV_SYSADMIN_SCHEMA = [
     value: (report) => report.secondCarsAttendanceSenior,
   },
   {
-    column: "Frontcountry Camping - Second Cars - Social",
+    column: "Frontcountry Camping - Second Cars - SSCFE",
     type: Number,
     width: 63,
     value: (report) => report.secondCarsAttendanceSocial,
@@ -244,7 +244,7 @@ const CSV_SYSADMIN_SCHEMA = [
   },
   // Group Camping - Standard Rate
   {
-    column: "Group Camping - Standard Rate - Standard",
+    column: "Group Camping - Standard Rate - Group nights",
     type: Number,
     width: 63,
     value: (report) => report.standardRateGroupsTotalPeopleStandard,
@@ -256,7 +256,7 @@ const CSV_SYSADMIN_SCHEMA = [
     value: (report) => report.standardRateGroupsTotalPeopleAdults,
   },
   {
-    column: "Group Camping - Standard Rate - Youth",
+    column: "Group Camping - Standard Rate - Youths",
     type: Number,
     width: 63,
     value: (report) => report.standardRateGroupsTotalPeopleYouth,
@@ -289,7 +289,7 @@ const CSV_SYSADMIN_SCHEMA = [
   },
   // Group Camping - Youth Rate
   {
-    column: "Group Camping - Youth Rate - Group nights",
+    column: "Group Camping - Youth Rate - Youth group nights",
     type: Number,
     width: 63,
     value: (report) => report.youthRateGroupsAttendanceGroupNights,
@@ -392,13 +392,13 @@ const CSV_SYSADMIN_SCHEMA = [
     value: (report) => report.notes_backcountryCamping,
   },
   {
-    column: "Backcountry Cabins - People - Adult",
+    column: "Backcountry Cabins - People - Adults",
     type: Number,
     width: 63,
     value: (report) => report.peopleAdult,
   },
   {
-    column: "Backcountry Cabins - People - Child",
+    column: "Backcountry Cabins - People - Youths",
     type: Number,
     width: 63,
     value: (report) => report.peopleChild,
@@ -418,13 +418,13 @@ const CSV_SYSADMIN_SCHEMA = [
   },
   // Backcountry Cabins - Family
   {
-    column: "Backcountry Cabins - Family - Gross family revenue",
+    column: "Backcountry Cabins - Gross revenue",
     type: Number,
     width: 63,
     value: (report) => report.revenueFamily,
   },
   {
-    column: "Backcountry Cabins - Family - Net revenue",
+    column: "Backcountry Cabins - Net revenue",
     type: Number,
     width: 63,
     backgroundColor: "#aee5ba",
