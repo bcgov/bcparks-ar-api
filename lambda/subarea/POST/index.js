@@ -1,10 +1,9 @@
 const AWS = require("aws-sdk");
-const { dynamodb, runQuery, TABLE_NAME, getOne } = require("../../dynamoUtil");
+const { dynamodb, runQuery, TABLE_NAME, getOne, FISCAL_YEAR_FINAL_MONTH, TIMEZONE } = require("../../dynamoUtil");
 const { sendResponse } = require("../../responseUtil");
 const { decodeJWT, roleFilter, resolvePermissions } = require('../../permissionUtil');
 const { logger } = require('../../logger');
-
-const FISCAL_YEAR_FINAL_MONTH = 3;
+const { DateTime } = require('luxon');
 
 exports.handlePost = async (event, context) => {
   logger.debug('Subarea POST:', event);
@@ -40,6 +39,12 @@ async function main(event, context, lock = null) {
     // check if fiscal year is locked
     if (await checkFiscalYearLock(body)) {
       return sendResponse(403, { msg: `This fiscal year has been locked against editing by the system administrator.` }, context)
+    }
+
+    // check if attempting to lock current/future month
+    // Not allowed as per https://bcparksdigital.atlassian.net/browse/BRS-817
+    if (lock && await checkLockingDates(body)) {
+      return sendResponse(403, { msg: 'Cannot lock a record for a month that has not yet concluded.' }, context);
     }
 
     // Disabling the ability to change config for now. 
@@ -84,6 +89,19 @@ async function checkFiscalYearLock(body) {
   }
   const fiscalYearEndObj = await getOne('fiscalYearEnd', String(recordYear));
   if (fiscalYearEndObj?.isLocked) {
+    return true;
+  }
+  return false;
+}
+
+async function checkLockingDates(body) {
+  const beginningOfMonth = DateTime.now().setZone(TIMEZONE).startOf('month');
+  const recordDate = DateTime.fromObject({
+    year: Number(body.date.slice(0, 4)),
+    month: Number(body.date.slice(4, 6)),
+    zone: TIMEZONE
+  });
+  if (recordDate >= beginningOfMonth) {
     return true;
   }
   return false;

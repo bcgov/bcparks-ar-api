@@ -24,6 +24,8 @@ const PASS_TYPE_EXPIRY_HOURS = {
   DAY: 0,
 };
 
+const FISCAL_YEAR_FINAL_MONTH = 3; // March
+
 const RECORD_ACTIVITY_LIST = [
   'Frontcountry Camping',
   'Frontcountry Cabins',
@@ -181,6 +183,7 @@ module.exports = {
   TIMEZONE,
   PM_ACTIVATION_HOUR,
   PASS_TYPE_EXPIRY_HOURS,
+  FISCAL_YEAR_FINAL_MONTH,
   timeZone,
   TABLE_NAME,
   dynamodb,
