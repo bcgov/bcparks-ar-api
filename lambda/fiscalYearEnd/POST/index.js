@@ -1,5 +1,5 @@
 const AWS = require('aws-sdk');
-const { TABLE_NAME, dynamodb, timeZone, FISCAL_YEAR_FINAL_MONTH } = require('../../dynamoUtil');
+const { TABLE_NAME, dynamodb, TIMEZONE, FISCAL_YEAR_FINAL_MONTH } = require('../../dynamoUtil');
 const { sendResponse } = require('../../responseUtil');
 const { logger } = require('../../logger');
 const { decodeJWT, resolvePermissions } = require('../../permissionUtil');
@@ -57,12 +57,12 @@ function verifyEventParams(event, isLocked) {
       msg: `Invalid fiscal year. Format: 'yyyy'`
     };
   }
-  const today = DateTime.now().setZone(timeZone);
+  const today = DateTime.now().setZone(TIMEZONE);
   const currentFiscalYearEnd = DateTime.fromObject({
     year: params.fiscalYearEnd,
     month: FISCAL_YEAR_FINAL_MONTH,
   }, {
-    zone: timeZone
+    zone: TIMEZONE
   }).endOf('month');
   if (currentFiscalYearEnd > today && isLocked) {
     throw {
