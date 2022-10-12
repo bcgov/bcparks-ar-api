@@ -67,6 +67,11 @@ const CSV_SYSADMIN_SCHEMA = [
     value: (report) => report.year,
   },
   {
+    column: "Fiscal Year",
+    type: String,
+    value: (report) => report.fiscalYear,
+  },
+  {
     column: "Month",
     type: String,
     value: (report) => report.month,
