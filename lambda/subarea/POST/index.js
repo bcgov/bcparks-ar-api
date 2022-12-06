@@ -39,6 +39,7 @@ async function main(event, context, lock = null) {
     }
 
     if (await verifyBody(body)) {
+      logger.info("Fiscal year is locked.");
       logger.debug("verifyBody", body);
       return sendResponse(400, { msg: "Invalid request." });
     }
