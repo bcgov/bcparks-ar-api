@@ -12,7 +12,7 @@ const tokenContent = {
 };
 const token = jwt.sign(tokenContent, "defaultSecret");
 const roleToken = {
-  resource_access: { "attendance-and-revenue": { roles: ["0001:0041"] } },
+  resource_access: { "attendance-and-revenue": { roles: ["0041:0087"] } },
 };
 
 async function setupDb() {
@@ -95,7 +95,7 @@ describe("Pass Succeeds", () => {
     expect(body.data[0].subAreaName).toMatch(body.data[0].subAreaName);
   });
 
-  test("Handler - 200 Receive park specific information with limited role", async () => {
+  test("Handler - 200 Receive park specific information with limited role without params", async () => {
     const response = await parkGET.handler(
       {
         headers: {
@@ -134,9 +134,7 @@ describe("Pass Succeeds", () => {
     );
 
     const body = JSON.parse(response.body);
-    // TBD: Only partial Test
-    expect(response.statusCode).toBe(200);
-    // expect(body.data[0].subAreaName).toMatch(body.data[0].subAreaName);
+    expect(body.data[0].subAreaName).toMatch(body.data[0].subAreaName);
   });
 
   test("Handler - 403 GET Invalid", async () => {
