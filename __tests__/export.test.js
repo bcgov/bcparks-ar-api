@@ -109,7 +109,7 @@ describe("Export Report", () => {
   test("Handler - 200 GET, generate report", async () => {
     const event = {
       headers: {
-        authorization234: "Bearer " + token,
+        Authorization: "Bearer " + token,
       },
       httpMethod: "GET",
     };

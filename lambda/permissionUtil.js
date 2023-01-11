@@ -16,13 +16,15 @@ exports.decodeJWT = async function (event) {
     decoded = await new Promise(function (resolve) {
       // TODO: This was temporarily necessary for getting UT's to pass.
       if (process.env.IS_OFFLINE == true) {
-        if (event.headers?.PsuedoToken) {
+        if (process.env.IS_TEST == true && event.headers?.PsuedoToken) {
+          // This section is for testing purposes
           if (event.headers.PsuedoToken === "error") {
             throw new Error("Bad token");
           } else {
             resolve(event.headers.PsuedoToken);
           }
         } else {
+          // Otherwise give sysadmin role while working offline
           resolve({
             resource_access: {
               "attendance-and-revenue": { roles: ["sysadmin"] },
@@ -147,6 +149,14 @@ exports.resolvePermissions = function (token) {
   let roles = ['public'];
   let isAdmin = false;
   let isAuthenticated = false;
+
+  if (process.env.IS_OFFLINE == true && !process.env.IS_TEST) {
+    return {
+      roles: ['sysadmin'],
+      isAdmin: true,
+      isAuthenticated: true
+    }
+  }
 
   try {
     logger.debug(JSON.stringify(token.data));
