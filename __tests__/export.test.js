@@ -5,6 +5,8 @@ const { PARKSLIST, SUBAREAS, JOBSLIST, MOCKJOB } = require("./global/data.json")
 
 const exportGET = require("../lambda/export/GET/index");
 const exportFUNCTIONS = require("../lambda/export/functions");
+const utils = require("../lambda/dynamoUtil");
+
 
 const jwt = require("jsonwebtoken");
 const tokenContent = {
@@ -122,8 +124,18 @@ describe("Export Report", () => {
   });
 
   test("Functions - updateJobEntry", async () => {
-    const result = exportFUNCTIONS.updateJobEntry(MOCKJOB, TABLE_NAME)
+    const query = {
+      TableName: TABLE_NAME,
+      KeyConditionExpression: "pk = :pk AND sk = :sk",
+      ExpressionAttributeValues: {
+        ":pk": { S: "job" },
+        ":sk": {S: "MOCK_JOB_ID"}
+      }
+    };
 
-    expect(result).toMatchObject({})
+    const response = await exportFUNCTIONS.updateJobEntry(MOCKJOB, TABLE_NAME)
+    const result = await utils.runQuery(query)
+
+    expect(result).toMatchObject([MOCKJOB])
   })
 });
