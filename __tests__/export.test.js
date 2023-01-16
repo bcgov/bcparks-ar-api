@@ -133,7 +133,7 @@ describe("Export Report", () => {
       }
     };
 
-    const response = await exportFUNCTIONS.updateJobEntry(MOCKJOB, TABLE_NAME)
+    await exportFUNCTIONS.updateJobEntry(MOCKJOB, TABLE_NAME)
     const result = await utils.runQuery(query)
 
     expect(result).toMatchObject([MOCKJOB])

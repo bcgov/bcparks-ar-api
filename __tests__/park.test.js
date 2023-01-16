@@ -114,6 +114,7 @@ describe("Pass Succeeds", () => {
 
     const body = JSON.parse(response.body);
     expect(body.data[0].subAreaName).toMatch(specificSubAreas[0].subAreaName);
+    expect(response.statusCode).toBe(200);
   });
 
   test("Handler - 200 Receive park specific information with limited role", async () => {
@@ -138,6 +139,7 @@ describe("Pass Succeeds", () => {
     );
     const body = JSON.parse(response.body);
     expect(body.data[0].sk).toMatch(specificSubAreas[0].sk);
+    expect(response.statusCode).toBe(200);
   });
 
   test("Handler - 403 GET Invalid", async () => {
@@ -186,7 +188,7 @@ describe("Pass Succeeds", () => {
     expect(response.statusCode).toBe(400);
   });
 
-  test("Handler - 200 POST Park", async () => {
+  test("Handler - 400 POST Park", async () => {
     const response = await parkPOST.handler(
       {
         headers: {
