@@ -18,20 +18,20 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'yarn'
+          cache: "yarn"
       - run: yarn install --silent --frozen-lockfile
 
-    - name: Setup DynamoDB Local
-      uses: rrainn/dynamodb-action@v3.0.0
-      with:
-        sharedDb: true
-        port: 8000
-        cors: '*'
+      - name: Setup DynamoDB Local
+        uses: rrainn/dynamodb-action@v3.0.0
+        with:
+          sharedDb: true
+          port: 8000
+          cors: "*"
 
-    - run: yarn test
-      env:
-        IS_OFFLINE: true
-        AWS_REGION: local-env
-        TABLE_NAME: ar-tests
-        AWS_ACCESS_KEY_ID: notused
-        AWS_SECRET_ACCESS_KEY: notused
+      - run: yarn test
+        env:
+          IS_OFFLINE: true
+          AWS_REGION: local-env
+          TABLE_NAME: ar-tests
+          AWS_ACCESS_KEY_ID: notused
+          AWS_SECRET_ACCESS_KEY: notused
