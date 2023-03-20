@@ -58,7 +58,7 @@ const CSV_SYSADMIN_SCHEMA = [
     value: (report) => report.parkName,
   },
   {
-    column: "ORC",
+    column: "ORCS",
     type: String,
     value: (report) => report.orcs,
   },
