@@ -394,9 +394,9 @@ async function executeChangelog() {
         for (const item of transaction.TransactItems) {
           try {
             // create KC roles
-            let key = AWS.DynamoDB.Converter.unmarshall(item?.Put?.Item);
+            const key = AWS.DynamoDB.Converter.unmarshall(item?.Put?.Item);
             if (key.orcs && key.sk && key.parkName && key.subAreaName) {
-              let role = {
+              const role = {
                 name: `${key.orcs}:${key.sk}`,
                 description: `${key.parkName}:${key.subAreaName}`
               };

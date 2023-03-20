@@ -102,10 +102,10 @@ async function run() {
             try {
               // determine KC role to delete based on transaction item
               // this way if KC role creation fails, the transaction fails and we can track failures clearer
-              let key = AWS.DynamoDB.Converter.unmarshall(item?.Delete?.Key);
+              const key = AWS.DynamoDB.Converter.unmarshall(item?.Delete?.Key);
               if (key.pk.startsWith('park::')) {
                 // The item is a subarea
-                let orcs = key.pk.split('::')[1];
+                const orcs = key.pk.split('::')[1];
                 const role = `${orcs}:${key.sk}`
                 await removeRoleFromKeycloak(role, kcURL, token);
                 removedRoles.push(role);
