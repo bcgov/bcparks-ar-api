@@ -11,8 +11,6 @@ provider:
 
 package:
   individually: true
-  exclude:
-    - "./*" # This causes Serverless to only package referenced source files
 
 plugins:
   - serverless-offline
