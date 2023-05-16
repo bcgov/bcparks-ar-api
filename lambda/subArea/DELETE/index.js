@@ -126,7 +126,7 @@ async function deleteSubAreaRecords(subAreaId, orcs, context) {
   return response.Attributes?.activities.SS;
 }
 
-async function archiveSubAreaRecords(subAreaId, orcs, context) {
+async function archiveSubAreaRecord(subAreaId, orcs, context) {
   logger.info("Archiving subareas")
   // update all items in dynamodb matching pk = `park::${orcs}` and sk = `${subAreaId}`
   const params = {
@@ -188,7 +188,7 @@ async function archiveSubArea(subAreaId, orcs, context) {
   logger.info("Removed.  Archiving Subarea.")
 
   // Go throught the subarea records and flag them as archived.
-  await archiveSubAreaRecords(subAreaId, orcs, context);
+  await archiveSubAreaRecord(subAreaId, orcs, context);
   logger.info("Archived.")
 
   return sendResponse(200, { msg: "SubArea archived" }, context);
