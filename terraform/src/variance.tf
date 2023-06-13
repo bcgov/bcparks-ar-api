@@ -1,4 +1,6 @@
-#getVariance
+# ===========
+# getVariance
+# ===========
 resource "aws_lambda_function" "varianceGetLambda" {
   function_name = "variance-get-${random_string.postfix.result}"
 
@@ -38,7 +40,28 @@ resource "aws_lambda_permission" "varianceGetPermission" {
   source_arn    = "${aws_api_gateway_rest_api.apiLambda.execution_arn}/*/GET/variance"
 }
 
-#postVariance
+// Defines the HTTP GET /variance API
+resource "aws_api_gateway_method" "varianceGet" {
+  rest_api_id   = aws_api_gateway_rest_api.apiLambda.id
+  resource_id   = module.varianceResource.resource.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+// Integrates the APIG to Lambda via POST method
+resource "aws_api_gateway_integration" "varianceGetIntegration" {
+  rest_api_id = aws_api_gateway_rest_api.apiLambda.id
+  resource_id = module.varianceResource.resource.id
+  http_method = aws_api_gateway_method.varianceGet.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.varianceGetLambda.invoke_arn
+}
+
+# ============
+# postVariance
+# ============
 resource "aws_lambda_function" "variancePostLambda" {
   function_name = "variance-post-${random_string.postfix.result}"
 
@@ -78,7 +101,28 @@ resource "aws_lambda_permission" "variancePostPermission" {
   source_arn    = "${aws_api_gateway_rest_api.apiLambda.execution_arn}/*/POST/variance"
 }
 
-#putVariance
+// Defines the HTTP POST /variance API
+resource "aws_api_gateway_method" "variancePost" {
+  rest_api_id   = aws_api_gateway_rest_api.apiLambda.id
+  resource_id   = module.varianceResource.resource.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+// Integrates the APIG to Lambda via POST method
+resource "aws_api_gateway_integration" "variancePostIntegration" {
+  rest_api_id = aws_api_gateway_rest_api.apiLambda.id
+  resource_id = module.varianceResource.resource.id
+  http_method = aws_api_gateway_method.variancePost.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.variancePostLambda.invoke_arn
+}
+
+# ===========
+# putVariance
+# ===========
 resource "aws_lambda_function" "variancePutLambda" {
   function_name = "variance-put-${random_string.postfix.result}"
 
@@ -118,52 +162,6 @@ resource "aws_lambda_permission" "variancePutPermission" {
   source_arn    = "${aws_api_gateway_rest_api.apiLambda.execution_arn}/*/PUT/variance"
 }
 
-# Resources - variances
-module "varianceResource" {
-  source               = "./modules/cors-enabled-api-resource"
-  resource_rest_api_id = aws_api_gateway_rest_api.apiLambda.id
-  resource_parent_id   = aws_api_gateway_rest_api.apiLambda.root_resource_id
-  resource_path_part   = "variance"
-}
-
-// Defines the HTTP GET /variance API
-resource "aws_api_gateway_method" "varianceGet" {
-  rest_api_id   = aws_api_gateway_rest_api.apiLambda.id
-  resource_id   = module.varianceResource.resource.id
-  http_method   = "GET"
-  authorization = "NONE"
-}
-
-// Integrates the APIG to Lambda via POST method
-resource "aws_api_gateway_integration" "varianceGetIntegration" {
-  rest_api_id = aws_api_gateway_rest_api.apiLambda.id
-  resource_id = module.varianceResource.resource.id
-  http_method = aws_api_gateway_method.varianceGet.http_method
-
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.varianceGetLambda.invoke_arn
-}
-
-// Defines the HTTP POST /variance API
-resource "aws_api_gateway_method" "variancePost" {
-  rest_api_id   = aws_api_gateway_rest_api.apiLambda.id
-  resource_id   = module.varianceResource.resource.id
-  http_method   = "POST"
-  authorization = "NONE"
-}
-
-// Integrates the APIG to Lambda via POST method
-resource "aws_api_gateway_integration" "variancePostIntegration" {
-  rest_api_id = aws_api_gateway_rest_api.apiLambda.id
-  resource_id = module.varianceResource.resource.id
-  http_method = aws_api_gateway_method.variancePost.http_method
-
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.variancePostLambda.invoke_arn
-}
-
 // Defines the HTTP PUT /variance API
 resource "aws_api_gateway_method" "variancePut" {
   rest_api_id   = aws_api_gateway_rest_api.apiLambda.id
@@ -181,4 +179,14 @@ resource "aws_api_gateway_integration" "variancePutIntegration" {
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.variancePutLambda.invoke_arn
+}
+
+# =====================
+# Resources - variances
+# =====================
+module "varianceResource" {
+  source               = "./modules/cors-enabled-api-resource"
+  resource_rest_api_id = aws_api_gateway_rest_api.apiLambda.id
+  resource_parent_id   = aws_api_gateway_rest_api.apiLambda.root_resource_id
+  resource_path_part   = "variance"
 }
