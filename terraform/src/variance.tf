@@ -1,11 +1,11 @@
 #getVariance
-resource "aws_lambda_function" "activityGetLambda" {
-  function_name = "activity-get-${random_string.postfix.result}"
+resource "aws_lambda_function" "varianceGetLambda" {
+  function_name = "variance-get-${random_string.postfix.result}"
 
-  filename         = "artifacts/activityGet.zip"
-  source_code_hash = filebase64sha256("artifacts/activityGet.zip")
+  filename         = "artifacts/varianceGet.zip"
+  source_code_hash = filebase64sha256("artifacts/varianceGet.zip")
 
-  handler = "lambda/activity/GET/index.handler"
+  handler = "lambda/variance/GET/index.handler"
   runtime = "nodejs14.x"
   timeout = 30
   publish = "true"
@@ -24,28 +24,28 @@ resource "aws_lambda_function" "activityGetLambda" {
   }
 }
 
-resource "aws_lambda_alias" "activityGetLambdaLatest" {
+resource "aws_lambda_alias" "varianceGetLambdaLatest" {
   name             = "latest"
-  function_name    = aws_lambda_function.activityGetLambda.function_name
-  function_version = aws_lambda_function.activityGetLambda.version
+  function_name    = aws_lambda_function.varianceGetLambda.function_name
+  function_version = aws_lambda_function.varianceGetLambda.version
 }
 
-resource "aws_lambda_permission" "activityGetPermission" {
-  statement_id  = "activityGetPermissionInvoke"
+resource "aws_lambda_permission" "varianceGetPermission" {
+  statement_id  = "varianceGetPermissionInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.activityGetLambda.function_name
+  function_name = aws_lambda_function.varianceGetLambda.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.apiLambda.execution_arn}/*/GET/activity"
+  source_arn    = "${aws_api_gateway_rest_api.apiLambda.execution_arn}/*/GET/variance"
 }
 
 #postVariance
-resource "aws_lambda_function" "activityPostLambda" {
-  function_name = "activity-post-${random_string.postfix.result}"
+resource "aws_lambda_function" "variancePostLambda" {
+  function_name = "variance-post-${random_string.postfix.result}"
 
-  filename         = "artifacts/activityPost.zip"
-  source_code_hash = filebase64sha256("artifacts/activityPost.zip")
+  filename         = "artifacts/variancePost.zip"
+  source_code_hash = filebase64sha256("artifacts/variancePost.zip")
 
-  handler = "lambda/activity/POST/index.handlePost"
+  handler = "lambda/variance/POST/index.handler"
   runtime = "nodejs14.x"
   timeout = 30
   publish = "true"
@@ -64,28 +64,28 @@ resource "aws_lambda_function" "activityPostLambda" {
   }
 }
 
-resource "aws_lambda_alias" "activityPostLambdaLatest" {
+resource "aws_lambda_alias" "variancePostLambdaLatest" {
   name             = "latest"
-  function_name    = aws_lambda_function.activityPostLambda.function_name
-  function_version = aws_lambda_function.activityPostLambda.version
+  function_name    = aws_lambda_function.variancePostLambda.function_name
+  function_version = aws_lambda_function.variancePostLambda.version
 }
 
-resource "aws_lambda_permission" "activityPostPermission" {
-  statement_id  = "activityPostPermissionInvoke"
+resource "aws_lambda_permission" "variancePostPermission" {
+  statement_id  = "variancePostPermissionInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.activityPostLambda.function_name
+  function_name = aws_lambda_function.variancePostLambda.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.apiLambda.execution_arn}/*/POST/activity"
+  source_arn    = "${aws_api_gateway_rest_api.apiLambda.execution_arn}/*/POST/variance"
 }
 
 #putVariance
-resource "aws_lambda_function" "activityPutLambda" {
-  function_name = "activity-put-${random_string.postfix.result}"
+resource "aws_lambda_function" "variancePutLambda" {
+  function_name = "variance-put-${random_string.postfix.result}"
 
-  filename         = "artifacts/activityPut.zip"
-  source_code_hash = filebase64sha256("artifacts/activityPut.zip")
+  filename         = "artifacts/variancePut.zip"
+  source_code_hash = filebase64sha256("artifacts/variancePut.zip")
 
-  handler = "lambda/activity/PUT/index.handlePut"
+  handler = "lambda/variance/PUT/index.handler"
   runtime = "nodejs14.x"
   timeout = 30
   publish = "true"
@@ -104,81 +104,81 @@ resource "aws_lambda_function" "activityPutLambda" {
   }
 }
 
-resource "aws_lambda_alias" "activityPutLambdaLatest" {
+resource "aws_lambda_alias" "variancePutLambdaLatest" {
   name             = "latest"
-  function_name    = aws_lambda_function.activityPutLambda.function_name
-  function_version = aws_lambda_function.activityPutLambda.version
+  function_name    = aws_lambda_function.variancePutLambda.function_name
+  function_version = aws_lambda_function.variancePutLambda.version
 }
 
-resource "aws_lambda_permission" "activityPutPermission" {
-  statement_id  = "activityPutPermissionInvoke"
+resource "aws_lambda_permission" "variancePutPermission" {
+  statement_id  = "variancePutPermissionInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.activityPutLambda.function_name
+  function_name = aws_lambda_function.variancePutLambda.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.apiLambda.execution_arn}/*/PUT/activity"
+  source_arn    = "${aws_api_gateway_rest_api.apiLambda.execution_arn}/*/PUT/variance"
 }
 
 # Resources - variances
-module "activityResource" {
+module "varianceResource" {
   source               = "./modules/cors-enabled-api-resource"
   resource_rest_api_id = aws_api_gateway_rest_api.apiLambda.id
   resource_parent_id   = aws_api_gateway_rest_api.apiLambda.root_resource_id
-  resource_path_part   = "activity"
+  resource_path_part   = "variance"
 }
 
-// Defines the HTTP GET /activity API
-resource "aws_api_gateway_method" "activityGet" {
+// Defines the HTTP GET /variance API
+resource "aws_api_gateway_method" "varianceGet" {
   rest_api_id   = aws_api_gateway_rest_api.apiLambda.id
-  resource_id   = module.activityResource.resource.id
+  resource_id   = module.varianceResource.resource.id
   http_method   = "GET"
   authorization = "NONE"
 }
 
 // Integrates the APIG to Lambda via POST method
-resource "aws_api_gateway_integration" "activityGetIntegration" {
+resource "aws_api_gateway_integration" "varianceGetIntegration" {
   rest_api_id = aws_api_gateway_rest_api.apiLambda.id
-  resource_id = module.activityResource.resource.id
-  http_method = aws_api_gateway_method.activityGet.http_method
+  resource_id = module.varianceResource.resource.id
+  http_method = aws_api_gateway_method.varianceGet.http_method
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.activityGetLambda.invoke_arn
+  uri                     = aws_lambda_function.varianceGetLambda.invoke_arn
 }
 
-// Defines the HTTP POST /activity API
-resource "aws_api_gateway_method" "activityPost" {
+// Defines the HTTP POST /variance API
+resource "aws_api_gateway_method" "variancePost" {
   rest_api_id   = aws_api_gateway_rest_api.apiLambda.id
-  resource_id   = module.activityResource.resource.id
+  resource_id   = module.varianceResource.resource.id
   http_method   = "POST"
   authorization = "NONE"
 }
 
 // Integrates the APIG to Lambda via POST method
-resource "aws_api_gateway_integration" "activityPostIntegration" {
+resource "aws_api_gateway_integration" "variancePostIntegration" {
   rest_api_id = aws_api_gateway_rest_api.apiLambda.id
-  resource_id = module.activityResource.resource.id
-  http_method = aws_api_gateway_method.activityPost.http_method
+  resource_id = module.varianceResource.resource.id
+  http_method = aws_api_gateway_method.variancePost.http_method
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.activityPostLambda.invoke_arn
+  uri                     = aws_lambda_function.variancePostLambda.invoke_arn
 }
 
-// Defines the HTTP PUT /activity API
-resource "aws_api_gateway_method" "activityPut" {
+// Defines the HTTP PUT /variance API
+resource "aws_api_gateway_method" "variancePut" {
   rest_api_id   = aws_api_gateway_rest_api.apiLambda.id
-  resource_id   = module.activityResource.resource.id
+  resource_id   = module.varianceResource.resource.id
   http_method   = "PUT"
   authorization = "NONE"
 }
 
 // Integrates the APIG to Lambda via POST method
-resource "aws_api_gateway_integration" "activityPutIntegration" {
+resource "aws_api_gateway_integration" "variancePutIntegration" {
   rest_api_id = aws_api_gateway_rest_api.apiLambda.id
-  resource_id = module.activityResource.resource.id
-  http_method = aws_api_gateway_method.activityPut.http_method
+  resource_id = module.varianceResource.resource.id
+  http_method = aws_api_gateway_method.variancePut.http_method
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.activityPutLambda.invoke_arn
+  uri                     = aws_lambda_function.variancePutLambda.invoke_arn
 }
