@@ -244,7 +244,7 @@ describe("Variance Test", () => {
     const { calculateVariance } = require("../lambda/varianceUtils");
     const res = calculateVariance(8, 8, 8, 10, 0.2);
     expect(res).toEqual({
-      varianceErrorMessage: "Variance triggered: +25%",
+      varianceMessage: "Variance triggered: +25%",
       varianceTriggered: true,
       percentageChange: 0.25,
     });
@@ -254,7 +254,7 @@ describe("Variance Test", () => {
     const { calculateVariance } = require("../lambda/varianceUtils");
     const res = calculateVariance(10, 10, 10, 10, 0.2);
     expect(res).toEqual({
-      varianceErrorMessage: "Variance triggered: +0%",
+      varianceMessage: "Variance triggered: +0%",
       varianceTriggered: false,
       percentageChange: 0,
     });
@@ -264,7 +264,7 @@ describe("Variance Test", () => {
     const { calculateVariance } = require("../lambda/varianceUtils");
     const res = calculateVariance(8, 8, null, 10, 0.2);
     expect(res).toEqual({
-      varianceErrorMessage: "Variance triggered: +25%",
+      varianceMessage: "Variance triggered: +25%",
       varianceTriggered: true,
       percentageChange: 0.25,
     });
