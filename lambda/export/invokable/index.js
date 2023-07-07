@@ -160,7 +160,7 @@ async function getAllRecords(roles = null) {
       }
     }
     for (const subarea of subareas) {
-      const subAreaRecords = await getRecords(subarea, true, false);
+      const subAreaRecords = await getRecords(subarea, subarea.bundle, subarea.section, subarea.region, true, false);
       records = records.concat(subAreaRecords);
     }
     return records;
@@ -424,13 +424,14 @@ async function mergeReports(result, report) {
       },
       KeyConditionExpression: "pk = :pk",
     };
-    const park = (await runQuery(queryObj))[0];
 
+    const queryData = await runQuery(queryObj);
+    const park = queryData[0];
     // Set up common attributes
     result[key] = {
       region: park.region,
       section: park.section,
-      bundle: park.bundle,
+      bundle: report.bundle,
       parkName: report.parkName,
       subAreaName: subAreaName,
       year: Number(report.date.substring(0, 4)),

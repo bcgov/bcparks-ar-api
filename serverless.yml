@@ -153,8 +153,10 @@ functions:
   ###########
   exportInvokable:
     handler: lambda/export/invokable/index.handler
+    timeout: 300
   exportGet:
     handler: lambda/export/GET/index.handler
+    timeout: 300
     events:
       - http:
           method: GET
