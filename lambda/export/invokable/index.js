@@ -417,20 +417,10 @@ async function mergeReports(result, report) {
   const subAreaName = report.config.subAreaName;
   const key = report.date + "_" + report.parkName + "_" + subAreaName;
   if (!result[key]) {
-    const queryObj = {
-      TableName: TABLE_NAME,
-      ExpressionAttributeValues: {
-        ":pk": { S: "park::" + report.orcs },
-      },
-      KeyConditionExpression: "pk = :pk",
-    };
-
-    const queryData = await runQuery(queryObj);
-    const park = queryData[0];
     // Set up common attributes
     result[key] = {
-      region: park.region,
-      section: park.section,
+      region: report.region,
+      section: report.section,
       bundle: report.bundle,
       parkName: report.parkName,
       subAreaName: subAreaName,
