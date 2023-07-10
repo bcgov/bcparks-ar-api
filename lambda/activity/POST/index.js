@@ -162,7 +162,7 @@ async function checkVarianceTrigger(body) {
   let varianceWasTriggered = false;
 
   // Quick check if variance note field has data in it
-  if (notes !== "" && notes !== undefined && nodes !== null) {
+  if (notes !== "" && notes !== undefined && notes !== null) {
     await createVariance(subAreaId, activity, date, fields, notes, orcs, parkName, subAreaName);
     return;
   }
