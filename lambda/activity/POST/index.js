@@ -161,6 +161,12 @@ async function checkVarianceTrigger(body) {
   let fields = [];
   let varianceWasTriggered = false;
 
+  // Quick check if variance note field has data in it
+  if (notes !== "" && notes !== undefined && notes !== null) {
+    await createVariance(subAreaId, activity, date, fields, notes, orcs, parkName, subAreaName);
+    return;
+  }
+
   // Map through all fields we care about and check their values
   let varianceConfig = EXPORT_VARIANCE_CONFIG[activity];
   const fieldsToCheck = Object.keys(varianceConfig);
