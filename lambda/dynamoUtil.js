@@ -175,7 +175,7 @@ async function getSubAreas(orcs, includeLegacy = true) {
 // pass the full subarea object.
 // pass filter = false to look for every possible activity
 // includeLegacy = false will only return records that are not marked as legacy.
-async function getRecords(subArea, filter = true, includeLegacy = true) {
+async function getRecords(subArea, bundle, section, region, filter = true, includeLegacy = true) {
   let records = [];
   let filteredActivityList = RECORD_ACTIVITY_LIST;
   if (filter && subArea.activites) {
@@ -193,9 +193,15 @@ async function getRecords(subArea, filter = true, includeLegacy = true) {
       recordQuery.FilterExpression = "isLegacy = :legacy OR attribute_not_exists(isLegacy)";
       recordQuery.ExpressionAttributeValues[":legacy"] = { BOOL: false };
     }
-    // will return at most 1 record.
-    const record = await runQuery(recordQuery);
-    records = records.concat(record);
+    let recordsFromQuery = await runQuery(recordQuery);
+    for(let rec of recordsFromQuery) {
+      // Tack these items from the subare record onto the report record as they are not found on the
+      // activity entry
+      rec.bundle = bundle;
+      rec.section = section;
+      rec.region = region;
+      records = records.concat(rec);
+    }
   }
   return records;
 }
