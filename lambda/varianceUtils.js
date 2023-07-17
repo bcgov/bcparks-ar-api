@@ -1,50 +1,45 @@
 const { logger } = require("./logger");
 
 function calculateVariance(
-  firstYearValue = null,
-  secondYearValue = null,
-  thirdYearValue = null,
+  historicalValues,
   currentValue,
   variancePercentage
 ) {
+  const filteredInputs = historicalValues.filter((val) => val !== null && !isNaN(val));
+
   logger.info("=== Calculating variance ===");
   // We might receive two past years instead of three
-  let numberOfYearsProvided = 0;
-  numberOfYearsProvided += firstYearValue ? 1 : 0;
-  numberOfYearsProvided += secondYearValue ? 1 : 0;
-  numberOfYearsProvided += thirdYearValue ? 1 : 0;
+  const numberOfYearsProvided = filteredInputs.length;
   logger.debug("Number of years provided:", numberOfYearsProvided);
 
   // Get the average value across provided years
-  const averageHistoricValue =
-    ((firstYearValue ? firstYearValue : 0) +
-      (secondYearValue ? secondYearValue : 0) +
-      (thirdYearValue ? thirdYearValue : 0)) /
-    numberOfYearsProvided;
+  const averageHistoricValue = filteredInputs.reduce((acc, val) => acc + val, 0) / filteredInputs.length;
   logger.debug("Average historic value:", averageHistoricValue);
 
-  // Percentage change formula: (b-a)/b
-  const percentageChange =
-    (currentValue - averageHistoricValue) / averageHistoricValue;
-  const percentageChangeAbs = Math.abs(percentageChange);
-  logger.debug("Percentage change:", percentageChange);
+  // Calculate the percentage change only if averageHistoricValue is not zero
+  let percentageChange;
+  if (averageHistoricValue !== 0) {
+    percentageChange = Math.round(((currentValue - averageHistoricValue) / averageHistoricValue) * 100) / 100;
+  } else {
+    // Set percentageChange to 0 or some other default value if averageHistoricValue is zero
+    percentageChange = 0;
+  }
 
-  let varianceMessage = `Variance triggered: ${
-    percentageChangeAbs >= 0 ? "+" : "-"
-  }${String(percentageChangeAbs * 100)}%`;
+  const percentageChangeAbs = Math.abs(percentageChange);
+
+  const varianceMessage = `Variance triggered: ${percentageChangeAbs >= variancePercentage ? "+" : "-"}${Math.round(percentageChangeAbs * 100)}%`;
 
   // Since percentage change is absolute, we can subtract from variance percentage
   // If negative, variance is triggered
-  let varianceTriggered =
-    variancePercentage - percentageChangeAbs < 0 ? true : false;
-  logger.info("Variance percentageChangeAbs?", percentageChangeAbs);
-  logger.info("Variance variancePercentage?", variancePercentage);
-  logger.info("Variance 3?", percentageChangeAbs < 0);
+  const varianceTriggered = variancePercentage - percentageChangeAbs < 0 ? true : false;
+  logger.info("Variance Triggered:", varianceTriggered);
+  logger.info("Variance percentageChange:", percentageChange);
+  logger.info("Variance variancePercentage:", variancePercentage);
 
   const res = {
     varianceMessage: varianceMessage,
     varianceTriggered: varianceTriggered,
-    percentageChange: percentageChange,
+    percentageChange: +percentageChange,
   };
   logger.info("Variance return obj:", res);
   logger.info("=== Variance calulation complete ===");
