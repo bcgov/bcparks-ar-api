@@ -273,6 +273,19 @@ const CSV_SYSADMIN_SCHEMA = [
     backgroundColor: "#aee5ba",
     value: (report) => report.calc_frontCountryCamping_other_shower_netRevenue,
   },
+  {
+    column: "Frontcountry Camping - Other - Gross revenue",
+    type: Number,
+    width: 63,
+    value: (report) => report.calc_frontCountryCamping_other_grossRevenue,
+  },
+  {
+    column: "Frontcountry Camping - Other - Net revenue",
+    type: Number,
+    width: 63,
+    backgroundColor: "#aee5ba",
+    value: (report) => report.calc_frontCountryCamping_other_netRevenue,
+  },
   // Frontcountry Camping - Variance Notes
   {
     column: "Frontcountry Camping - Variance Notes",
@@ -280,6 +293,43 @@ const CSV_SYSADMIN_SCHEMA = [
     width: 63,
     backgroundColor: "#fff3cd",
     value: (report) => report.notes_frontcountryCamping,
+  },
+  /// Legacy frontcountry camping data
+  {
+    column: "LEGACY - Frontcountry Cabins - Day Use Misc Shower Net Revenue",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_dayUseMiscShowerNetRevenue || "",
+  },
+  {
+    column: "LEGACY - Frontcountry Cabins - Day Use Misc Sani Station Net Revenue",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_dayUseMiscSaniStationNetRevenue || "",
+  },
+  {
+    column: "LEGACY - Frontcountry Cabins - Camping Total Second Cars Attendance",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_legacy_frontcountryCampingTotalSecondCarsAttendance || "",
+  },
+  {
+    column: "LEGACY - Frontcountry Cabins - Second Cars Net Revenue",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_frontcountryCampingSecondCarsNetRevenue || "",
+  },
+  {
+    column: "LEGACY - Frontcountry Cabins - Total Camping Gross Revenue",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_frontcountryCampingTotalCampingGrossRevenue || "",
+  },
+  {
+    column: "LEGACY - Frontcountry Cabins - Total Camping Net Revenue",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_frontcountryCampingTotalCampingNetRevenue || "",
   },
   // Frontcountry Cabins - Parties
   {
@@ -416,6 +466,24 @@ const CSV_SYSADMIN_SCHEMA = [
     backgroundColor: "#aee5ba",
     value: (report) => report.calc_groupCamping_totalNetRevenue,
   },
+  {
+    column: "LEGACY - Group Camping - Standard Total Attendance People",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_groupCampingStandardTotalAttendancePeople || "",
+  },
+  {
+    column: "LEGACY - Group Camping - Total Gross Revenue",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_groupCampingTotalNetRevenue || "",
+  },
+  {
+    column: "LEGACY - Group Camping - Total Net Revenue",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_groupCampingTotalGrossRevenue || "",
+  },
   // Frontcountry Totals
   {
     column: "Total Frontcountry Attendance (People)",
@@ -511,6 +579,18 @@ const CSV_SYSADMIN_SCHEMA = [
     width: 63,
     backgroundColor: "#fff3cd",
     value: (report) => report.notes_backcountryCabins,
+  },
+  {
+    column: "LEGACY - Backcountry Cabins - Total Attendance People",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_backcountryCabinsTotalAttendancePeople || "",
+  },
+  {
+    column: "LEGACY - Backcountry Cabins - Net Revenue",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_backcountryCabinsNetRevenue || "",
   },
   // Backcountry Totals
   {
@@ -656,6 +736,56 @@ const CSV_SYSADMIN_SCHEMA = [
     backgroundColor: "#aee5ba",
     value: (report) => report.calc_dayUse_totalNetRevenue,
   },
+  {
+    column: "LEGACY - Day Use - Picnic Shelter Variance",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_dayUsePicnicShelterVarianceNote || "",
+  },
+
+  {
+    column: "LEGACY - Day Use - Total Attendance People",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_dayUseTotalAttendancePeople || "",
+  },
+  {
+    column: "LEGACY - Day Use - Total People And Vehicle Attendance People",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_dayUseTotalPeopleAndVehiclesAttendancePeople || "",
+  },
+  {
+    column: "LEGACY - Day Use - Picnic Revenue Gross",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.picnicRevenueGross || "",
+  },
+
+  {
+    column: "LEGACY - Day Use - Misc Gross Revenue",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_dayUseMiscGrossRevenue || "",
+  },
+  {
+    column: "LEGACY - Day Use - Misc Net Revenue",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_dayUseMiscNetRevenue || "",
+  },
+  {
+    column: "LEGACY - Day Use - Total Gross Revenue",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_dayUseTotalGrossRevenue || "",
+  },
+  {
+    column: "LEGACY - Day Use - Total Net Revenue",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_dayUseTotalNetRevenue || "",
+  },
   // Boating - Boats
   {
     column: "Boating - Boats - Nights on dock",
@@ -702,6 +832,18 @@ const CSV_SYSADMIN_SCHEMA = [
     width: 63,
     backgroundColor: "#fff3cd",
     value: (report) => report.notes_boating,
+  },
+  {
+    column: "LEGACY - Boating - Totall Attendance People",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_boatingTotalAttendancePeople,
+  },
+  {
+    column: "LEGACY - Boating - Net Revenue",
+    type: Number,
+    width: 63,
+    value: (report) => report.legacyData?.legacy_boatingTotalNetRevenue,
   },
   // Overall Totals
   {

@@ -8,3 +8,5 @@ terraform/sandbox/artifacts/
 .env
 terraform/tools/.terraform.lock.hcl
 terraform/tools/.terragrunt-cache/
+.DS_Store
+A&R_Export.xlsx

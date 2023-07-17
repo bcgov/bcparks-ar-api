@@ -260,6 +260,19 @@ async function modifyReportForCSV(report) {
       report.calc_frontCountryCamping_other_shower_netRevenue = basicNetRevenue(
         [report.otherRevenueShower]
       ).result;
+
+      // Other frontcountry / other - GROSS REVENUE
+      report.calc_frontCountryCamping_other_grossRevenue =
+        arraySum([
+          report.otherRevenueGrossSani,
+          report.otherRevenueElectrical,
+          report.otherRevenueShower
+        ]) || null;
+
+      // Other frontcountry / other - NET REVENUE
+      report.calc_frontCountryCamping_other_netRevenue = basicNetRevenue(
+        [report.calc_frontCountryCamping_other_grossRevenue]
+      ).result;
       break;
 
     case "Frontcountry Cabins":
