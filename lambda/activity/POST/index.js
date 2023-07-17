@@ -198,7 +198,7 @@ async function checkVarianceTrigger(body) {
       continue;
     }
 
-    const res = calculateVariance(first, second, third, current, varianceConfig[fieldsToCheck[field]]);
+    const res = calculateVariance([first, second, third], current, varianceConfig[fieldsToCheck[field]]);
     if (res.varianceTriggered) {
       varianceWasTriggered = true;
       fields.push(fieldsToCheck[field]);
