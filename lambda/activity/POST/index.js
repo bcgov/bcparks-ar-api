@@ -163,7 +163,7 @@ async function checkVarianceTrigger(body) {
 
   // Quick check if variance note field has data in it
   if (notes !== "" && notes !== undefined && notes !== null) {
-    await createVariance(subAreaId, activity, date, fields, notes, orcs, parkName, subAreaName);
+    await createVariance(orcs, date, subAreaId, activity, fields, notes, parkName, subAreaName);
     return;
   }
 
@@ -210,25 +210,35 @@ async function checkVarianceTrigger(body) {
   logger.info(fields);
 
   if (varianceWasTriggered) {
-    await createVariance(subAreaId, activity, date, fields, notes, orcs, parkName, subAreaName);
+    await createVariance(orcs, date, subAreaId, activity, fields, notes, parkName, subAreaName);
   } else {
     // Attempt to delete any previous variances
     await deleteVariance(subAreaId, activity, date);
   }
 }
 
-async function createVariance(subAreaId, activity, date, fields, notes, orcs, parkName, subAreaName) {
-  logger.info('Creating Variance:', subAreaId, activity, date, fields, notes)
+async function createVariance(orcs, date, subAreaId, activity, fields, notes, parkName, subAreaName) {
+  // TODO: Include bundle property on the config object and use that to get the
+  // bundle for variance.
+  let subarea = await getOne(`park::${orcs}`, subAreaId);
+  let bundle = subarea?.bundle;
+  if (bundle === undefined) {
+    bundle = "N/A";
+  }
+  logger.info('Creating Variance:', orcs, date, subAreaId, activity, fields, notes, bundle)
   try {
     const newObject = {
-      pk:`variance::${subAreaId}::${activity}`,
-      sk: date,
+      pk:`variance::${orcs}::${date}`,
+      sk: `${subAreaId}::${activity}`,
       fields: fields,
       notes: notes,
       resolved: false,
       orcs: orcs,
       parkName: parkName,
-      subAreaName: subAreaName
+      subAreaName: subAreaName,
+      subAreaId: subAreaId,
+      bundle: bundle,
+      roles: ['sysadmin', `${orcs}:${subAreaId}`]
     };
     const putObj = {
       TableName: TABLE_NAME,

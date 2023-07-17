@@ -27,8 +27,8 @@ async function setupDb() {
     .put({
       TableName: TABLE_NAME,
       Item: {
-        pk: `variance::0001::Day Use`,
-        sk: `2022-01-01`,
+        pk: `variance::0001::202201`,
+        sk: `0403::Day Use`,
         fields: docClient.createSet(["peopleAndVehiclesVehicle"]),
         notes: "A Note",
         resolved: false,
@@ -40,8 +40,21 @@ async function setupDb() {
     .put({
       TableName: TABLE_NAME,
       Item: {
-        pk: `variance::0001::Day Use`,
-        sk: `2022-01-02`,
+        pk: `variance::0001::202201`,
+        sk: `0403::Frontcountry Camping`,
+        fields: docClient.createSet(["peopleAndVehiclesVehicle"]),
+        notes: "A different note",
+        resolved: false,
+      },
+    })
+    .promise();
+
+  await docClient
+    .put({
+      TableName: TABLE_NAME,
+      Item: {
+        pk: `variance::0001::202202`,
+        sk: `0403::Day Use`,
         fields: docClient.createSet(["peopleAndVehiclesVehicle"]),
         notes: "A Note",
         resolved: false,
@@ -63,6 +76,9 @@ describe("Variance Test", () => {
     getParkAccess: jest.fn((orcs, permissionObject) => {
       return {};
     }),
+    roleFilter: jest.fn((records, roles) => {
+      return {}
+    }) 
   };
 
   const mockedLimitedUser = {
@@ -94,6 +110,9 @@ describe("Variance Test", () => {
     getParkAccess: jest.fn((orcs, permissionObject) => {
       return {};
     }),
+    roleFilter: jest.fn((records, roles) => {
+      return records;
+    }),
   };
 
   const OLD_ENV = process.env;
@@ -110,6 +129,29 @@ describe("Variance Test", () => {
     return await setupDb();
   });
 
+  test("Variance GET Single PK Success", async () => {
+    jest.mock("../lambda/permissionUtil", () => {
+      return mockedSysadmin;
+    });
+
+    const varianceGET = require("../lambda/variance/GET/index");
+    const response = await varianceGET.handler(
+      {
+        headers: {
+          Authorization: "Bearer " + token,
+        },
+        queryStringParameters: {
+          orcs: '0001',
+          date: "202201",
+        },
+      },
+      null
+    );
+    const body = JSON.parse(response.body);
+    expect(response.statusCode).toBe(200);
+    expect(body.length === 2);
+  });
+
   test("Variance GET Single SK Success", async () => {
     jest.mock("../lambda/permissionUtil", () => {
       return mockedSysadmin;
@@ -122,19 +164,20 @@ describe("Variance Test", () => {
           Authorization: "Bearer " + token,
         },
         queryStringParameters: {
+          orcs: '0001',
           activity: "Day Use",
-          date: "2022-01-01",
-          subAreaId: "0001",
+          date: "202201",
+          subAreaId: "0403",
         },
       },
       null
     );
     const body = JSON.parse(response.body);
     expect(response.statusCode).toBe(200);
-    expect(body.data.length === 1);
+    expect(body.length === 1);
   });
 
-  test("Variance GET FAIL 403 limited user", async () => {
+  test("Variance GET Success 200 but no permissions for records", async () => {
     jest.mock("../lambda/permissionUtil", () => {
       return mockedLimitedUser;
     });
@@ -146,16 +189,17 @@ describe("Variance Test", () => {
           Authorization: "Bearer " + token,
         },
         queryStringParameters: {
+          orcs: '0001',
           activity: "Day Use",
-          date: "2022-01-01",
-          subAreaId: "0001",
+          date: "202201",
+          subAreaId: "0403",
         },
       },
       null
     );
     const body = JSON.parse(response.body);
-    expect(response.statusCode).toBe(403);
-    expect(response.body === "{ msg: 'Error: UnAuthenticated.' }");
+    expect(response.statusCode).toBe(200);
+    expect(body.length === 0);
   });
 
   test("Variance GET FAIL 403 public user", async () => {
@@ -300,13 +344,17 @@ describe("Variance Test", () => {
       {
         headers: {
           Authorization: "Bearer " + token,
-        }
+        },
+        body: JSON.stringify({
+          subAreaId: "0403",
+          orcs: "0001",
+        })
       },
       null
     );
     const body = JSON.parse(response.body);
     expect(response.statusCode).toBe(403);
-    expect(response.body === "{ msg: 'Error: UnAuthenticated.' }")
+    expect(response.body === "{ msg: 'Error: Unauthorized.' }")
   });
 
   test("Variance PUT Success", async () => {
@@ -327,9 +375,10 @@ describe("Variance Test", () => {
           Authorization: "Bearer " + token,
         },
         body: JSON.stringify({
-          subAreaId: "0001",
+          subAreaId: "0403",
+          orcs: "0001",
           activity: "Day Use",
-          date: "2022-01-01",
+          date: "202201",
           fields: ["Some Field"],
           resolve: true,
           notes: "Some Note"

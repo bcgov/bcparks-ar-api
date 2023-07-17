@@ -223,8 +223,8 @@ describe("Activity Test", () => {
     const doc = await docClient.get({
       TableName: TABLE_NAME,
       Key: {
-        pk: `variance::${SUBAREA_ENTRIES[0].pk.split("::")[0]}::${SUBAREA_ENTRIES[0].pk.split("::")[1]}`,
-        sk: "202201"
+        pk: `variance::${SUBAREA_ENTRIES[0].orcs}::202201`,
+        sk: `${SUBAREA_ENTRIES[0].pk.split("::")[0]}}::${SUBAREA_ENTRIES[0].pk.split("::")[1]}`
       },
     }).promise();
     expect(doc).toEqual({});
@@ -260,18 +260,21 @@ describe("Activity Test", () => {
     const doc2 = await docClient.get({
       TableName: TABLE_NAME,
       Key: {
-        pk: `variance::${SUBAREA_ENTRIES[0].pk.split("::")[0]}::${SUBAREA_ENTRIES[0].pk.split("::")[1]}`,
-        sk: "202301"
+        pk: `variance::${SUBAREA_ENTRIES[0].orcs}::202301`,
+        sk: `${SUBAREA_ENTRIES[0].pk.split("::")[0]}::${SUBAREA_ENTRIES[0].pk.split("::")[1]}`
       },
     }).promise();
     expect(doc2.Item).toEqual({
       parkName: 'Cultus Lake Park',
       orcs: '0041',
-      sk: '202301',
-      pk: 'variance::0087::Day Use',
+      sk: '0087::Day Use',
+      pk: 'variance::0041::202301',
       fields: ['picnicRevenueGross'],
       resolved: false,
-      subAreaName: 'TBD'
+      subAreaId: '0087',
+      roles: [ 'sysadmin', '0041:0087'],
+      subAreaName: 'TBD',
+      bundle: 'N/A'
     });
   });
 

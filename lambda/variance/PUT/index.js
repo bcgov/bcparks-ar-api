@@ -14,15 +14,14 @@ exports.handler = async (event, context) => {
       return sendResponse(403, { msg: "Error: Unauthenticated." }, context);
     }
 
-    // Admins only
-    if (!permissionObject.isAdmin) {
+    const body = JSON.parse(event.body);
+
+    if (!permissionObject.isAdmin && !permissionObject.roles.includes(`${body.orcs}:${body.subAreaId}`)) {
       logger.info("Not authorized.");
       return sendResponse(403, { msg: "Unauthorized." }, context);
     }
 
-    const body = JSON.parse(event.body);
-
-    if (!body.subAreaId || !body.activity || !body.date) {
+    if (!body.subAreaId || !body.activity || !body.date || !body.orcs) {
       return sendResponse(400, { msg: "Invalid request" }, context);
     }
 
@@ -30,24 +29,42 @@ exports.handler = async (event, context) => {
       TableName: TABLE_NAME,
       ConditionExpression: "attribute_exists(pk) AND attribute_exists(sk)",
       Key: {
-        pk: { S: `variance::${body.subAreaId}::${body.activity}` },
-        sk: { S: body.date }
+        pk: { S: `variance::${body.orcs}::${body.date}` },
+        sk: { S: `${body.subAreaId}::${body.activity}` }
       },
-      UpdateExpression: `SET notes =:notes, resolved =:resolved, #roles =:roles`,
       ExpressionAttributeValues: {
-        ':notes': { S: body.notes },
-        ':resolved': { BOOL: body.resolved ? body.resolved : false },
-        ':roles': { SS: ["sysadmin"] }
+        ':roles': { L: [{ S: "sysadmin" }, { S: `${body.orcs}:${body.subAreaId}` }] }
       },
       ExpressionAttributeNames: {
         '#roles': 'roles'
       }
     };
 
+    let updateExpressions = ['#roles =:roles'];
+
+    if (body.notes) {
+      params.ExpressionAttributeValues[':notes'] = { S: body.notes };
+      updateExpressions.push('notes = :notes');
+    }
+
+    if (body.resolved) {
+      params.ExpressionAttributeValues[':resolved'] = { BOOL: body.resolved };
+      updateExpressions.push('resolved = :resolved');
+    }
+
     if (body.fields) {
       params.ExpressionAttributeValues[':fields'] = { L: body.fields.map(item => ({ S: item })) };
-      params.UpdateExpression += ', #fields =:fields';
+      updateExpressions.push('#fields = :fields');
       params.ExpressionAttributeNames['#fields'] = 'fields';
+    }
+
+    if (body.bundle) {
+      params.ExpressionAttributeValues[':bundle'] = { S: body.bundle };
+      updateExpressions.push('bundle = :bundle');
+    }
+
+    if (updateExpressions.length > 0) {
+      params.UpdateExpression = `SET ${updateExpressions.join(', ')}`;
     }
 
     const res = await dynamodb.updateItem(params).promise();
