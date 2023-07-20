@@ -74,4 +74,4 @@ jobs:
         working-directory: ${{ env.TG_SRC_PATH }}/${{ env.ENVIRONMENT }}
         env:
           aws_region: ${{ secrets.AWS_REGION }}
-        run: terragrunt apply terragrunt-non-interactive -var target_aws_account_id=${{ vars.ACCOUNT_ID }} -var target_env=dev
+        run: terragrunt apply --terragrunt-non-interactive -var target_aws_account_id=${{ vars.ACCOUNT_ID }} -var target_env=dev
