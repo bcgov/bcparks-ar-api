@@ -12,7 +12,7 @@ generate "remote_state" {
   contents  = <<EOF
 terraform {
   backend "s3" {
-    bucket         = "terraform-remote-state-${local.project}-${var.target_env}"
+    bucket         = "terraform-remote-state-${local.project}-${local.environment}"
     key            = "remote.tfstate"                                    # Path and name of the state file within the bucket
     region         = "ca-central-1"                                      # AWS region where the bucket is located
     dynamodb_table = "terraform-remote-state-lock-${local.project}"      # Replace with either generated or custom DynamoDB table name
