@@ -22,11 +22,6 @@ terraform {
 EOF
 }
 
-
-output "localoutput" {
-  value = "S3Bucket: terraform-remote-state-${local.project}-${local.environment}"
-}
-
 generate "provider" {
   path      = "provider.tf"
   if_exists = "overwrite"
