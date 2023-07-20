@@ -74,4 +74,4 @@ jobs:
         working-directory: ${{ env.TG_SRC_PATH }}/${{ env.TARGET_ENV }}
         env:
           aws_region: ${{ secrets.AWS_REGION }}
-        run: terragrunt force-unlock b3d2ce70-0643-e884-24a7-52eb039086c6 && terragrunt apply -auto-approve --terragrunt-non-interactive -var target_aws_account_id=${{ vars.ACCOUNT_ID }} -var target_env=dev
+        run: terragrunt force-unlock --terragrunt-non-interactive b3d2ce70-0643-e884-24a7-52eb039086c6 && terragrunt apply -auto-approve --terragrunt-non-interactive -var target_aws_account_id=${{ vars.ACCOUNT_ID }} -var target_env=dev
