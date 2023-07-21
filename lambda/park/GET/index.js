@@ -90,16 +90,11 @@ exports.handler = async (event, context) => {
           "**Some other authenticated person with attendance-and-revenue roles**"
         );
         logger.debug("permissionObject.roles:", permissionObject.roles);
-        const parkRoles = permissionObject.roles.map((item) => {
-          return item.split(":")[0];
-        });
-        results = await roleFilter(results, parkRoles);
-        // TODO: Filter park, don't give everything
-        results = await filterSubAreaAccess(permissionObject, results);
-        logger.debug(JSON.stringify(parkData));
+        results = await roleFilter(results, permissionObject.roles);
+        logger.debug(JSON.stringify(results));
       }
 
-      return sendResponse(200, parkData, context);
+      return sendResponse(200, results, context);
     } else {
       throw "Invalid parameters for call.";
     }

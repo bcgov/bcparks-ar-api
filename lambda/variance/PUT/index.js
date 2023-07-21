@@ -47,7 +47,8 @@ exports.handler = async (event, context) => {
       updateExpressions.push('notes = :notes');
     }
 
-    if (body.resolved) {
+    // only sysadmins can change resolved status
+    if (body.resolved !== undefined && permissionObject.isAdmin) {
       params.ExpressionAttributeValues[':resolved'] = { BOOL: body.resolved };
       updateExpressions.push('resolved = :resolved');
     }

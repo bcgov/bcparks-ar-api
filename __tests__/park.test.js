@@ -59,7 +59,7 @@ describe("Park Test", () => {
     resolvePermissions: jest.fn((token) => {
       return {
         isAdmin: false,
-        roles: ["0041:0084"],
+        roles: ["0041:0087"],
         isAuthenticated: true,
       };
     }),
@@ -67,12 +67,15 @@ describe("Park Test", () => {
       return {};
     }),
     roleFilter: jest.fn((records, roles) => {
+      if (roles.includes('0041:0087')) {
+        return records.filter((subarea) => subarea.roles.includes('0041:0087'));
+      }
       return records.filter((park) => park.orcs === "0041");
     }),
   };
 
   const mockedUnauthenticatedUser = {
-    decodeJWT: jest.fn((event) => {}),
+    decodeJWT: jest.fn((event) => { }),
     resolvePermissions: jest.fn((token) => {
       return {
         isAdmin: false,
@@ -86,7 +89,7 @@ describe("Park Test", () => {
   };
 
   const mockedSysadmin = {
-    decodeJWT: jest.fn((event) => {}),
+    decodeJWT: jest.fn((event) => { }),
     resolvePermissions: jest.fn((token) => {
       return {
         isAdmin: true,
@@ -156,14 +159,18 @@ describe("Park Test", () => {
     );
 
     const body = JSON.parse(response.body);
-    // Body should be empty
+    // Body should have 1 subarea
     expect(body).toMatchObject([
       {
         orcs: "0041",
         parkName: "Cultus Lake Park",
         pk: "park",
         sk: "0041",
-        subAreas: [],
+        subAreas: [{
+          id: '0087',
+          name: 'Maple Bay',
+        }
+        ],
       },
     ]);
   });
@@ -193,7 +200,7 @@ describe("Park Test", () => {
     );
 
     const body = JSON.parse(response.body);
-    expect(body.data[0].subAreaName).toMatch(specificSubAreas[0].subAreaName);
+    expect(body[0].subAreaName).toMatch(specificSubAreas[0].subAreaName);
     expect(response.statusCode).toBe(200);
   });
 
@@ -221,7 +228,7 @@ describe("Park Test", () => {
       null
     );
     const body = JSON.parse(response.body);
-    expect(body.data[0].sk).toMatch(specificSubAreas[0].sk);
+    expect(body[0].sk).toMatch(specificSubAreas[0].sk);
     expect(response.statusCode).toBe(200);
   });
 
