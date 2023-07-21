@@ -1,4 +1,5 @@
 const { runQuery, TABLE_NAME } = require("../../dynamoUtil");
+const AWS = require("aws-sdk");
 const { sendResponse } = require("../../responseUtil");
 const {
   decodeJWT,
@@ -37,7 +38,9 @@ exports.handler = async (event, context) => {
     const activity = event.queryStringParameters.activity;
     const activityDate = event.queryStringParameters.date;
     const resolvedStatus = event.queryStringParameters.resolved;
-    const lastEvaluatedKey = event.queryStringParameters.lastEvaluatedKey;
+    // TODO: find a better way to send ExclusiveStartKeys without sending pk/sk individually (queryParams cant handle objects)
+    const lastEvaluatedKeyPK = event.queryStringParameters.lastEvaluatedKeyPK;
+    const lastEvaluatedKeySK = event.queryStringParameters.lastEvaluatedKeySK;
 
 
     // Must provide park and activityDate
@@ -48,7 +51,7 @@ exports.handler = async (event, context) => {
     }
 
 
-    return await getVarianceRecords(permissionObject, orcs, activityDate, subAreaId, activity, resolvedStatus, lastEvaluatedKey)
+    return await getVarianceRecords(permissionObject, orcs, activityDate, subAreaId, activity, resolvedStatus, lastEvaluatedKeyPK, lastEvaluatedKeySK)
   } catch (e) {
     console.error(e);
   }
@@ -56,7 +59,7 @@ exports.handler = async (event, context) => {
   return sendResponse(400, { msg: "Invalid request." }, context);
 };
 
-async function getVarianceRecords(permissionObject, orcs, activityDate, subAreaId, activity, resolvedStatus, lastEvaluatedKey, context) {
+async function getVarianceRecords(permissionObject, orcs, activityDate, subAreaId, activity, resolvedStatus, lastEvaluatedKeyPK, lastEvaluatedKeySK, context) {
   let queryObj = {
     TableName: TABLE_NAME
   };
@@ -66,8 +69,9 @@ async function getVarianceRecords(permissionObject, orcs, activityDate, subAreaI
   queryObj.ExpressionAttributeValues[':pk'] = { S: `variance::${orcs}::${activityDate}` };
   queryObj.KeyConditionExpression = 'pk =:pk';
 
+  // limit role
   if (subAreaId) {
-    if (activity) {
+    if (!activity) {
       // if subArea is provided but no activity, search sk 'starts with: subAreaId::'
       queryObj.ExpressionAttributeValues[':sk'] = { S: `${subAreaId}::` };
       queryObj.KeyConditionExpression += ' AND begins_with(sk, :sk)';
@@ -78,15 +82,21 @@ async function getVarianceRecords(permissionObject, orcs, activityDate, subAreaI
     }
   }
 
-  // add filters
-  
-  if (resolvedStatus !== undefined) {
-    queryObj.ExpressionAttributeValues[':status'] = { S: resolvedStatus };
-    queryObj.FilterExpression = ' resolved =:status';
+  // add filters (queryparams cant handle booleans)
+  if (resolvedStatus !== undefined && resolvedStatus !== null) {
+    if (resolvedStatus === "true") {
+      queryObj.ExpressionAttributeValues[':resolved'] = { BOOL: true };
+    } else {
+      queryObj.ExpressionAttributeValues[':resolved'] = { BOOL: false };
+    }
+    queryObj.FilterExpression = 'resolved =:resolved';
   }
 
-  if (lastEvaluatedKey) {
-    queryObj.ExclusiveStartKey = lastEvaluatedKey;
+  if (lastEvaluatedKeyPK && lastEvaluatedKeySK) {
+    queryObj.ExclusiveStartKey = {
+      pk: { S: lastEvaluatedKeyPK },
+      sk: { S: lastEvaluatedKeySK }
+    };
   }
 
   try {
@@ -95,7 +105,7 @@ async function getVarianceRecords(permissionObject, orcs, activityDate, subAreaI
     logger.debug('User roles: ', permissionObject.roles);
     const filteredData = await roleFilter(data.data, permissionObject.roles);
 
-    return sendResponse(200, filteredData, context);
+    return sendResponse(200, { data: filteredData, lastEvaluatedKey: data.LastEvaluatedKey }, context);
   } catch (e) {
     logger.error(e);
     return sendResponse(400, { msg: "Invalid request." }, context);
