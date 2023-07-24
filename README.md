@@ -74,13 +74,15 @@ There are three places where secrets and variables are stored.
 
 The secrets stored in Github are required for the AWS configuration in Github actions. The variables are as follows:
 
-- AWS_ROLE_TO_ASSUME
-- AWS_ACCESS_KEY_ID
 - AWS_REGION
-- AWS_SECRET_ACCESS_KEY
-- TFC_TEAM_TOKEN
 
 These secrets are permanent and will not have to be changed in the future.
+
+These environment variables need to be set for each dev/test/prod environment:
+
+- ACCOUNT_ID
+- AWS_ROLE_ARN_TO_USE
+
 
 ### Terraform
 
