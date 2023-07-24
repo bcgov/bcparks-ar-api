@@ -15,6 +15,10 @@ env:
   TARGET_ENV: test
   GIT_BRANCH: main
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   ci:
     name: Push to AWS Lambda
