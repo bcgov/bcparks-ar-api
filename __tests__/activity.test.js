@@ -269,7 +269,10 @@ describe("Activity Test", () => {
       orcs: '0041',
       sk: '0087::Day Use',
       pk: 'variance::0041::202301',
-      fields: ['picnicRevenueGross'],
+      fields: [{
+        key: 'picnicRevenueGross',
+        percentageChange: 99.1
+      }],
       resolved: false,
       subAreaId: '0087',
       roles: [ 'sysadmin', '0041:0087'],
