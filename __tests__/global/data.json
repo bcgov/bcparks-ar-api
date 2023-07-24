@@ -67,7 +67,7 @@
       "subAreaName": "Maple Bay",
       "roles": [
         "sysadmin",
-        "0041"
+        "0041:0087"
       ]
     },
     {
@@ -81,7 +81,7 @@
       "subAreaName": "Teapot Hill",
       "roles": [
         "sysadmin",
-        "0041"
+        "0041:0089"
       ]
     },
     {
