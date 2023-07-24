@@ -201,7 +201,7 @@ async function checkVarianceTrigger(body) {
     const res = calculateVariance([first, second, third], current, varianceConfig[fieldsToCheck[field]]);
     if (res.varianceTriggered) {
       varianceWasTriggered = true;
-      fields.push(fieldsToCheck[field]);
+      fields.push({key: fieldsToCheck[field], percentageChange: res?.percentageChange});
     }
   }
   // By now, the varianceWasTriggered should be active and the fields array full
