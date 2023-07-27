@@ -117,9 +117,56 @@ resource "aws_iam_role" "exportInvokeRole" {
 EOF
 }
 
+resource "aws_iam_role" "varianceExportInvokeRole" {
+  name = "varianceExportInvokeRole-${random_string.postfix.result}"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
 resource "aws_iam_role_policy" "exportInvokeRolePolicy" {
   name        = "exportInvokeRolePolicy-${random_string.postfix.result}"
   role        = aws_iam_role.exportInvokeRole.id
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1464440182000",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:Scan",
+                "dynamodb:Query",
+                "dynamodb:PutItem",
+                "s3:PutObject"
+            ],
+            "Resource": [
+                "${aws_dynamodb_table.ar_table.arn}",
+                "${aws_s3_bucket.bcgov-parks-ar-assets.arn}/*"
+            ]
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "varianceExportInvokeRolePolicy" {
+  name        = "varianceExportInvokeRolePolicy-${random_string.postfix.result}"
+  role        = aws_iam_role.varianceExportInvokeRole.id
 
   policy = <<EOF
 {
@@ -163,6 +210,25 @@ resource "aws_iam_role" "exportGetRole" {
 EOF
 }
 
+resource "aws_iam_role" "varianceExportGetRole" {
+  name = "varianceExportGetRole-${random_string.postfix.result}"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
 resource "aws_iam_role_policy" "exportGetRolePolicy" {
   name = "exportGetRolePolicy-${random_string.postfix.result}"
   role = aws_iam_role.exportGetRole.id
@@ -183,6 +249,34 @@ resource "aws_iam_role_policy" "exportGetRolePolicy" {
         "Resource": [
           "${aws_dynamodb_table.ar_table.arn}",
           "${aws_lambda_function.exportInvokableLambda.arn}",
+          "${aws_s3_bucket.bcgov-parks-ar-assets.arn}/*"
+        ]
+      }
+  ]
+}
+  EOF
+}
+
+resource "aws_iam_role_policy" "varianceExportGetRolePolicy" {
+  name = "varianceExportGetRolePolicy-${random_string.postfix.result}"
+  role = aws_iam_role.varianceExportGetRole.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+        "Effect": "Allow",
+        "Action": [
+            "dynamodb:Query",
+            "dynamodb:PutItem",
+            "lambda:InvokeAsync",
+            "lambda:InvokeFunction",
+            "s3:GetObject"
+        ],
+        "Resource": [
+          "${aws_dynamodb_table.ar_table.arn}",
+          "${aws_lambda_function.varianceExportInvokableLambda.arn}",
           "${aws_s3_bucket.bcgov-parks-ar-assets.arn}/*"
         ]
       }

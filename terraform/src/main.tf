@@ -37,6 +37,7 @@ resource "aws_api_gateway_deployment" "apideploy" {
     aws_api_gateway_integration.activityRecordLockIntegration,
     aws_api_gateway_integration.activityRecordUnlockIntegration,
     aws_api_gateway_integration.exportGetIntegration,
+    aws_api_gateway_integration.varianceExportGetIntegration,
     aws_api_gateway_integration.fiscalYearEndGetIntegration,
     aws_api_gateway_integration.fiscalYearEndLockIntegration,
     aws_api_gateway_integration.fiscalYearEndUnlockIntegration,
@@ -105,6 +106,14 @@ resource "aws_iam_role_policy_attachment" "lambda_export_invoke_cloudwatch_logs"
 }
 resource "aws_iam_role_policy_attachment" "lambda_export_get_cloudwatch_logs" {
   role       = aws_iam_role.exportGetRole.name
+  policy_arn = aws_iam_policy.lambda_logging.arn
+}
+resource "aws_iam_role_policy_attachment" "lambda_variance_export_invoke_cloudwatch_logs" {
+  role       = aws_iam_role.varianceExportInvokeRole.name
+  policy_arn = aws_iam_policy.lambda_logging.arn
+}
+resource "aws_iam_role_policy_attachment" "lambda_variance_export_get_cloudwatch_logs" {
+  role       = aws_iam_role.varianceExportGetRole.name
   policy_arn = aws_iam_policy.lambda_logging.arn
 }
 resource "aws_iam_role_policy_attachment" "databaseReadRoleCloudWatchLogs" {
