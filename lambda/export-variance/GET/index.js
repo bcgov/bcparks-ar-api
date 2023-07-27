@@ -79,7 +79,7 @@ exports.handler = async (event, context) => {
 
         let urlKey = jobObj?.key;
         let message = 'Job completed';
-        if (res.progressState === 'error') {
+        if (jobObj.progressState === 'error') {
           key = jobObj?.lastSuccessfulJob.key;
           message = 'Job failed. Returning last successful job.';
         }
