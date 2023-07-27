@@ -92,6 +92,15 @@ const STATE_DICTIONARY = {
   COMPLETE: 7,
 };
 
+VARIANCE_STATE_DICTIONARY = {
+  ERROR: 99,
+  FETCHING: 1,
+  FORMATTING: 2,
+  GENERATING: 3,
+  UPLOADING: 4,
+  COMPLETE: 5,
+}
+
 const CSV_SYSADMIN_SCHEMA = [
   // Shared Data
   {
@@ -726,10 +735,16 @@ const CSV_SYSADMIN_SCHEMA = [
   },
 ];
 
+VARIANCE_CSV_SCHEMA = [
+  'Bundle', 'ORCS', 'Park Name', 'Sub-area Name', 'Sub-area ID', 'Activity', 'Year', 'Month', 'Notes', 'Variances'
+]
+
 module.exports = {
   EXPORT_NOTE_KEYS,
   EXPORT_VARIANCE_CONFIG,
   EXPORT_MONTHS,
   CSV_SYSADMIN_SCHEMA,
   STATE_DICTIONARY,
+  VARIANCE_CSV_SCHEMA,
+  VARIANCE_STATE_DICTIONARY
 };

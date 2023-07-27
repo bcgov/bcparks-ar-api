@@ -162,6 +162,17 @@ functions:
           method: GET
           path: /export
           cors: true
+  varianceExportInvokable:
+    handler: lambda/export-variance/invokable/index.handler
+    timeout: 300
+  varianceExportGet:
+    handler: lambda/export-variance/GET/index.handler
+    timeout: 300
+    events:
+      - http:
+          method: GET
+          path: /export-variance
+          cors: true
 
   ###########
   # Fiscal Year End
