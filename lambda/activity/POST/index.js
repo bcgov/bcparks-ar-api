@@ -1,31 +1,24 @@
-const AWS = require("aws-sdk");
-const {
-  dynamodb,
-  runQuery,
-  TABLE_NAME,
-  getOne,
-  FISCAL_YEAR_FINAL_MONTH,
-  TIMEZONE,
-} = require("../../dynamoUtil");
-const { sendResponse } = require("../../responseUtil");
-const { decodeJWT, resolvePermissions } = require("../../permissionUtil");
-const { logger } = require("../../logger");
-const { DateTime } = require("luxon");
+const AWS = require('aws-sdk');
+const { dynamodb, runQuery, TABLE_NAME, getOne, FISCAL_YEAR_FINAL_MONTH, TIMEZONE } = require('../../dynamoUtil');
+const { sendResponse } = require('../../responseUtil');
+const { decodeJWT, resolvePermissions } = require('../../permissionUtil');
+const { logger } = require('../../logger');
+const { DateTime } = require('luxon');
 const { calculateVariance } = require('../../varianceUtils');
-const { EXPORT_VARIANCE_CONFIG } = require("../../constants");
+const { EXPORT_VARIANCE_CONFIG } = require('../../constants');
 
 exports.handlePost = async (event, context) => {
-  logger.info("Activity POST:");
+  logger.info('Activity POST:');
   return await main(event, context);
 };
 
 exports.handleLock = async (event, context) => {
-  logger.debug("Record Lock POST:", event);
+  logger.debug('Record Lock POST:', event);
   return await main(event, context, true);
 };
 
 exports.handleUnlock = async (event, context) => {
-  logger.debug("Record Unlock POST:", event);
+  logger.debug('Record Unlock POST:', event);
   return await main(event, context, false);
 };
 
@@ -35,29 +28,27 @@ async function main(event, context, lock = null) {
     const permissionObject = resolvePermissions(token);
 
     if (!permissionObject.isAuthenticated) {
-      logger.info("**NOT AUTHENTICATED, PUBLIC**");
-      return sendResponse(403, { msg: "Error: UnAuthenticated." }, context);
+      logger.info('**NOT AUTHENTICATED, PUBLIC**');
+      return sendResponse(403, { msg: 'Error: UnAuthenticated.' }, context);
     }
 
     const body = JSON.parse(event.body);
 
-    if (!permissionObject.isAdmin
-        && permissionObject.roles.includes(`${body.orcs}:${body.subAreaId}`) === false)
-    {
-      logger.info("Not authorized.");
+    if (!permissionObject.isAdmin && permissionObject.roles.includes(`${body.orcs}:${body.subAreaId}`) === false) {
+      logger.info('Not authorized.');
       logger.debug(permissionObject.roles);
-      return sendResponse(403, { msg: "Unauthorized." }, context);
+      return sendResponse(403, { msg: 'Unauthorized.' }, context);
     }
 
     if (await verifyBody(body)) {
-      logger.info("Fiscal year is locked.");
-      logger.debug("verifyBody", body);
-      return sendResponse(400, { msg: "Invalid request." });
+      logger.info('Fiscal year is locked.');
+      logger.debug('verifyBody', body);
+      return sendResponse(400, { msg: 'Invalid request.' });
     }
 
     // check if fiscal year is locked
     if (await checkFiscalYearLock(body)) {
-      logger.debug("checkFiscalYearLock", body);
+      logger.debug('checkFiscalYearLock', body);
       return sendResponse(
         403,
         {
@@ -75,24 +66,17 @@ async function main(event, context, lock = null) {
     // check if attempting to lock current/future month
     // Not allowed as per https://bcparksdigital.atlassian.net/browse/BRS-817
     if (lock && (await checkLockingDates(body))) {
-      logger.debug("checkLockingDates", body);
-      return sendResponse(
-        403,
-        { msg: "Cannot lock a record for a month that has not yet concluded." },
-        context
-      );
+      logger.debug('checkLockingDates', body);
+      return sendResponse(403, { msg: 'Cannot lock a record for a month that has not yet concluded.' }, context);
     }
 
     // check if record is locked
     const unlocking = lock === false ? true : false;
-    const existingRecord = await getOne(
-      `${body.subAreaId}::${body.activity}`,
-      body.date
-    );
+    const existingRecord = await getOne(`${body.subAreaId}::${body.activity}`, body.date);
     if (existingRecord?.isLocked && !unlocking) {
-      logger.info("Record is locked.");
-      logger.debug("locking", existingRecord?.isLocked, !unlocking);
-      return sendResponse(409, { msg: "Record is locked." });
+      logger.info('Record is locked.');
+      logger.debug('locking', existingRecord?.isLocked, !unlocking);
+      return sendResponse(409, { msg: 'Record is locked.' });
     }
 
     // handle locking/unlocking existing records
@@ -101,22 +85,22 @@ async function main(event, context, lock = null) {
         return await handleLockUnlock(existingRecord, lock, context);
       } else if (lock === false) {
         // if record doesnt exist, we can't unlock it
-        logger.info("Record not found.");
-        return sendResponse(404, { msg: "Record not found." });
+        logger.info('Record not found.');
+        return sendResponse(404, { msg: 'Record not found.' });
       }
       // if we are locking a record that doesn't exist, we need to create it.
       // fall through and create new record for locking.
       lock = true;
     }
 
-    if (event?.queryStringParameters?.isForced  == 'true') {
+    if (event?.queryStringParameters?.isForced == 'true') {
       return await handleActivity(body, lock, context);
     } else {
       return await handleVarianceTrigger(body, lock, context);
     }
   } catch (err) {
     logger.error(err);
-    return sendResponse(400, { msg: "Invalid request" }, context);
+    return sendResponse(400, { msg: 'Invalid request' }, context);
   }
 }
 
@@ -130,7 +114,7 @@ async function handleVarianceTrigger(body, lock, context) {
     // TBD: What should we do?  For now fall-through.
     logger.error(e);
   }
-  logger.info("Adding activity record:", body);
+  logger.info('Adding activity record:', body);
   return await handleActivity(body, lock, context);
 }
 
@@ -139,33 +123,27 @@ async function deleteVariance(subAreaId, activity, date) {
     TableName: TABLE_NAME,
     Key: {
       pk: { S: `variance::${subAreaId}::${activity}` },
-      sk: { S: date }
-    }
+      sk: { S: date },
+    },
   };
 
-  logger.info("Deleting variance record:", params);
+  logger.info('Deleting variance record:', params);
 
   await dynamodb.deleteItem(params).promise();
 }
 
 async function checkVarianceTrigger(body) {
-  const subAreaId   = body.subAreaId;
-  const activity    = body.activity;
-  const date        = body.date;
-  const notes       = body.notes;
-  const orcs        = body.orcs;
+  const subAreaId = body.subAreaId;
+  const activity = body.activity;
+  const date = body.date;
+  const notes = body.notes;
+  const orcs = body.orcs;
   const subAreaName = body.subAreaName;
-  const parkName    = body.parkName;
+  const parkName = body.parkName;
 
   // Create a variance field array
   let fields = [];
   let varianceWasTriggered = false;
-
-  // Quick check if variance note field has data in it
-  if (notes !== "" && notes !== undefined && notes !== null) {
-    await createVariance(orcs, date, subAreaId, activity, fields, notes, parkName, subAreaName);
-    return;
-  }
 
   // Map through all fields we care about and check their values
   let varianceConfig = EXPORT_VARIANCE_CONFIG[activity];
@@ -189,7 +167,9 @@ async function checkVarianceTrigger(body) {
     let third = records[2]?.[fieldsToCheck[field]];
 
     // Grabs the field percentage from the object
-    logger.info(`Calculating variance ${first}, ${second}, ${third}, ${current}, ${varianceConfig[fieldsToCheck[field]]}`);
+    logger.info(
+      `Calculating variance ${first}, ${second}, ${third}, ${current}, ${varianceConfig[fieldsToCheck[field]]}`
+    );
 
     if (!current === undefined || !first === undefined) {
       // We skip comparing against fields that are undefined. TBD Business logic.
@@ -201,7 +181,7 @@ async function checkVarianceTrigger(body) {
     const res = calculateVariance([first, second, third], current, varianceConfig[fieldsToCheck[field]]);
     if (res.varianceTriggered) {
       varianceWasTriggered = true;
-      fields.push({key: fieldsToCheck[field], percentageChange: res?.percentageChange});
+      fields.push({ key: fieldsToCheck[field], percentageChange: res?.percentageChange });
     }
   }
   // By now, the varianceWasTriggered should be active and the fields array full
@@ -209,7 +189,8 @@ async function checkVarianceTrigger(body) {
   logger.info('Variance triggered: ', varianceWasTriggered);
   logger.info(fields);
 
-  if (varianceWasTriggered) {
+  // Create variance object if variance was triggered or if a variance note exists
+  if (varianceWasTriggered || (notes !== '' && notes !== undefined && notes !== null)) {
     await createVariance(orcs, date, subAreaId, activity, fields, notes, parkName, subAreaName);
   } else {
     // Attempt to delete any previous variances
@@ -223,12 +204,12 @@ async function createVariance(orcs, date, subAreaId, activity, fields, notes, pa
   let subarea = await getOne(`park::${orcs}`, subAreaId);
   let bundle = subarea?.bundle;
   if (bundle === undefined) {
-    bundle = "N/A";
+    bundle = 'N/A';
   }
-  logger.info('Creating Variance:', orcs, date, subAreaId, activity, fields, notes, bundle)
+  logger.info('Creating Variance:', orcs, date, subAreaId, activity, fields, notes, bundle);
   try {
     const newObject = {
-      pk:`variance::${orcs}::${date}`,
+      pk: `variance::${orcs}::${date}`,
       sk: `${subAreaId}::${activity}`,
       fields: fields,
       notes: notes,
@@ -238,7 +219,7 @@ async function createVariance(orcs, date, subAreaId, activity, fields, notes, pa
       subAreaName: subAreaName,
       subAreaId: subAreaId,
       bundle: bundle,
-      roles: ['sysadmin', `${orcs}:${subAreaId}`]
+      roles: ['sysadmin', `${orcs}:${subAreaId}`],
     };
     const putObj = {
       TableName: TABLE_NAME,
@@ -251,7 +232,7 @@ async function createVariance(orcs, date, subAreaId, activity, fields, notes, pa
 }
 
 async function getPreviousYearData(years, subAreaId, activity, date) {
-  logger.info('Getting previous year data', years, subAreaId, activity, date)
+  logger.info('Getting previous year data', years, subAreaId, activity, date);
   // Get records for up to the past N years, limited to no farther than 2011
   let currentDate = DateTime.fromFormat(date, 'yyyyMM');
   const targetYear = 2022;
@@ -265,7 +246,7 @@ async function getPreviousYearData(years, subAreaId, activity, date) {
     try {
       const data = await getOne(`${subAreaId}::${activity}`, selectedYear);
       logger.info('Read Activity Record Returning.');
-      logger.debug("DATA:", data);
+      logger.debug('DATA:', data);
       if (Object.keys(data).length !== 0) {
         records.push(data);
       }
@@ -286,7 +267,7 @@ async function checkFiscalYearLock(body) {
   if (recordMonth > FISCAL_YEAR_FINAL_MONTH) {
     recordYear++;
   }
-  const fiscalYearEndObj = await getOne("fiscalYearEnd", String(recordYear));
+  const fiscalYearEndObj = await getOne('fiscalYearEnd', String(recordYear));
   if (fiscalYearEndObj?.isLocked) {
     return true;
   }
@@ -294,7 +275,7 @@ async function checkFiscalYearLock(body) {
 }
 
 async function checkLockingDates(body) {
-  const beginningOfMonth = DateTime.now().setZone(TIMEZONE).startOf("month");
+  const beginningOfMonth = DateTime.now().setZone(TIMEZONE).startOf('month');
   const recordDate = DateTime.fromObject(
     {
       year: Number(body.date.slice(0, 4)),
@@ -326,30 +307,30 @@ async function handleLockUnlock(record, lock, context) {
       pk: { S: record.pk },
       sk: { S: record.sk },
     },
-    UpdateExpression: "set isLocked = :isLocked",
-    ConditionExpression: "isLocked <> :isLocked",
+    UpdateExpression: 'set isLocked = :isLocked',
+    ConditionExpression: 'isLocked <> :isLocked',
     ExpressionAttributeValues: {
-      ":isLocked": { BOOL: lock },
+      ':isLocked': { BOOL: lock },
     },
-    ReturnValues: "ALL_NEW",
+    ReturnValues: 'ALL_NEW',
   };
   try {
     const res = await dynamodb.updateItem(updateObj).promise();
     logger.info(`Updated record pk: ${record.pk}, sk: ${record.sk} `);
-    const s = lock ? "locked" : "unlocked";
+    const s = lock ? 'locked' : 'unlocked';
     return sendResponse(200, {
       msg: `Record successfully ${s}`,
       data: AWS.DynamoDB.Converter.unmarshall(res.Attributes),
     });
   } catch (err) {
-    if (err.code === "ConditionalCheckFailedException") {
+    if (err.code === 'ConditionalCheckFailedException') {
       return sendResponse(409, {
-        msg: "Record is already locked/unlocked",
+        msg: 'Record is already locked/unlocked',
         error: err,
       });
     }
     return sendResponse(400, {
-      msg: "Record lock/unlock failed: ",
+      msg: 'Record lock/unlock failed: ',
       error: err,
     });
   }
@@ -364,34 +345,30 @@ async function handleActivity(body, lock = false, context) {
     const configObj = {
       TableName: TABLE_NAME,
       ExpressionAttributeValues: {
-        ":pk": { S: `config::${body.subAreaId}` },
-        ":sk": { S: body.activity },
+        ':pk': { S: `config::${body.subAreaId}` },
+        ':sk': { S: body.activity },
       },
-      KeyConditionExpression: "pk =:pk AND sk =:sk",
+      KeyConditionExpression: 'pk =:pk AND sk =:sk',
     };
     const configData = (await runQuery(configObj))[0];
     if (!configData?.orcs || !configData?.parkName) {
-      throw "Malformed config object";
+      throw 'Malformed config object';
     }
-    body["config"] = configData;
-    body["orcs"] = body["orcs"] ? body["orcs"] : configData.orcs;
-    body["parkName"] = body["parkName"]
-      ? body["parkName"]
-      : configData.parkName;
-    body["subAreaName"] = body["subAreaName"]
-      ? body["subAreaName"]
-      : configData.subAreaName;
+    body['config'] = configData;
+    body['orcs'] = body['orcs'] ? body['orcs'] : configData.orcs;
+    body['parkName'] = body['parkName'] ? body['parkName'] : configData.parkName;
+    body['subAreaName'] = body['subAreaName'] ? body['subAreaName'] : configData.subAreaName;
 
-    body["pk"] = pk;
+    body['pk'] = pk;
 
     if (body.date.length !== 6 || isNaN(body.date)) {
-      throw "Invalid date.";
+      throw 'Invalid date.';
     }
 
-    body["sk"] = body.date;
-    body["lastUpdated"] = new Date().toISOString();
+    body['sk'] = body.date;
+    body['lastUpdated'] = new Date().toISOString();
 
-    body["isLocked"] = lock ?? false;
+    body['isLocked'] = lock ?? false;
 
     const newObject = AWS.DynamoDB.Converter.marshall(body);
 
@@ -401,7 +378,7 @@ async function handleActivity(body, lock = false, context) {
     };
 
     await dynamodb.putItem(putObject).promise();
-    logger.info("Activity Updated.");
+    logger.info('Activity Updated.');
     return sendResponse(200, body, context);
   } catch (err) {
     logger.error(err);
