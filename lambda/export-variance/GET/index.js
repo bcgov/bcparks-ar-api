@@ -41,7 +41,9 @@ exports.handler = async (event, context) => {
   params['roles'] = permissionObject.roles;
 
   // generate a job id from params+role
-  const decodedHash = JSON.stringify(params) + JSON.stringify(permissionObject.roles);
+  let hashParams = {...params};
+  delete hashParams.getJob;
+  const decodedHash = JSON.stringify(hashParams) + JSON.stringify(permissionObject.roles);
   const hash = crypto.createHash('md5').update(decodedHash).digest('hex');
   const pk = "variance-exp-job";
 
@@ -67,7 +69,7 @@ exports.handler = async (event, context) => {
 
   if (params?.getJob) {
     // We're trying to download an existing job
-    if (!jobObj) {
+    if (!jobObj?.sk) {
       // Job doesn't exist.
       return sendResponse(200, { msg: "Requested job does not exist" }, context);
     } else if (
