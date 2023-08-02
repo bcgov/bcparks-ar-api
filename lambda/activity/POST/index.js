@@ -154,40 +154,37 @@ async function checkVarianceTrigger(body) {
   // Pull up to the last 3 years for this activity type and date.
   let records = await getPreviousYearData(3, subAreaId, activity, date);
 
-  if (records.length === 0) {
-    // Nothing to validate against
-    return;
-  }
+  if (records.length > 0) {
+    for (const field in fieldsToCheck) {
+      logger.info(`Checking ${fieldsToCheck[field]}`);
+      let current = body?.[fieldsToCheck[field]];
+      let first = records[0]?.[fieldsToCheck[field]];
+      let second = records[1]?.[fieldsToCheck[field]];
+      let third = records[2]?.[fieldsToCheck[field]];
 
-  for (const field in fieldsToCheck) {
-    logger.info(`Checking ${fieldsToCheck[field]}`);
-    let current = body?.[fieldsToCheck[field]];
-    let first = records[0]?.[fieldsToCheck[field]];
-    let second = records[1]?.[fieldsToCheck[field]];
-    let third = records[2]?.[fieldsToCheck[field]];
+      // Grabs the field percentage from the object
+      logger.info(
+        `Calculating variance ${first}, ${second}, ${third}, ${current}, ${varianceConfig[fieldsToCheck[field]]}`
+      );
 
-    // Grabs the field percentage from the object
-    logger.info(
-      `Calculating variance ${first}, ${second}, ${third}, ${current}, ${varianceConfig[fieldsToCheck[field]]}`
-    );
+      if (!current === undefined || !first === undefined) {
+        // We skip comparing against fields that are undefined. TBD Business logic.
+        // Move onto the next field
+        logger.info('Undefined field - skipping.');
+        continue;
+      }
 
-    if (!current === undefined || !first === undefined) {
-      // We skip comparing against fields that are undefined. TBD Business logic.
-      // Move onto the next field
-      logger.info('Undefined field - skipping.');
-      continue;
+      const res = calculateVariance([first, second, third], current, varianceConfig[fieldsToCheck[field]]);
+      if (res.varianceTriggered) {
+        varianceWasTriggered = true;
+        fields.push({ key: fieldsToCheck[field], percentageChange: res?.percentageChange });
+      }
     }
-
-    const res = calculateVariance([first, second, third], current, varianceConfig[fieldsToCheck[field]]);
-    if (res.varianceTriggered) {
-      varianceWasTriggered = true;
-      fields.push({ key: fieldsToCheck[field], percentageChange: res?.percentageChange });
-    }
+    // By now, the varianceWasTriggered should be active and the fields array full
+    // of the specific fields that triggers.  Or, there is no variance at all.
+    logger.info('Variance triggered: ', varianceWasTriggered);
+    logger.info(fields);
   }
-  // By now, the varianceWasTriggered should be active and the fields array full
-  // of the specific fields that triggers.  Or, there is no variance at all.
-  logger.info('Variance triggered: ', varianceWasTriggered);
-  logger.info(fields);
 
   // Create variance object if variance was triggered or if a variance note exists
   if (varianceWasTriggered || (notes !== '' && notes !== undefined && notes !== null)) {
