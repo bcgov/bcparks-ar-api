@@ -1,21 +1,16 @@
-const AWS = require("aws-sdk");
-const { TABLE_NAME } = require("./dynamoUtil");
+const AWS = require('aws-sdk');
+const { TABLE_NAME } = require('./dynamoUtil');
 
-function createUpdateParkWithNewSubAreaObj(
-  subAreaName,
-  subAreaId,
-  isLegacy,
-  orcs
-) {
+function createUpdateParkWithNewSubAreaObj(subAreaName, subAreaId, isLegacy, orcs) {
   // Return update park obj
   return {
     TableName: TABLE_NAME,
     Key: {
-      pk: { S: "park" },
+      pk: { S: 'park' },
       sk: { S: orcs },
     },
     ExpressionAttributeValues: {
-      ":subAreas": {
+      ':subAreas': {
         L: [
           {
             M: AWS.DynamoDB.Converter.marshall({
@@ -27,14 +22,18 @@ function createUpdateParkWithNewSubAreaObj(
         ],
       },
     },
-    UpdateExpression: "SET subAreas = list_append(subAreas, :subAreas)",
+    UpdateExpression: 'SET subAreas = list_append(subAreas, :subAreas)',
   };
 }
 
 function createPutSubAreaObj(subAreaObj, subAreaId, parkName) {
+  let marshalledRolesList = [];
+  subAreaObj.roles.forEach((role) => {
+    marshalledRolesList.push({ S: role });
+  });
   return {
     TableName: TABLE_NAME,
-    ConditionExpression: "attribute_not_exists(sk)",
+    ConditionExpression: 'attribute_not_exists(sk)',
     Item: {
       pk: { S: `park::${subAreaObj.orcs}` },
       sk: { S: subAreaId },
@@ -45,7 +44,7 @@ function createPutSubAreaObj(subAreaObj, subAreaId, parkName) {
       bundle: { S: subAreaObj.bundle },
       subAreaName: { S: subAreaObj.subAreaName },
       parkName: { S: parkName },
-      roles: { SS: subAreaObj.roles },
+      roles: { L: marshalledRolesList },
       orcs: { S: subAreaObj.orcs },
     },
   };
@@ -54,7 +53,7 @@ function createPutSubAreaObj(subAreaObj, subAreaId, parkName) {
 function getValidSubareaObj(body, parkName) {
   let obj = { parkName: parkName };
   if (body.orcs) {
-    obj["orcs"] = body.orcs;
+    obj['orcs'] = body.orcs;
   }
   if (body.activities) {
     let activityArray = [];
@@ -64,39 +63,39 @@ function getValidSubareaObj(body, parkName) {
         activityArray.push(activity);
       }
     }
-    obj["activities"] = activityArray;
+    obj['activities'] = activityArray;
   }
   if (body.managementArea) {
-    obj["managementArea"] = body.managementArea;
+    obj['managementArea'] = body.managementArea;
   }
   if (body.section) {
-    obj["section"] = body.section;
+    obj['section'] = body.section;
   }
   if (body.region) {
-    obj["region"] = body.region;
+    obj['region'] = body.region;
   }
   if (body.bundle) {
-    obj["bundle"] = body.bundle;
+    obj['bundle'] = body.bundle;
   }
   if (body.subAreaName) {
-    obj["subAreaName"] = body.subAreaName;
+    obj['subAreaName'] = body.subAreaName;
   }
-  obj["isLegacy"] = body.isLegacy ? body.isLegacy : false;
+  obj['isLegacy'] = body.isLegacy ? body.isLegacy : false;
 
   // Add roles
-  obj.roles = ["sysadmin", body.orcs];
+  obj.roles = ['sysadmin', body.orcs];
 
   return obj;
 }
 
 const validActivities = [
-  "Frontcountry Camping",
-  "Frontcountry Cabins",
-  "Group Camping",
-  "Backcountry Camping",
-  "Backcountry Cabins",
-  "Boating",
-  "Day Use",
+  'Frontcountry Camping',
+  'Frontcountry Cabins',
+  'Group Camping',
+  'Backcountry Camping',
+  'Backcountry Cabins',
+  'Boating',
+  'Day Use',
 ];
 
 module.exports = {
