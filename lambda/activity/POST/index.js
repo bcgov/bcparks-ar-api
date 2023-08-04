@@ -230,28 +230,28 @@ async function createVariance(orcs, date, subAreaId, activity, fields, notes, pa
 
 async function getPreviousYearData(years, subAreaId, activity, date) {
   logger.info('Getting previous year data', years, subAreaId, activity, date);
-  // Get records for up to the past N years, limited to no farther than 2011
+  // Get records for up to the past N years, limited to no farther than January 2022
   let currentDate = DateTime.fromFormat(date, 'yyyyMM');
-  const targetYear = 2022;
+  const targetYear = 202201;
   let records = [];
 
   // Go back 3 years until no more than 2022
-  for (let i = 0; i < years && currentDate.year >= targetYear; i++) {
-    let selectedYear = currentDate.toFormat('yyyyMM');
-    logger.info(`Selected year: ${selectedYear}`);
-
-    try {
-      const data = await getOne(`${subAreaId}::${activity}`, selectedYear);
-      logger.info('Read Activity Record Returning.');
-      logger.debug('DATA:', data);
-      if (Object.keys(data).length !== 0) {
-        records.push(data);
+  for (let i = 1; i <= years; i++) {
+    let selectedYear = currentDate.minus({ years: i }).toFormat('yyyyMM');
+    if (selectedYear >= targetYear) {
+      logger.info(`Selected year: ${selectedYear}`);
+      try {
+        const data = await getOne(`${subAreaId}::${activity}`, selectedYear);
+        logger.info('Read Activity Record Returning.');
+        logger.debug('DATA:', data);
+        if (Object.keys(data).length !== 0) {
+          records.push(data);
+        }
+      } catch (err) {
+        // Skip on errors
+        logger.error(err);
       }
-    } catch (err) {
-      // Skip on errors
-      logger.error(err);
     }
-    currentDate = currentDate.minus({ years: 1 });
   }
 
   return records;
