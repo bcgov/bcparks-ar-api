@@ -31,7 +31,7 @@ function calculateVariance(
 
   // Since percentage change is absolute, we can subtract from variance percentage
   // If negative, variance is triggered
-  const varianceTriggered = variancePercentage - percentageChangeAbs < 0 ? true : false;
+  const varianceTriggered = variancePercentage - percentageChangeAbs <= 0 ? true : false;
   logger.info("Variance Triggered:", varianceTriggered);
   logger.info("Variance percentageChange:", percentageChange);
   logger.info("Variance variancePercentage:", variancePercentage);

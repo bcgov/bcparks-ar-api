@@ -118,12 +118,12 @@ async function handleVarianceTrigger(body, lock, context) {
   return await handleActivity(body, lock, context);
 }
 
-async function deleteVariance(subAreaId, activity, date) {
+async function deleteVariance(orcs, date, subAreaId, activity) {
   const params = {
     TableName: TABLE_NAME,
     Key: {
-      pk: { S: `variance::${subAreaId}::${activity}` },
-      sk: { S: date },
+      pk: { S: `variance::${orcs}::${date}` },
+      sk: { S: `${subAreaId}::${activity}` },
     },
   };
 
@@ -191,7 +191,7 @@ async function checkVarianceTrigger(body) {
     await createVariance(orcs, date, subAreaId, activity, fields, notes, parkName, subAreaName);
   } else {
     // Attempt to delete any previous variances
-    await deleteVariance(subAreaId, activity, date);
+    await deleteVariance(orcs, date, subAreaId, activity);
   }
 }
 
