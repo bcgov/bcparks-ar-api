@@ -21,7 +21,7 @@ exports.handler = async (event, context) => {
     LAST_SUCCESSFUL_JOB = event.lastSuccessfulJob || {};
     if (event?.jobId && event?.params?.roles) {
       JOB_ID = event.jobId;
-      S3_KEY = JOB_ID + "/" + FILE_NAME + ".xlsx";
+      S3_KEY = JOB_ID + "/" + FILE_NAME + ".csv";
       const roles = event?.params?.roles;
       PARAMS = event?.params;
 
@@ -114,6 +114,7 @@ async function updateJobWithState(state, percentageOverride = null) {
     progressPercentage: percentage,
     progressDescription: message,
     lastSuccessfulJob: LAST_SUCCESSFUL_JOB,
+    key: S3_KEY,
     params: PARAMS,
     dateGenerated: new Date().toISOString(),
   }
