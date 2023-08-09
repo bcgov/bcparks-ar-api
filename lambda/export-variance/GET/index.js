@@ -105,9 +105,9 @@ exports.handler = async (event, context) => {
 
     } else {
       // Job is currently running. Return latest job object
-      delete jobObj.pk;
-      delete jobObj.sk;
-      delete jobObj.key;
+      delete jobObj?.pk;
+      delete jobObj?.sk;
+      delete jobObj?.key;
       return sendResponse(200, { msg: "Job is currently running", jobObj: jobObj }, context);
     }
   } else {
