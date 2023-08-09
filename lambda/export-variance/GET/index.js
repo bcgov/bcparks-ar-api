@@ -69,12 +69,12 @@ exports.handler = async (event, context) => {
 
   if (params?.getJob) {
     // We're trying to download an existing job
-    if (!jobObj?.sk) {
+    if (!jobObj || !jobObj?.sk) {
       // Job doesn't exist.
       return sendResponse(200, { msg: "Requested job does not exist" }, context);
     } else if (
-      jobObj.progressState === "complete" ||
-      jobObj.progressState === "error"
+      jobObj?.progressState === "complete" ||
+      jobObj?.progressState === "error"
     ) {
       // Job is not currently running. Return signed URL
       try {
