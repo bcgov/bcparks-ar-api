@@ -13,6 +13,8 @@ let LAST_SUCCESSFUL_JOB = {};
 let JOB_ID;
 let S3_KEY;
 let PARAMS;
+let JOB_UPDATE_MODULO = 20;
+let CURRENT_PROGRESS_PERCENT = 0;
 
 exports.handler = async (event, context) => {
   logger.debug("Running export invokable: ", event);
@@ -86,17 +88,17 @@ async function updateJobWithState(state, percentageOverride = null) {
       break;
     case 2:
       state = 'formatting_records';
-      percentage = percentageOverride || 50;
+      percentage = percentageOverride || 80;
       message = 'Formatting records.';
       break;
     case 3:
       state = 'generating_report';
-      percentage = percentageOverride || 60;
+      percentage = percentageOverride || 90;
       message = 'Generating report.';
       break;
     case 4:
       state = 'uploading_report';
-      percentage = percentageOverride || 90;
+      percentage = percentageOverride || 95;
       message = 'Uploading report.';
       break;
     case 5:
@@ -120,6 +122,7 @@ async function updateJobWithState(state, percentageOverride = null) {
   }
   try {
     await updateJobEntry(jobObj);
+    CURRENT_PROGRESS_PERCENT = jobObj.progressPercentage;
   } catch (error) {
     throw new Error("Error updating job: " + error);
   }
@@ -162,7 +165,7 @@ async function getVarianceRecords(fiscalYearEnd, roles) {
   // determine months in fiscal year
   const dates = [];
   for (let i = 1; i <= 12; i++) {
-    year = fiscalYearEnd;
+    let year = fiscalYearEnd;
     if (i > 3) {
       year -= 1;
     }
@@ -181,6 +184,7 @@ async function getVarianceRecords(fiscalYearEnd, roles) {
   try {
     // cycle through parks
     for (const orcs of orcsList) {
+      updateHighAccuracyJobState(1, orcsList.indexOf(orcs), orcsList.length, 70);
       // cycle through months
       for (const date of dates) {
         // add to query
@@ -209,6 +213,14 @@ async function getVarianceRecords(fiscalYearEnd, roles) {
     return varianceRecords;
   } catch (error) {
     throw `Error querying variance records: ${error}`;
+  }
+}
+
+function updateHighAccuracyJobState(state, index, total, size){
+  if (index % JOB_UPDATE_MODULO === 0) {
+     const increment = JOB_UPDATE_MODULO*size/total;
+     const percentage = Math.floor(CURRENT_PROGRESS_PERCENT + increment);
+     updateJobWithState(state, percentage);
   }
 }
 
@@ -260,7 +272,7 @@ async function uploadToS3(csvData) {
   const buffer = fs.readFileSync(filePath);
 
   const params = {
-    Bucket: process.env.S3_BUCKET,
+    Bucket: process.env.S3_BUCKET_DATA,
     Key: S3_KEY,
     Body: buffer,
   }

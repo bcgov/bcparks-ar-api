@@ -78,15 +78,16 @@ exports.handler = async (event, context) => {
     ) {
       // Job is not currently running. Return signed URL
       try {
-
         let urlKey = jobObj?.key;
         let message = 'Job completed';
-        if (jobObj.progressState === 'error') {
-          key = jobObj?.lastSuccessfulJob.key;
+        if (jobObj?.progressState === 'error') {
+          urlKey = jobObj?.lastSuccessfulJob?.key;
           message = 'Job failed. Returning last successful job.';
         }
         let URL = "";
         if (!process.env.IS_OFFLINE) {
+          logger.debug('S3_BUCKET_DATA:', process.env.S3_BUCKET_DATA);
+          logger.debug('Url key:', urlKey);
           URL = await s3.getSignedUrl("getObject", {
             Bucket: process.env.S3_BUCKET_DATA,
             Expires: EXPIRY_TIME,
@@ -113,7 +114,7 @@ exports.handler = async (event, context) => {
   } else {
     // We are trying to generate a new report
     // If there's already a completed job, we want to save this in case the new job fails
-    let lastSuccessfulJob = null;
+    let lastSuccessfulJob = {};
     if (jobObj && jobObj?.progressState === "complete" && jobObj?.key) {
       lastSuccessfulJob = {
         key: jobObj?.key,
@@ -139,7 +140,7 @@ exports.handler = async (event, context) => {
           progressPercentage: 0,
           progressDescription: "Initializing job.",
           progressState: "Initializing",
-          lastSuccessfulJob: lastSuccessfulJob || null
+          lastSuccessfulJob: lastSuccessfulJob
         }),
       };
 
