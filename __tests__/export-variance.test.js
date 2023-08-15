@@ -103,7 +103,7 @@ describe("Export Variance Report", () => {
     expect(response.statusCode).toBe(403);
   });
 
-  test("Handler - 200 GET, with no jobs", async () => {
+  test("Handler - 400 no fiscal year provided", async () => {
     const dateField = "dateGenerated"
     const event = {
       headers: {
@@ -135,6 +135,45 @@ describe("Export Variance Report", () => {
           "Access-Control-Allow-Origin": "*",
           "Content-Type": "application/json",
         },
+        statusCode: 400,
+      }),
+    );
+  })
+
+  test("Handler - 200 GET, with no jobs", async () => {
+    const dateField = "dateGenerated"
+    const event = {
+      headers: {
+        Authorization: "Bearer " + token,
+      },
+      httpMethod: "GET",
+      queryStringParameters: {
+        getJob: "true",
+        fiscalYearEnd: 2023
+      },
+    };
+
+    jest.mock('../lambda/permissionUtil', () => {
+      return mockedSysadmin;
+    });
+    const varianceExportGET = require("../lambda/export-variance/GET/index");
+    const result = await varianceExportGET.handler(event, null);
+    let body;
+    try {
+      body = JSON.parse(result.body)
+      console.log('body:', body);
+    } catch (e) {
+      body = 'fail'
+    }
+    expect(result).toEqual(
+      expect.objectContaining({
+        headers: {
+          "Access-Control-Allow-Headers":
+            "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+          "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json",
+        },
         statusCode: 200,
       }),
     );
@@ -147,6 +186,9 @@ describe("Export Variance Report", () => {
         Authorization: "Bearer " + token,
       },
       httpMethod: "GET",
+      queryStringParameters: {
+        fiscalYearEnd: 2023
+      },
     };
     jest.mock('../lambda/permissionUtil', () => {
       return mockedSysadmin;

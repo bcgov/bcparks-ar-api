@@ -40,6 +40,11 @@ exports.handler = async (event, context) => {
   let params = event?.queryStringParameters || {};
   params['roles'] = permissionObject.roles;
 
+  // Must provide fiscal year end
+  if (!params?.fiscalYearEnd) {
+    return sendResponse(400, { msg: "No fiscal year end provided." }, context);
+  }
+
   // generate a job id from params+role
   let hashParams = {...params};
   delete hashParams.getJob;
