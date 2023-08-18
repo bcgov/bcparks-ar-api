@@ -31,6 +31,7 @@ async function run() {
 async function getVariances() {
   let startTime = new Date();
   let recordCount = 0;
+  let count = 0;
   let variances = [];
 
   // get a list of variances to be created
@@ -54,13 +55,14 @@ async function getVariances() {
             // Don't yell at me for my quadruply nested for loop
             const month = year + String(i).padStart(2, '0');
             const record = await getOne(`${subarea.sk}::${activity}`, `${month}`);
+            count++;
             if (Object.keys(record).length > 0) {
               recordCount++;
               const variance = await checkVarianceTrigger(record);
               if (variance) {
                 variances.push(variance);
               }
-              updateConsoleProgress(startTime, `Variances to be created: ${variances.length}. Records analysed`, 25, recordCount);
+              updateConsoleProgress(startTime, `Variances to be created: ${variances.length}. Records queried: ${count}. Records analysed`, 1, recordCount);
             }
           }
         }
@@ -96,7 +98,7 @@ async function putVariances(records) {
         continue;
       }
       // we have to staple the bundle on...
-      let subarea = getOne(`park::${records.orcs}`, record.subAreaId);
+      let subarea = await getOne(`park::${record.orcs}`, record.subAreaId);
       let bundle = subarea?.bundle;
       if (bundle === undefined) {
         bundle = 'N/A';
