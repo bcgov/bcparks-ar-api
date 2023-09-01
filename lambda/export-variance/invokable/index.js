@@ -252,7 +252,7 @@ function createCSV(records) {
       record.sk.split('::')[1] || 'N/A',
       record.year || 'N/A',
       record.month || 'N/A',
-      record.note || '',
+      record.notes || '',
       record.fields || ''
     ])
   }
