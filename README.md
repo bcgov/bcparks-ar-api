@@ -1,5 +1,5 @@
 # BC Parks Attendance & Revenue - API
-![Lifecycle:Maturing](https://img.shields.io/badge/Lifecycle-Maturing-007EC6)
+![Lifecycle:Maturing](https://img.shields.io/badge/Lifecycle-Maturing-007EC6) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=bcgov_bcparks-ar-api&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=bcgov_bcparks-ar-api)
 
 
 # Introduction
