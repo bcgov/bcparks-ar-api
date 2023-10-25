@@ -230,7 +230,8 @@ function formatRecords(records) {
     if (record.fields.length > 0) {
       let fields = [];
       for (const field of record.fields) {
-        fields.push(String(field.key + " " + parseFloat(field.percentageChange) * 100 + "%"));
+        const percent = (parseFloat(field.percentageChange) * 100).toFixed(2);
+        fields.push(String(field.key + " " + percent + "%"));
       }
       record['fields'] = fields.join("; ");
     }
@@ -246,14 +247,15 @@ function createCSV(records) {
     content.push([
       record.bundle || 'N/A',
       record.orcs || 'N/A',
-      record.parkName || 'N/A',
+      `"${record.parkName || 'N/A'}"`,
       record.subAreaName || 'N/A',
       record.subAreaId || 'N/A',
       record.sk.split('::')[1] || 'N/A',
       record.year || 'N/A',
       record.month || 'N/A',
-      record.notes || '',
-      record.fields || ''
+      `"${record.notes || ''}"`,
+      record.fields || '',
+      record.resolved || ''
     ])
   }
   let csvData = '';
