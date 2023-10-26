@@ -237,6 +237,10 @@ function formatRecords(records) {
     const date = record.pk.split('::')[2];
     record['year'] = date.slice(0, 4);
     record['month'] = convertMonth(parseInt(date.slice(4)));
+    record['resolved'] = record.resolved ? 'YES' : 'NO';
+    if (/\r\n|\n|\r/.test(record.notes)) {
+      record.notes = record.notes.replace(/(\r\n|\n|\r)/g, ' ');
+    }
   }
 }
 
@@ -253,7 +257,8 @@ function createCSV(records) {
       record.year || 'N/A',
       record.month || 'N/A',
       record.notes || '',
-      record.fields || ''
+      record.fields || '',
+      record.resolved || ''
     ])
   }
   let csvData = '';
