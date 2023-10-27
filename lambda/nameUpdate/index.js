@@ -90,7 +90,7 @@ async function batchWriteCache(records) {
   let batchCount = 0;
   // Writes the records in batches of 25
   let batch = { RequestItems: { [NAME_CACHE_TABLE_NAME]: [] } };
-  for(record of records) {
+  for(const record of records) {
     logger.info("Writing cache");
     logger.debug(record)
     // logger.info(`Processing record:`, record)
@@ -133,7 +133,7 @@ async function updateAllRecords(records) {
     },
     ReturnValues: 'NONE',
   };
-  for(record of records) {
+  for(const record of records) {
     logger.info("----------------------");
     logger.debug(record);
     updateObj.ExpressionAttributeValues[':parkName'].S = record.displayName;
@@ -151,7 +151,7 @@ async function updateAllRecords(records) {
 }
 
 async function updateRecords(recordsToUpdate, updateObj) {
-  for(record of recordsToUpdate) {
+  for(const record of recordsToUpdate) {
     let params = JSON.parse(JSON.stringify(updateObj))
     params.Key.pk.S = record.pk;
     params.Key.sk.S = record.sk;
