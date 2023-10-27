@@ -736,7 +736,7 @@ const CSV_SYSADMIN_SCHEMA = [
 ];
 
 VARIANCE_CSV_SCHEMA = [
-  'Bundle', 'ORCS', 'Park Name', 'Sub-area Name', 'Sub-area ID', 'Activity', 'Year', 'Month', 'Notes', 'Variances'
+  'Bundle', 'ORCS', 'Park Name', 'Sub-area Name', 'Sub-area ID', 'Activity', 'Year', 'Month', 'Notes', 'Variances', 'Resolved'
 ]
 
 module.exports = {
