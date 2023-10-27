@@ -1,14 +1,12 @@
 const AWS = require("aws-sdk");
 const { DocumentClient } = require("aws-sdk/clients/dynamodb");
 const { REGION, ENDPOINT, TABLE_NAME, NAME_CACHE_TABLE_NAME } = require("./global/settings");
-
+const docClient = new DocumentClient({
+  region: REGION,
+  endpoint: ENDPOINT,
+  convertEmptyValues: true,
+});
 async function setupDb() {
-  const docClient = new DocumentClient({
-    region: REGION,
-    endpoint: ENDPOINT,
-    convertEmptyValues: true,
-  });
-
   // Insert a document for the handler to now find and update.
   await docClient
     .put({
