@@ -3,10 +3,6 @@ const { DocumentClient } = require("aws-sdk/clients/dynamodb");
 const { REGION, ENDPOINT, TABLE_NAME, NAME_CACHE_TABLE_NAME } = require("./global/settings");
 
 async function setupDb() {
-  new AWS.DynamoDB({
-    region: REGION,
-    endpoint: ENDPOINT,
-  });
   docClient = new DocumentClient({
     region: REGION,
     endpoint: ENDPOINT,
