@@ -50,7 +50,7 @@
         "Frontcountry Camping",
         "Day Use"
       ],
-      "orcs": 41,
+      "orcs": "41",
       "subAreaName": "Maple Bay"
     }
   ],
@@ -63,7 +63,7 @@
         "Day Use"
       ],
       "parkName": "Cultus Lake Park",
-      "orcs": 41,
+      "orcs": "41",
       "subAreaName": "Maple Bay",
       "roles": [
         "sysadmin",
@@ -77,7 +77,7 @@
         "Day Use"
       ],
       "parkName": "Cultus Lake Park",
-      "orcs": 41,
+      "orcs": "41",
       "subAreaName": "Teapot Hill",
       "roles": [
         "sysadmin",
