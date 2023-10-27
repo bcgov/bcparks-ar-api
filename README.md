@@ -1,7 +1,6 @@
 # BC Parks Attendance & Revenue - API
 ![Lifecycle:Maturing](https://img.shields.io/badge/Lifecycle-Maturing-007EC6) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=bcgov_bcparks-ar-api&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=bcgov_bcparks-ar-api)
 
-
 # Introduction
 
 This repository consists of the back end code for the BC Parks Attendance & Revenue system (A&R) API. A&R helps Park Operators, BC Parks, and the BC Government track important statistical information to help guide budget allowances and any maintenance that needs to be done to parks.
