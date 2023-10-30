@@ -2,6 +2,8 @@ const AWS = require("aws-sdk");
 const { logger } = require("./logger");
 
 const TABLE_NAME = process.env.TABLE_NAME || "ar-tests";
+const ORCS_INDEX = process.env.ORCS_INDEX || "orcs-index";
+const NAME_CACHE_TABLE_NAME = process.env.NAME_CACHE_TABLE_NAME || "name-cache";
 const CONFIG_TABLE_NAME = process.env.CONFIG_TABLE_NAME || "ar-config";
 const options = {
   region: "ca-central-1",
@@ -234,6 +236,8 @@ module.exports = {
   PASS_TYPE_EXPIRY_HOURS,
   FISCAL_YEAR_FINAL_MONTH,
   TABLE_NAME,
+  ORCS_INDEX,
+  NAME_CACHE_TABLE_NAME,
   dynamodb,
   runQuery,
   runScan,

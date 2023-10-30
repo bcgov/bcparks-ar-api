@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk');
 
-const { REGION, ENDPOINT, TABLE_NAME, CONFIG_TABLE_NAME } = require('./settings');
+const { REGION, ENDPOINT, TABLE_NAME, CONFIG_TABLE_NAME, NAME_CACHE_TABLE_NAME } = require('./settings');
 const { logger } = require('../../lambda/logger');
 
 module.exports = async () => {
@@ -12,7 +12,8 @@ module.exports = async () => {
   // TODO: This should pull in the JSON version of our serverless.yml!
 
   try {
-    let res = await dynamoDb
+    console.log("Creating main table.");
+    await dynamoDb
       .createTable({
         TableName: TABLE_NAME,
         KeySchema: [
@@ -33,6 +34,51 @@ module.exports = async () => {
           {
             AttributeName: 'sk',
             AttributeType: 'S'
+          },
+          {
+            AttributeName: 'orcs',
+            AttributeType: 'S'
+          }
+        ],
+        ProvisionedThroughput: {
+          ReadCapacityUnits: 1,
+          WriteCapacityUnits: 1
+        },
+        GlobalSecondaryIndexes: [
+          {
+            IndexName: 'orcs-index',
+            KeySchema: [
+              {
+                AttributeName: 'orcs',
+                KeyType: 'HASH'
+              }
+            ],
+            Projection: {
+              ProjectionType: 'ALL'
+            },
+            ProvisionedThroughput: {
+              ReadCapacityUnits: 1,
+              WriteCapacityUnits: 1
+            }
+          }
+        ]
+      })
+      .promise();
+
+    console.log("Creating name-cache table.");
+    await dynamoDb
+      .createTable({
+        TableName: NAME_CACHE_TABLE_NAME,
+        KeySchema: [
+          {
+            AttributeName: 'pk',
+            KeyType: 'HASH'
+          }
+        ],
+        AttributeDefinitions: [
+          {
+            AttributeName: 'pk',
+            AttributeType: 'S'
           }
         ],
         ProvisionedThroughput: {
@@ -42,6 +88,7 @@ module.exports = async () => {
       })
       .promise();
 
+    console.log("Creating config table.");
     await dynamoDb
       .createTable({
         TableName: CONFIG_TABLE_NAME,
