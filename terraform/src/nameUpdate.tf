@@ -5,7 +5,7 @@ resource "aws_lambda_function" "name_update" {
   source_code_hash = filebase64sha256("artifacts/nameUpdate.zip")
 
   handler     = "lambda/nameUpdate/index.handler"
-  runtime     = "nodejs18.x"
+  runtime     = "nodejs14.x"
   memory_size = 512
   timeout     = 300
   publish     = "true"
