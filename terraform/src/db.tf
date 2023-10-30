@@ -12,7 +12,7 @@ resource "aws_dynamodb_table" "ar_table_name_cache" {
   }
 
   attribute {
-    name = "orcs"
+    name = "pk"
     type = "S"
   }
 }
@@ -38,6 +38,11 @@ resource "aws_dynamodb_table" "ar_table" {
 
   attribute {
     name = "sk"
+    type = "S"
+  }
+
+  attribute {
+    name = "orcs"
     type = "S"
   }
 
