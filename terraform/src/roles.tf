@@ -80,6 +80,7 @@ resource "aws_iam_role_policy" "databaseReadRolePolicy" {
             "dynamodb:CreateTable",
             "dynamodb:Delete*",
             "dynamodb:Update*",
+            "dynamodb:UpdateItem",
             "dynamodb:PutItem"
         ],
         "Resource": [
