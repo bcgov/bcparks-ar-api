@@ -237,7 +237,11 @@ function formatRecords(records) {
     }
     const date = record.pk.split('::')[2];
     record['year'] = date.slice(0, 4);
-    record['month'] = date.slice(4);
+    record['month'] = convertMonth(parseInt(date.slice(4)));
+    record['resolved'] = record.resolved ? 'YES' : 'NO';
+    if (/\r\n|\n|\r/.test(record.notes)) {
+      record.notes = record.notes.replace(/(\r\n|\n|\r)/g, ' ');
+    }
   }
 }
 
@@ -284,4 +288,19 @@ async function uploadToS3(csvData) {
   }
   logger.debug("Uploaded to S3");
 
+}
+
+function convertMonth(monthNumber){
+  
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  if (monthNumber >= 1 && monthNumber <= 12) {
+    return months[monthNumber - 1];
+  } else {
+    return 'Invalid month number';
+  }
+  
 }
