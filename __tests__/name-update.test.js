@@ -23,7 +23,7 @@ async function setupDb() {
           "legacy_backcountryCabinsNetRevenue": 0,
           "legacy_backcountryCabinsTotalAttendancePeople": 0
         },
-        "orcs": "1",
+        "orcs": "0001",
         "parkName": "Strathcona Park",
         "subAreaId": "0673"
       }

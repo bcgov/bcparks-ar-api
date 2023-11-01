@@ -135,15 +135,17 @@ async function updateAllRecords(records) {
   };
   for(const record of records) {
     logger.info("----------------------");
-    logger.debug(record);
+    logger.debug(JSON.stringify(record));
     updateObj.ExpressionAttributeValues[':parkName'].S = record.displayName;
-    // Each record is a seperate protected area in the data register
-    logger.info(`Getting indexed record set for:${record.pk}`);
-    const recordsToUpdate = await getIndexedRecordSet(record.pk);
-    logger.debug(recordsToUpdate);
+    // Each record is a seperate protected area in the data register.  The difference currently with
+    // A&R is that there are 0 prefixes on numbers in 4 digits.
+    const pk = String(record.pk).padStart(4, '0');
+    logger.info(`Getting indexed record set for:${pk}`);
+    const recordsToUpdate = await getIndexedRecordSet(pk);
+    logger.debug(JSON.stringify(recordsToUpdate));
     logger.info(`Size: ${recordsToUpdate.length}`);
     if (recordsToUpdate.length > 0) {
-      process.stdout.write(`Orcs: ${record.pk} (${recordsToUpdate.length} records)`);
+      process.stdout.write(`Orcs: ${pk} (${recordsToUpdate.length} records)`);
       // Update all the records
       await updateRecords(recordsToUpdate, updateObj);
     }
