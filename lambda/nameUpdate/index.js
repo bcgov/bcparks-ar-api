@@ -3,6 +3,7 @@ const AWS = require("aws-sdk");
 const { runQuery, runScan, NAME_CACHE_TABLE_NAME, TABLE_NAME, ORCS_INDEX, dynamodb } = require("../dynamoUtil");
 const { logger } = require('../logger');
 const DATA_REGISTER_NAME_ENDPOINT = process.env.DATA_REGISTER_NAME_ENDPOINT || 'https://zloys5cfvf.execute-api.ca-central-1.amazonaws.com/api/parks/names?status=current';
+const DATA_REGISTER_NAME_API_KEY = process.env.DATA_REGISTER_NAME_API_KEY;
 
 exports.handler = async (event, context) => {
   logger.info('Name Update')
@@ -211,7 +212,8 @@ async function getDataRegisterRecords() {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'None',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'x-api-key': DATA_REGISTER_NAME_API_KEY
       }
     });
 }

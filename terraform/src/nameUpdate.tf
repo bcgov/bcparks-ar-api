@@ -15,6 +15,7 @@ resource "aws_lambda_function" "name_update" {
       TABLE_NAME = aws_dynamodb_table.ar_table.name,
       NAME_CACHE_TABLE_NAME = aws_dynamodb_table.ar_table_name_cache.name,
       DATA_REGISTER_NAME_ENDPOINT = data.aws_ssm_parameter.data_register_name_endpoint.value,
+      DATA_REGISTER_NAME_API_KEY = data.aws_ssm_parameter.data_register_name_api_key.value,
       LOG_LEVEL  = "debug"
     }
   }

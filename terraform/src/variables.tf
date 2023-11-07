@@ -23,6 +23,10 @@ data "aws_ssm_parameter" "data_register_name_endpoint" {
   name = "/parks-ar-api/data-register-name-endpoint"
 }
 
+data "aws_ssm_parameter" "data_register_name_api_key" {
+  name = "/parks-ar-api/data-register-name-api-key"
+}
+
 data "aws_ssm_parameter" "s3_bucket_assets" {
   name = "/parks-ar-api/s3-bucket-assets"
 }
