@@ -28,10 +28,11 @@ resource "aws_lambda_alias" "name_update_latest" {
   function_version = aws_lambda_function.name_update.version
 }
 
+# Every day at 08:00 UTC (00:00 PDT) = cron(0 8 * * ? *)
 resource "aws_cloudwatch_event_rule" "name_update_every_midnight" {
   name                = "name-update-every-midnight"
   description         = "Executes nightly"
-  schedule_expression = "cron(* 0 * * ? *)"
+  schedule_expression = "cron(0 8 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "name_update_every_midnight" {
