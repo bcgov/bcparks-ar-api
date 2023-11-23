@@ -11,7 +11,7 @@ provider:
 package:
   individually: true
   patterns:
-    - "!./**"
+    - "**/*"
 
 plugins:
   - serverless-offline
@@ -24,6 +24,11 @@ functions:
   ###########
   readConfig:
     handler: lambda/readConfig/index.handler
+    package:
+      include:
+        - lambda/readConfig/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: GET
@@ -34,6 +39,11 @@ functions:
   ###########
   parkGet:
     handler: lambda/park/GET/index.handler
+    package:
+      include:
+        - lambda/park/GET/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: GET
@@ -42,6 +52,11 @@ functions:
 
   parkPost:
     handler: lambda/park/POST/index.handler
+    package:
+      include:
+        - lambda/park/POST/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: POST
@@ -50,6 +65,11 @@ functions:
 
   parkPut:
     handler: lambda/park/PUT/index.handler
+    package:
+      include:
+        - lambda/park/PUT/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: PUT
@@ -61,6 +81,11 @@ functions:
   # ###########
   subAreaGet:
     handler: lambda/subArea/GET/index.handler
+    package:
+      include:
+        - lambda/subArea/GET/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: GET
@@ -69,6 +94,11 @@ functions:
 
   subAreaPost:
     handler: lambda/subArea/POST/index.handler
+    package:
+      include:
+        - lambda/subArea/POST/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: POST
@@ -77,6 +107,11 @@ functions:
 
   subAreaPut:
     handler: lambda/subArea/PUT/index.handler
+    package:
+      include:
+        - lambda/subArea/PUT/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: PUT
@@ -85,6 +120,11 @@ functions:
 
   subAreaDelete:
     handler: lambda/subArea/DELETE/index.handler
+    package:
+      include:
+        - lambda/subArea/DELETE/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: DELETE
@@ -96,6 +136,11 @@ functions:
   ###########
   activityGet:
     handler: lambda/activity/GET/index.handler
+    package:
+      include:
+        - lambda/activity/GET/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: GET
@@ -104,6 +149,11 @@ functions:
 
   activityPost:
     handler: lambda/activity/POST/index.handlePost
+    package:
+      include:
+        - lambda/activity/POST/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: POST
@@ -112,6 +162,11 @@ functions:
 
   activityPut:
     handler: lambda/activity/PUT/index.handler
+    package:
+      include:
+        - lambda/activity/PUT/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: PUT
@@ -120,6 +175,11 @@ functions:
 
   activityDelete:
     handler: lambda/activity/DELETE/index.handler
+    package:
+      include:
+        - lambda/activity/DELETE/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: DELETE
@@ -128,6 +188,11 @@ functions:
 
   activityRecordLock:
     handler: lambda/activity/POST/index.handleLock
+    package:
+      include:
+        - lambda/activity/POST/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: POST
@@ -136,6 +201,11 @@ functions:
 
   activityRecordUnlock:
     handler: lambda/activity/POST/index.handleUnlock
+    package:
+      include:
+        - lambda/activity/POST/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: POST
@@ -147,15 +217,30 @@ functions:
   ###########
   cloudwatchAlarm:
     handler: lambda/cloudwatchAlarm/index.handler
+    package:
+      include:
+        - lambda/cloudwatchAlarm/**
+        - node_modules/**
+        - lambda/*.js
 
   ###########
   # Export
   ###########
   exportInvokable:
     handler: lambda/export/invokable/index.handler
+    package:
+      include:
+        - lambda/export/invokable/**
+        - node_modules/**
+        - lambda/*.js
     timeout: 300
   exportGet:
     handler: lambda/export/GET/index.handler
+    package:
+      include:
+        - lambda/export/GET/**
+        - node_modules/**
+        - lambda/*.js
     timeout: 300
     events:
       - http:
@@ -164,9 +249,19 @@ functions:
           cors: true
   varianceExportInvokable:
     handler: lambda/export-variance/invokable/index.handler
+    package:
+      include:
+        - lambda/export-variance/invokable/**
+        - node_modules/**
+        - lambda/*.js
     timeout: 300
   varianceExportGet:
     handler: lambda/export-variance/GET/index.handler
+    package:
+      include:
+        - lambda/export-variance/GET/**
+        - node_modules/**
+        - lambda/*.js
     timeout: 300
     events:
       - http:
@@ -179,6 +274,11 @@ functions:
   ###########
   fiscalYearEndGet:
     handler: lambda/fiscalYearEnd/GET/index.handler
+    package:
+      include:
+        - lambda/fiscalYearEnd/GET/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: GET
@@ -187,6 +287,11 @@ functions:
 
   fiscalYearEndLock:
     handler: lambda/fiscalYearEnd/POST/index.lockFiscalYear
+    package:
+      include:
+        - lambda/fiscalYearEnd/POST/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: POST
@@ -195,6 +300,11 @@ functions:
 
   fiscalYearEndUnlock:
     handler: lambda/fiscalYearEnd/POST/index.unlockFiscalYear
+    package:
+      include:
+        - lambda/fiscalYearEnd/POST/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: POST
@@ -206,6 +316,11 @@ functions:
   ###########
   varianceGet:
     handler: lambda/variance/GET/index.handler
+    package:
+      include:
+        - lambda/variance/GET/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: GET
@@ -214,6 +329,11 @@ functions:
 
   variancePost:
     handler: lambda/variance/POST/index.handlePost
+    package:
+      include:
+        - lambda/variance/POST/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: POST
@@ -222,6 +342,11 @@ functions:
 
   variancePut:
     handler: lambda/variance/PUT/index.handler
+    package:
+      include:
+        - lambda/variance/PUT/**
+        - node_modules/**
+        - lambda/*.js
     events:
       - http:
           method: PUT
