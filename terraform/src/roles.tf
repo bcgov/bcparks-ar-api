@@ -80,9 +80,13 @@ resource "aws_iam_role_policy" "databaseReadRolePolicy" {
             "dynamodb:CreateTable",
             "dynamodb:Delete*",
             "dynamodb:Update*",
+            "dynamodb:UpdateItem",
             "dynamodb:PutItem"
         ],
-        "Resource": "${aws_dynamodb_table.ar_table.arn}"
+        "Resource": [
+          "${aws_dynamodb_table.ar_table_name_cache.arn}*",
+          "${aws_dynamodb_table.ar_table.arn}*"
+        ]
       },
       {
         "Effect": "Allow",

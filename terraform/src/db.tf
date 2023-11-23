@@ -1,3 +1,22 @@
+resource "aws_dynamodb_table" "ar_table_name_cache" {
+  name           = "${data.aws_ssm_parameter.db_name_cache.value}-${random_string.postfix.result}"
+  hash_key       = "pk"
+  billing_mode   = "PAY_PER_REQUEST"
+
+  point_in_time_recovery {
+    enabled = false
+  }
+
+  tags = {
+    Name = "database-${random_string.postfix.result}"
+  }
+
+  attribute {
+    name = "pk"
+    type = "S"
+  }
+}
+
 resource "aws_dynamodb_table" "ar_table" {
   name           = "${data.aws_ssm_parameter.db_name.value}-${random_string.postfix.result}"
   hash_key       = "pk"
@@ -20,6 +39,17 @@ resource "aws_dynamodb_table" "ar_table" {
   attribute {
     name = "sk"
     type = "S"
+  }
+
+  attribute {
+    name = "orcs"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name               = "orcs-index"
+    hash_key           = "orcs"
+    projection_type    = "ALL"
   }
 }
 

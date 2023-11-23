@@ -224,6 +224,12 @@ functions:
         - lambda/*.js
 
   ###########
+  # Cloudwatch Alarm
+  ###########
+  nameUpdate:
+    handler: lambda/nameUpdate/index.handler
+
+  ###########
   # Export
   ###########
   exportInvokable:
@@ -370,4 +376,26 @@ resources:
             KeyType: HASH
           - AttributeName: sk
             KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        GlobalSecondaryIndexes:
+          - IndexName: orcs-index
+            KeySchema:
+              - AttributeName: orcs
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+    nameCacheTable:
+      Type: "AWS::DynamoDB::Table"
+      DeletionPolicy: Retain
+      Properties:
+        TableName: nameCache
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
         BillingMode: PAY_PER_REQUEST
