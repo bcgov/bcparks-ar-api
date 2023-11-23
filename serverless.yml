@@ -10,7 +10,7 @@ provider:
 
 package:
   individually: true
-  patterns:
+  exclude:
     - "**/*"
 
 plugins:
