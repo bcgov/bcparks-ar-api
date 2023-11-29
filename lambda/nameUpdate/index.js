@@ -2,8 +2,9 @@ const axios = require('axios');
 const AWS = require("aws-sdk");
 const { runQuery, runScan, NAME_CACHE_TABLE_NAME, TABLE_NAME, ORCS_INDEX, dynamodb } = require("../dynamoUtil");
 const { logger } = require('../logger');
-const DATA_REGISTER_NAME_ENDPOINT = process.env.DATA_REGISTER_NAME_ENDPOINT || 'https://zloys5cfvf.execute-api.ca-central-1.amazonaws.com/api/parks/names?status=current';
+const DATA_REGISTER_NAME_ENDPOINT = process.env.DATA_REGISTER_NAME_ENDPOINT || 'https://zloys5cfvf.execute-api.ca-central-1.amazonaws.com/api/parks/names?status=established';
 const DATA_REGISTER_NAME_API_KEY = process.env.DATA_REGISTER_NAME_API_KEY;
+const ESTABLISHED_STATE = 'established';
 
 exports.handler = async (event, context) => {
   logger.info('Name Update')
@@ -207,7 +208,7 @@ async function getDataRegisterRecords() {
   return await axios.get(encodeURI(DATA_REGISTER_NAME_ENDPOINT),
     {
       params: {
-        status: 'current'
+        status: ESTABLISHED_STATE
       },
       headers: {
         'Content-Type': 'application/json',
