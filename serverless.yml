@@ -228,6 +228,11 @@ functions:
   ###########
   nameUpdate:
     handler: lambda/nameUpdate/index.handler
+    package:
+      include:
+        - lambda/nameUpdate/**
+        - node_modules/**
+        - lambda/*.js
 
   ###########
   # Export
