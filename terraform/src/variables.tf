@@ -39,12 +39,8 @@ data "aws_ssm_parameter" "aws_account_list" {
   name = "/parks-ar-api/aws_account_list"
 }
 
-data "aws_ssm_parameter" "rocketchat_url" {
-  name = "/parks-ar-api/rocketchat_url"
-}
-
-data "aws_ssm_parameter" "rocketchat_bearer_token" {
-  name = "/parks-ar-api/rocketchat_bearer_token"
+data "aws_ssm_parameter" "webhook_url" {
+  name = "/parks-ar-api/webhook_url"
 }
 
 data "aws_ssm_parameter" "origin_id_assets" {
