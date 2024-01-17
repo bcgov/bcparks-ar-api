@@ -37,7 +37,7 @@ function inversePercentage(value, percentage) {
 
 function formatMoney(amt) {
   if (isValidNumber(amt)) {
-    return amt;
+    return formatDecimal(amt, 2);
   }
   return "";
 }
