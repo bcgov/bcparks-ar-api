@@ -86,7 +86,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n\t\"activities\": [\"Day Use\"],\r\n\t\"orcs\": \"0001\",\r\n\t\"managementArea\": \"Strathcona\",\r\n\t\"section\": \"South Central Coast/North Island\",\r\n\t\"region\": \"West Coast\",\r\n\t\"bundle\": \"Test Bundle\",\r\n\t\"subAreaName\": \"Test Sub Area\"\r\n}"
+							"raw": "{\r\n\t\"activities\": [\"Day Use\"],\r\n\t\"orcs\": \"0001\",\r\n\t\"managementArea\": \"Strathcona\",\r\n\t\"section\": \"South Central Coast/North Island\",\r\n\t\"region\": \"West Coast\",\r\n\t\"bundle\": \"N/A\",\r\n\t\"subAreaName\": \"Test Sub Area\"\r\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}subArea",
