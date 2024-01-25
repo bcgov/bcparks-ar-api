@@ -16,7 +16,7 @@ This document is intended to describe how the data model for various items in th
   ], // string list of roles for the park
   subAreas: [
     {
-      name: <subArea Name>,
+      name: <subAreaName>,
       id: <subAreaId>
     }
   ], // map list of subareas within the park
