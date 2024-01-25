@@ -1,0 +1,1377 @@
+{
+  "ModelName": "A&R Data Model",
+  "ModelMetadata": {
+    "Author": "BC Parks Team Osprey",
+    "DateCreated": "Jan 25, 2024, 10:31 AM",
+    "DateLastModified": "Jan 25, 2024, 12:08 PM",
+    "Description": "",
+    "AWSService": "Amazon DynamoDB",
+    "Version": "3.0"
+  },
+  "DataModel": [
+    {
+      "TableName": "parksar",
+      "KeyAttributes": {
+        "PartitionKey": {
+          "AttributeName": "pk",
+          "AttributeType": "S"
+        },
+        "SortKey": {
+          "AttributeName": "sk",
+          "AttributeType": "S"
+        }
+      },
+      "NonKeyAttributes": [
+        {
+          "AttributeName": "isLegacy",
+          "AttributeType": "BOOL"
+        },
+        {
+          "AttributeName": "orcs",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "parkName",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "roles",
+          "AttributeType": "L"
+        },
+        {
+          "AttributeName": "subAreas",
+          "AttributeType": "L"
+        },
+        {
+          "AttributeName": "activities",
+          "AttributeType": "SS"
+        },
+        {
+          "AttributeName": "bundle",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "managementArea",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "region",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "section",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "subAreaName",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "attendanceBusModifier",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "attendanceModifier",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "attendanceVehiclesModifier",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "subAreaId",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "activity",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "config",
+          "AttributeType": "M"
+        },
+        {
+          "AttributeName": "date",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "lastUpdated",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "notes",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "peopleAdult",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "peopleChild",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "peopleFamily",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "revenueFamily",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "grossCampingRevenue",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "isLocked",
+          "AttributeType": "BOOL"
+        },
+        {
+          "AttributeName": "people",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "standardRateGroupsRevenueGross",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "standardRateGroupsTotalPeopleAdults",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "standardRateGroupsTotalPeopleKids",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "standardRateGroupsTotalPeopleStandard",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "standardRateGroupsTotalPeopleYouth",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "youthRateGroupsAttendanceGroupNights",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "youthRateGroupsAttendancePeople",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "youthRateGroupsRevenueGross",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "otherDayUsePeopleHotSprings",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "otherDayUseRevenueHotSprings",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "peopleAndVehiclesBus",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "peopleAndVehiclesTrail",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "peopleAndVehiclesVehicle",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "picnicRevenueGross",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "picnicRevenueShelter",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "picnicShelterPeople",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "campingPartyNightsAttendanceLongStay",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "campingPartyNightsAttendanceSenior",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "campingPartyNightsAttendanceSocial",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "campingPartyNightsAttendanceStandard",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "campingPartyNightsRevenueGross",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "otherRevenueElectrical",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "otherRevenueGrossSani",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "otherRevenueShower",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "secondCarsAttendanceSenior",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "secondCarsAttendanceSocial",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "secondCarsAttendanceStandard",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "secondCarsRevenueGross",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "revenueGrossCamping",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "totalAttendanceParties",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "boatAttendanceMiscellaneous",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "boatAttendanceNightsOnBouys",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "boatAttendanceNightsOnDock",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "boatRevenueGross",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "fields",
+          "AttributeType": "M"
+        },
+        {
+          "AttributeName": "resolved",
+          "AttributeType": "BOOL"
+        }
+      ],
+      "GlobalSecondaryIndexes": [
+        {
+          "IndexName": "orcs-index",
+          "KeyAttributes": {
+            "PartitionKey": {
+              "AttributeName": "orcs",
+              "AttributeType": "S"
+            }
+          },
+          "Projection": {
+            "ProjectionType": "ALL"
+          }
+        }
+      ],
+      "TableData": [
+        {
+          "pk": {
+            "S": "park"
+          },
+          "sk": {
+            "S": "TEST"
+          },
+          "isLegacy": {
+            "BOOL": false
+          },
+          "orcs": {
+            "S": "TEST"
+          },
+          "parkName": {
+            "S": "TEST PARK"
+          },
+          "roles": {
+            "L": [
+              {
+                "S": "sysadmin"
+              },
+              {
+                "S": "TEST"
+              }
+            ]
+          },
+          "subAreas": {
+            "L": [
+              {
+                "M": {
+                  "name": {
+                    "S": "TEST SUBAREA"
+                  },
+                  "id": {
+                    "S": "TEST"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "pk": {
+            "S": "park::TEST"
+          },
+          "sk": {
+            "S": "TEST"
+          },
+          "isLegacy": {
+            "BOOL": false
+          },
+          "orcs": {
+            "S": "TEST"
+          },
+          "parkName": {
+            "S": "TEST PARK"
+          },
+          "roles": {
+            "L": [
+              {
+                "S": "sysadmin"
+              },
+              {
+                "S": "TEST:TEST"
+              }
+            ]
+          },
+          "activities": {
+            "SS": [
+              "Backcountry Cabins",
+              "Backcountry Camping",
+              "Boating",
+              "Day Use",
+              "Frontcountry Cabins",
+              "Frontcountry Camping",
+              "Group Camping"
+            ]
+          },
+          "bundle": {
+            "S": "TEST"
+          },
+          "managementArea": {
+            "S": "TEST"
+          },
+          "region": {
+            "S": "TEST"
+          },
+          "subAreaName": {
+            "S": "TEST SUBAREA"
+          }
+        },
+        {
+          "pk": {
+            "S": "config::TEST"
+          },
+          "sk": {
+            "S": "Backcountry Cabins"
+          },
+          "orcs": {
+            "S": "TEST"
+          },
+          "parkName": {
+            "S": "TEST PARK"
+          },
+          "subAreaName": {
+            "S": "TEST SUBAREA"
+          },
+          "attendanceModifier": {
+            "N": "3.2"
+          },
+          "subAreaId": {
+            "S": "TEST"
+          }
+        },
+        {
+          "pk": {
+            "S": " config::TEST"
+          },
+          "sk": {
+            "S": "Backcountry Camping"
+          },
+          "orcs": {
+            "S": "TEST"
+          },
+          "parkName": {
+            "S": " TEST PARK"
+          },
+          "subAreaName": {
+            "S": "TEST SUBAREA"
+          },
+          "subAreaId": {
+            "S": "TEST"
+          }
+        },
+        {
+          "pk": {
+            "S": " config::TEST"
+          },
+          "sk": {
+            "S": "Boating"
+          },
+          "orcs": {
+            "S": "TEST"
+          },
+          "parkName": {
+            "S": " TEST PARK"
+          },
+          "subAreaName": {
+            "S": "TEST SUBAREA"
+          },
+          "attendanceModifier": {
+            "N": "3.2"
+          },
+          "subAreaId": {
+            "S": "TEST"
+          }
+        },
+        {
+          "pk": {
+            "S": " config::TEST"
+          },
+          "sk": {
+            "S": "Day Use"
+          },
+          "orcs": {
+            "S": "TEST"
+          },
+          "parkName": {
+            "S": " TEST PARK"
+          },
+          "subAreaName": {
+            "S": "TEST SUBAREA"
+          },
+          "attendanceBusModifier": {
+            "N": "40"
+          },
+          "attendanceVehiclesModifier": {
+            "N": "3.5"
+          },
+          "subAreaId": {
+            "S": "TEST"
+          }
+        },
+        {
+          "pk": {
+            "S": " config::TEST"
+          },
+          "sk": {
+            "S": "Frontcountry Cabins"
+          },
+          "orcs": {
+            "S": "TEST"
+          },
+          "parkName": {
+            "S": " TEST PARK"
+          },
+          "subAreaName": {
+            "S": "TEST SUBAREA"
+          },
+          "attendanceModifier": {
+            "N": "3.2"
+          },
+          "subAreaId": {
+            "S": "TEST"
+          }
+        },
+        {
+          "pk": {
+            "S": " config::TEST"
+          },
+          "sk": {
+            "S": "Frontcountry Camping"
+          },
+          "orcs": {
+            "S": "TEST"
+          },
+          "parkName": {
+            "S": " TEST PARK"
+          },
+          "subAreaName": {
+            "S": "TEST SUBAREA"
+          },
+          "attendanceModifier": {
+            "N": "3.2"
+          },
+          "subAreaId": {
+            "S": "TEST"
+          }
+        },
+        {
+          "pk": {
+            "S": " config::TEST"
+          },
+          "sk": {
+            "S": "Group Camping"
+          },
+          "orcs": {
+            "S": "TEST"
+          },
+          "parkName": {
+            "S": " TEST PARK"
+          },
+          "subAreaName": {
+            "S": "TEST SUBAREA"
+          },
+          "subAreaId": {
+            "S": "TEST"
+          }
+        },
+        {
+          "pk": {
+            "S": "TEST::Backcountry Cabins"
+          },
+          "sk": {
+            "S": "202202"
+          },
+          "orcs": {
+            "S": "TEST"
+          },
+          "parkName": {
+            "S": "TEST PARK"
+          },
+          "subAreaName": {
+            "S": "TEST SUBAREA"
+          },
+          "subAreaId": {
+            "S": "TEST"
+          },
+          "activity": {
+            "S": "Backcountry Cabins"
+          },
+          "config": {
+            "M": {
+              "subAreaId": {
+                "S": "TEST"
+              },
+              "parkName": {
+                "S": "TEST PARK"
+              },
+              "orcs": {
+                "S": "TEST"
+              },
+              "sk": {
+                "S": "Backcountry Cabins"
+              },
+              "attendanceModifier": {
+                "N": "3.2"
+              },
+              "pk": {
+                "S": "config::TEST"
+              },
+              "subAreaName": {
+                "S": "TEST SUBAREA"
+              }
+            }
+          },
+          "date": {
+            "S": "202202"
+          },
+          "lastUpdated": {
+            "S": "2022-06-23T17:25:16.793Z"
+          },
+          "notes": {
+            "S": "notes "
+          },
+          "peopleAdult": {
+            "N": "1"
+          },
+          "peopleChild": {
+            "N": "1"
+          },
+          "peopleFamily": {
+            "N": "1"
+          },
+          "revenueFamily": {
+            "N": "10"
+          },
+          "isLocked": {
+            "BOOL": false
+          }
+        },
+        {
+          "pk": {
+            "S": "TEST::Backcountry Camping"
+          },
+          "sk": {
+            "S": "202202"
+          },
+          "orcs": {
+            "S": "TEST"
+          },
+          "parkName": {
+            "S": "TEST PARK"
+          },
+          "subAreaName": {
+            "S": "TEST SUBAREA"
+          },
+          "subAreaId": {
+            "S": "TEST"
+          },
+          "activity": {
+            "S": "Backcountry Camping"
+          },
+          "config": {
+            "M": {
+              "sk": {
+                "S": "Backcountry Camping"
+              },
+              "subAreaId": {
+                "S": "TEST"
+              },
+              "pk": {
+                "S": "config::TEST"
+              },
+              "parkName": {
+                "S": "TEST PARK"
+              },
+              "orcs": {
+                "S": "TEST"
+              },
+              "subAreaName": {
+                "S": "TEST SUBAREA"
+              }
+            }
+          },
+          "date": {
+            "S": "202202"
+          },
+          "lastUpdated": {
+            "S": "2022-06-23T17:22:52.397Z"
+          },
+          "notes": {
+            "S": "notes"
+          },
+          "grossCampingRevenue": {
+            "N": "1"
+          },
+          "isLocked": {
+            "BOOL": false
+          },
+          "people": {
+            "N": "1"
+          }
+        },
+        {
+          "pk": {
+            "S": "TEST::Boating"
+          },
+          "sk": {
+            "S": "202202"
+          },
+          "orcs": {
+            "S": "TEST"
+          },
+          "parkName": {
+            "S": "TEST PARK"
+          },
+          "subAreaName": {
+            "S": "TEST SUBAREA"
+          },
+          "subAreaId": {
+            "S": "TEST"
+          },
+          "activity": {
+            "S": "Boating"
+          },
+          "config": {
+            "M": {
+              "subAreaId": {
+                "S": "TEST"
+              },
+              "parkName": {
+                "S": "TEST PARK"
+              },
+              "orcs": {
+                "S": "TEST"
+              },
+              "sk": {
+                "S": "Boating"
+              },
+              "attendanceModifier": {
+                "N": "3.2"
+              },
+              "pk": {
+                "S": "config::TEST"
+              },
+              "subAreaName": {
+                "S": "TEST SUBAREA"
+              }
+            }
+          },
+          "date": {
+            "S": "202202"
+          },
+          "lastUpdated": {
+            "S": "2022-06-23T17:34:17.875Z"
+          },
+          "notes": {
+            "S": "notes"
+          },
+          "isLocked": {
+            "BOOL": false
+          },
+          "boatAttendanceMiscellaneous": {
+            "N": "1"
+          },
+          "boatAttendanceNightsOnBouys": {
+            "N": "1"
+          },
+          "boatAttendanceNightsOnDock": {
+            "N": "1"
+          },
+          "boatRevenueGross": {
+            "N": "10"
+          }
+        },
+        {
+          "pk": {
+            "S": "TEST::Day Use"
+          },
+          "sk": {
+            "S": "202202"
+          },
+          "orcs": {
+            "S": "TEST"
+          },
+          "parkName": {
+            "S": " TEST PARK"
+          },
+          "subAreaName": {
+            "S": "TEST SUBAREA"
+          },
+          "subAreaId": {
+            "S": "TEST"
+          },
+          "activity": {
+            "S": "Day Use"
+          },
+          "config": {
+            "M": {
+              "subAreaId": {
+                "S": "TEST"
+              },
+              "parkName": {
+                "S": "TEST PARK"
+              },
+              "orcs": {
+                "S": "TEST"
+              },
+              "sk": {
+                "S": "Day Use"
+              },
+              "attendanceBusModifier": {
+                "N": "40"
+              },
+              "pk": {
+                "S": "config::TEST"
+              },
+              "attendanceVehiclesModifier": {
+                "N": "3.5"
+              },
+              "subAreaName": {
+                "S": "TEST SUBAREA"
+              }
+            }
+          },
+          "date": {
+            "S": "202202"
+          },
+          "lastUpdated": {
+            "S": "2022-06-23T17:15:30.611Z"
+          },
+          "notes": {
+            "S": "notes"
+          },
+          "isLocked": {
+            "BOOL": false
+          },
+          "otherDayUsePeopleHotSprings": {
+            "N": "1"
+          },
+          "otherDayUseRevenueHotSprings": {
+            "N": "1"
+          },
+          "peopleAndVehiclesBus": {
+            "N": "1"
+          },
+          "peopleAndVehiclesTrail": {
+            "N": "1"
+          },
+          "peopleAndVehiclesVehicle": {
+            "N": "1"
+          },
+          "picnicRevenueGross": {
+            "N": "10"
+          },
+          "picnicRevenueShelter": {
+            "N": "10"
+          },
+          "picnicShelterPeople": {
+            "N": "1"
+          }
+        },
+        {
+          "pk": {
+            "S": "TEST::Group Camping"
+          },
+          "sk": {
+            "S": "202202"
+          },
+          "orcs": {
+            "S": "TEST"
+          },
+          "parkName": {
+            "S": " TEST PARK"
+          },
+          "subAreaName": {
+            "S": "TEST SUBAREA"
+          },
+          "subAreaId": {
+            "S": "TEST"
+          },
+          "activity": {
+            "S": "Group Camping"
+          },
+          "config": {
+            "M": {
+              "sk": {
+                "S": "Group Camping"
+              },
+              "subAreaId": {
+                "S": "TEST"
+              },
+              "pk": {
+                "S": "config::TEST"
+              },
+              "parkName": {
+                "S": "TEST PARK"
+              },
+              "orcs": {
+                "S": "TEST"
+              },
+              "subAreaName": {
+                "S": "TEST SUBAREA"
+              }
+            }
+          },
+          "date": {
+            "S": "202202"
+          },
+          "lastUpdated": {
+            "S": "2022-06-22T23:44:38.278Z"
+          },
+          "notes": {
+            "S": "notes"
+          },
+          "isLocked": {
+            "BOOL": false
+          },
+          "standardRateGroupsRevenueGross": {
+            "N": "10"
+          },
+          "standardRateGroupsTotalPeopleAdults": {
+            "N": "1"
+          },
+          "standardRateGroupsTotalPeopleKids": {
+            "N": "1"
+          },
+          "standardRateGroupsTotalPeopleStandard": {
+            "N": "1"
+          },
+          "standardRateGroupsTotalPeopleYouth": {
+            "N": "1"
+          },
+          "youthRateGroupsAttendanceGroupNights": {
+            "N": "1"
+          },
+          "youthRateGroupsAttendancePeople": {
+            "N": "1"
+          },
+          "youthRateGroupsRevenueGross": {
+            "N": "10"
+          }
+        },
+        {
+          "pk": {
+            "S": "TEST::Frontcountry Cabins"
+          },
+          "sk": {
+            "S": "202202"
+          },
+          "orcs": {
+            "S": "TEST"
+          },
+          "parkName": {
+            "S": " TEST PARK"
+          },
+          "subAreaName": {
+            "S": "TEST SUBAREA"
+          },
+          "subAreaId": {
+            "S": "TEST"
+          },
+          "activity": {
+            "S": "Frontcountry Cabins"
+          },
+          "config": {
+            "M": {
+              "subAreaId": {
+                "S": "TEST"
+              },
+              "parkName": {
+                "S": "TEST PARK"
+              },
+              "orcs": {
+                "S": "TEST"
+              },
+              "sk": {
+                "S": "Frontcountry Cabins"
+              },
+              "attendanceModifier": {
+                "N": "3.2"
+              },
+              "pk": {
+                "S": "config::TEST"
+              },
+              "subAreaName": {
+                "S": "TEST SUBAREA"
+              }
+            }
+          },
+          "date": {
+            "S": "202202"
+          },
+          "lastUpdated": {
+            "S": "2022-06-22T23:39:12.975Z"
+          },
+          "notes": {
+            "S": "notes"
+          },
+          "isLocked": {
+            "BOOL": false
+          },
+          "revenueGrossCamping": {
+            "N": "10"
+          },
+          "totalAttendanceParties": {
+            "N": "1"
+          }
+        },
+        {
+          "pk": {
+            "S": "TEST::Frontcountry Camping"
+          },
+          "sk": {
+            "S": "202202"
+          },
+          "orcs": {
+            "S": "TEST"
+          },
+          "parkName": {
+            "S": " TEST PARK"
+          },
+          "subAreaName": {
+            "S": "TEST SUBAREA"
+          },
+          "subAreaId": {
+            "S": "TEST"
+          },
+          "activity": {
+            "S": "Frontcountry Camping"
+          },
+          "config": {
+            "M": {
+              "subAreaId": {
+                "S": "TEST"
+              },
+              "parkName": {
+                "S": "TEST PARK"
+              },
+              "orcs": {
+                "S": "TEST"
+              },
+              "sk": {
+                "S": "Frontcountry Camping"
+              },
+              "attendanceModifier": {
+                "N": "3.2"
+              },
+              "pk": {
+                "S": "config::TEST"
+              },
+              "subAreaName": {
+                "S": "TEST SUBAREA"
+              }
+            }
+          },
+          "date": {
+            "S": "202202"
+          },
+          "lastUpdated": {
+            "S": "2022-06-22T23:33:00.436Z"
+          },
+          "notes": {
+            "S": "notes"
+          },
+          "isLocked": {
+            "BOOL": false
+          },
+          "campingPartyNightsAttendanceLongStay": {
+            "N": "1"
+          },
+          "campingPartyNightsAttendanceSenior": {
+            "N": "1"
+          },
+          "campingPartyNightsAttendanceSocial": {
+            "N": "1"
+          },
+          "campingPartyNightsAttendanceStandard": {
+            "N": "1"
+          },
+          "campingPartyNightsRevenueGross": {
+            "N": "10"
+          },
+          "otherRevenueElectrical": {
+            "N": "10"
+          },
+          "otherRevenueGrossSani": {
+            "N": "10"
+          },
+          "otherRevenueShower": {
+            "N": "10"
+          },
+          "secondCarsAttendanceSenior": {
+            "N": "1"
+          },
+          "secondCarsAttendanceSocial": {
+            "N": "1"
+          },
+          "secondCarsAttendanceStandard": {
+            "N": "1"
+          },
+          "secondCarsRevenueGross": {
+            "N": "10"
+          }
+        },
+        {
+          "pk": {
+            "S": "fiscalYearEnd"
+          },
+          "sk": {
+            "S": "2022"
+          },
+          "isLocked": {
+            "BOOL": false
+          }
+        },
+        {
+          "pk": {
+            "S": "variance::TEST::202304"
+          },
+          "sk": {
+            "S": "TEST::Backcountry Camping"
+          },
+          "orcs": {
+            "S": "TEST"
+          },
+          "parkName": {
+            "S": " TEST PARK"
+          },
+          "roles": {
+            "L": [
+              {
+                "S": "sysadmin"
+              },
+              {
+                "S": "TEST:TEST"
+              }
+            ]
+          },
+          "bundle": {
+            "S": "TEST"
+          },
+          "subAreaName": {
+            "S": "TEST SUBAREA"
+          },
+          "subAreaId": {
+            "S": "TEST"
+          },
+          "notes": {
+            "S": "notes"
+          },
+          "fields": {
+            "M": [
+              {
+                "M": {
+                  "key": {
+                    "S": "people"
+                  },
+                  "percentageChange": {
+                    "N": "-0.21"
+                  }
+                }
+              },
+              {
+                "M": {
+                  "key": {
+                    "S": "grossCampingRevenue"
+                  },
+                  "percentageChange": {
+                    "N": "-0.21"
+                  }
+                }
+              }
+            ]
+          },
+          "resolved": {
+            "BOOL": false
+          }
+        }
+      ],
+      "DataAccess": {
+        "MySql": {}
+      },
+      "SampleDataFormats": {
+        "orcs": [
+          "dataTypes",
+          "String"
+        ],
+        "parkName": [
+          "dataTypes",
+          "String"
+        ],
+        "activities": [
+          "dataTypes",
+          "String"
+        ],
+        "bundle": [
+          "dataTypes",
+          "String"
+        ],
+        "managementArea": [
+          "dataTypes",
+          "String"
+        ],
+        "region": [
+          "dataTypes",
+          "String"
+        ],
+        "section": [
+          "dataTypes",
+          "String"
+        ],
+        "subAreaName": [
+          "dataTypes",
+          "String"
+        ],
+        "attendanceBusModifier": [
+          "Float"
+        ],
+        "attendanceModifier": [
+          "Float"
+        ],
+        "attendanceVehiclesModifier": [
+          "Float"
+        ],
+        "subAreaId": [
+          "dataTypes",
+          "String"
+        ],
+        "activity": [
+          "dataTypes",
+          "String"
+        ],
+        "date": [
+          "date",
+          "Year"
+        ],
+        "lastUpdated": [
+          "date",
+          "ISO 8601 date and time"
+        ],
+        "notes": [
+          "dataTypes",
+          "String"
+        ],
+        "peopleAdult": [
+          "Int"
+        ],
+        "peopleChild": [
+          "Int"
+        ],
+        "peopleFamily": [
+          "Int"
+        ],
+        "revenueFamily": [
+          "Float"
+        ],
+        "grossCampingRevenue": [
+          "Float"
+        ],
+        "people": [
+          "Int"
+        ],
+        "standardRateGroupsRevenueGross": [
+          "Float"
+        ],
+        "standardRateGroupsTotalPeopleAdults": [
+          "Int"
+        ],
+        "standardRateGroupsTotalPeopleKids": [
+          "Int"
+        ],
+        "standardRateGroupsTotalPeopleStandard": [
+          "Float"
+        ],
+        "standardRateGroupsTotalPeopleYouth": [
+          "Int"
+        ],
+        "youthRateGroupsAttendanceGroupNights": [
+          "Int"
+        ],
+        "youthRateGroupsAttendancePeople": [
+          "Float"
+        ],
+        "youthRateGroupsRevenueGross": [
+          "Float"
+        ],
+        "otherDayUsePeopleHotSprings": [
+          "Float"
+        ],
+        "otherDayUseRevenueHotSprings": [
+          "Float"
+        ],
+        "peopleAndVehiclesBus": [
+          "Float"
+        ],
+        "peopleAndVehiclesTrail": [
+          "Float"
+        ],
+        "peopleAndVehiclesVehicle": [
+          "Float"
+        ],
+        "picnicRevenueGross": [
+          "Float"
+        ],
+        "picnicRevenueShelter": [
+          "Float"
+        ],
+        "picnicShelterPeople": [
+          "Float"
+        ],
+        "campingPartyNightsAttendanceLongStay": [
+          "Float"
+        ],
+        "campingPartyNightsAttendanceSenior": [
+          "Float"
+        ],
+        "campingPartyNightsAttendanceSocial": [
+          "Float"
+        ],
+        "campingPartyNightsAttendanceStandard": [
+          "Float"
+        ],
+        "campingPartyNightsRevenueGross": [
+          "Float"
+        ],
+        "otherRevenueElectrical": [
+          "Float"
+        ],
+        "otherRevenueGrossSani": [
+          "Float"
+        ],
+        "otherRevenueShower": [
+          "Float"
+        ],
+        "secondCarsAttendanceSenior": [
+          "Float"
+        ],
+        "secondCarsAttendanceSocial": [
+          "Float"
+        ],
+        "secondCarsAttendanceStandard": [
+          "Float"
+        ],
+        "secondCarsRevenueGross": [
+          "Float"
+        ],
+        "revenueGrossCamping": [
+          "Float"
+        ],
+        "totalAttendanceParties": [
+          "Float"
+        ],
+        "boatAttendanceMiscellaneous": [
+          "Float"
+        ],
+        "boatAttendanceNightsOnBouys": [
+          "Float"
+        ],
+        "boatAttendanceNightsOnDock": [
+          "Float"
+        ],
+        "boatRevenueGross": [
+          "Float"
+        ],
+        "pk": [
+          "dataTypes",
+          "String"
+        ],
+        "sk": [
+          "dataTypes",
+          "String"
+        ]
+      },
+      "BillingMode": "PROVISIONED",
+      "ProvisionedCapacitySettings": {
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 5,
+          "WriteCapacityUnits": 5
+        },
+        "AutoScalingRead": {
+          "ScalableTargetRequest": {
+            "MinCapacity": 1,
+            "MaxCapacity": 10,
+            "ServiceRole": "AWSServiceRoleForApplicationAutoScaling_DynamoDBTable"
+          },
+          "ScalingPolicyConfiguration": {
+            "TargetValue": 70
+          }
+        },
+        "AutoScalingWrite": {
+          "ScalableTargetRequest": {
+            "MinCapacity": 1,
+            "MaxCapacity": 10,
+            "ServiceRole": "AWSServiceRoleForApplicationAutoScaling_DynamoDBTable"
+          },
+          "ScalingPolicyConfiguration": {
+            "TargetValue": 70
+          }
+        }
+      }
+    }
+  ]
+}
