@@ -1,37 +1,29 @@
-const {
-  dynamodb,
-  incrementAndGetNextSubAreaID,
-  getOne,
-} = require("../../dynamoUtil");
-const { createKeycloakRole } = require("../../keycloakUtil");
-const { createPutFormulaConfigObj } = require("../../formulaUtils");
-const { sendResponse } = require("../../responseUtil");
-const { decodeJWT, resolvePermissions } = require("../../permissionUtil");
-const { logger } = require("../../logger");
-const {
-  getValidSubareaObj,
-  createUpdateParkWithNewSubAreaObj,
-  createPutSubAreaObj,
-} = require("../../subAreaUtils");
+const { dynamodb, incrementAndGetNextSubAreaID, getOne } = require('../../dynamoUtil');
+const { createKeycloakRole } = require('../../keycloakUtil');
+const { createPutFormulaConfigObj } = require('../../formulaUtils');
+const { sendResponse } = require('../../responseUtil');
+const { decodeJWT, resolvePermissions } = require('../../permissionUtil');
+const { logger } = require('../../logger');
+const { getValidSubareaObj, createUpdateParkWithNewSubAreaObj, createPutSubAreaObj } = require('../../subAreaUtils');
 
 const SSO_ORIGIN = process.env.SSO_ORIGIN;
 const SSO_CLIENT_ID = process.env.SSO_CLIENT_ID;
 
 exports.handler = async (event, context) => {
-  logger.debug("Subarea POST:", event);
+  logger.debug('Subarea POST:', event);
   try {
     const token = await decodeJWT(event);
     const permissionObject = resolvePermissions(token);
 
     if (!permissionObject.isAuthenticated) {
-      logger.info("**NOT AUTHENTICATED, PUBLIC**");
-      return sendResponse(403, { msg: "Unauthenticated." }, context);
+      logger.info('**NOT AUTHENTICATED, PUBLIC**');
+      return sendResponse(403, { msg: 'Unauthenticated.' }, context);
     }
 
     // Admins only
     if (!permissionObject.isAdmin) {
-      logger.info("Not authorized.");
-      return sendResponse(403, { msg: "Unauthorized." }, context);
+      logger.info('Not authorized.');
+      return sendResponse(403, { msg: 'Unauthorized.' }, context);
     }
 
     const body = JSON.parse(event.body);
@@ -46,21 +38,21 @@ exports.handler = async (event, context) => {
       !body.bundle ||
       !body.subAreaName
     ) {
-      return sendResponse(400, { msg: "Invalid body" }, context);
+      return sendResponse(400, { msg: 'Invalid body' }, context);
     }
 
     // Get park
-    const park = await getOne("park", body.orcs);
+    const park = await getOne('park', body.orcs);
     if (!park) {
-      logger.debug("Unable to find park", body.orcs);
-      return sendResponse(400, { msg: "Park not found" }, context);
+      logger.debug('Unable to find park', body.orcs);
+      return sendResponse(400, { msg: 'Park not found' }, context);
     }
-
-    // Create post obj
-    let subAreaObj = getValidSubareaObj(body, park.parkName);
 
     // Generate subArea id
     const subAreaId = await incrementAndGetNextSubAreaID();
+
+    // Create post obj
+    let subAreaObj = getValidSubareaObj(body, park.parkName, subAreaId);
 
     // Create transaction
     let transactionObj = { TransactItems: [] };
@@ -94,21 +86,21 @@ exports.handler = async (event, context) => {
     }
 
     const res = await dynamodb.transactWriteItems(transactionObj).promise();
-    logger.debug("res:", res);
+    logger.debug('res:', res);
 
     // Add Keycloak role
     const kcRes = await createKeycloakRole(
       SSO_ORIGIN,
       SSO_CLIENT_ID,
-      event.headers.Authorization.replace("Bearer ", ""),
+      event.headers.Authorization.replace('Bearer ', ''),
       `${subAreaObj.orcs}:${subAreaId}`,
       `${park.parkName}:${subAreaObj.subAreaName}`
     );
-    logger.debug("kcRes:", kcRes);
+    logger.debug('kcRes:', kcRes);
 
-    return sendResponse(200, { msg: "Subarea created", subArea: res }, context);
+    return sendResponse(200, { msg: 'Subarea created', subArea: res }, context);
   } catch (err) {
     logger.error(err);
-    return sendResponse(400, { msg: "Invalid request" }, context);
+    return sendResponse(400, { msg: 'Invalid request' }, context);
   }
 };
