@@ -73,7 +73,7 @@ describe('keycloak utility tests', () => {
     const garbage = { test: 'fake', whatever: [] };
     const testSubAreaObjWithGarbage = { ...testSubAreaObj, ...garbage };
 
-    const response = await utils.getValidSubareaObj(testSubAreaObjWithGarbage, 'test-name');
+    const response = await utils.getValidSubareaObj(testSubAreaObjWithGarbage, 'test-name', 'test-subAreaId');
 
     expect(response).toEqual({
       parkName: 'test-name',
@@ -85,7 +85,7 @@ describe('keycloak utility tests', () => {
       bundle: 'test-bundle',
       subAreaName: 'test-subAreaName',
       isLegacy: false,
-      roles: ['sysadmin', 'test-orcs'],
+      roles: ['sysadmin', 'test-orcs:test-subAreaId'],
     });
   });
 });

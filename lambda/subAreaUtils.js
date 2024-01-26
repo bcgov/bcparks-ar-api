@@ -50,7 +50,7 @@ function createPutSubAreaObj(subAreaObj, subAreaId, parkName) {
   };
 }
 
-function getValidSubareaObj(body, parkName) {
+function getValidSubareaObj(body, parkName, subAreaId) {
   let obj = { parkName: parkName };
   if (body.orcs) {
     obj['orcs'] = body.orcs;
@@ -83,7 +83,7 @@ function getValidSubareaObj(body, parkName) {
   obj['isLegacy'] = body.isLegacy ? body.isLegacy : false;
 
   // Add roles
-  obj.roles = ['sysadmin', body.orcs];
+  obj.roles = ['sysadmin', `${body.orcs}:${subAreaId}`];
 
   return obj;
 }
