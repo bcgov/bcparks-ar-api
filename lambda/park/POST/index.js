@@ -35,7 +35,7 @@ exports.handler = async (event, context) => {
         orcs: { S: body.orcs },
         parkName: { S: body.parkName },
         isLegacy: { BOOL: body.isLegacy ? body.isLegacy : false },
-        roles: { SS: ["sysadmin", body.orcs] },
+        roles: { L: [{ S: 'sysadmin' }, { S: body.orcs }] },
         subAreas: { L: [] },
       },
     };
