@@ -262,6 +262,8 @@ The fundamental rule about migrating the legacy Excel data was this: "If the leg
 
 Initially, all data with an `isLegacy` flag was locked against editing.
 
+Currently, only the years from 2017-2019 represented in the Excel document have been brought over [#971](https://bcparksdigital.atlassian.net/browse/BRS-971).
+
 ### Parks
 
 It was assumed that all parks that would continue to collect attendance and revenue data were present in the modern A&R system before migration. Therefore, any park present only in the migration would be created in the modern system with an `isLegacy` flag.
