@@ -6,7 +6,7 @@ const { schema } = require('../legacy-data-constants');
 
 const MAX_TRANSACTION_SIZE = 25;
 
-let filePath = './20230227140505-legacy2017_2019.xlsx';
+let filePath = './20230227140505-legacy2017_2019.xlsx'; // File has moved to Confluence, located here: https://apps.nrs.gov.bc.ca/int/confluence/display/BCPRS/All+things+Data
 
 let xdb; // Existing DB snapshot
 let rows; // Raw historical data rows.
