@@ -1,6 +1,6 @@
 # A&R Data Structure
 
-This document is intended to describe how the data model for various items in the database are structured. It should help you construct a `pk/sk` query for your needs.
+This document is intended to describe how the [data model](data_model.json) for various items in the database are structured. It should help you construct a `pk/sk` query for your needs.
 
 ## Parks
 ```js
@@ -254,6 +254,11 @@ Proceeding with the hybrid implementation, a new activity was introduced exclusi
 
 * Legacy Data
 
+Currently, only the years from 2017-2019 represented in the Excel document have been brought over [#971](https://bcparksdigital.atlassian.net/browse/BRS-971).
+
+[Migration itinerary](legacy_migration_itinerary_2017-2019.pdf) - developer description of how the migration for legacy data from 2017-2019 was achieved.
+[Business approval](legacy_data_migration_business_approval.pdf) - business acknowledgement of assumptions taken in the 2017-2019 migration.
+
 See [#237](https://github.com/bcgov/bcparks-ar-api/issues/237) and [#680](https://bcparksdigital.atlassian.net/browse/BRS-680) for more.
 
 ## Differences in modern and legacy data
@@ -262,15 +267,13 @@ The fundamental rule about migrating the legacy Excel data was this: "If the leg
 
 Initially, all data with an `isLegacy` flag was locked against editing.
 
-Currently, only the years from 2017-2019 represented in the Excel document have been brought over [#971](https://bcparksdigital.atlassian.net/browse/BRS-971).
-
-### Parks
+### Legacy Parks
 
 It was assumed that all parks that would continue to collect attendance and revenue data were present in the modern A&R system before migration. Therefore, any park present only in the migration would be created in the modern system with an `isLegacy` flag.
 
 As later determined in [#250](https://github.com/bcgov/bcparks-ar-admin/issues/250), parks that were created as as `isLegacy` still may collect attendance and revenue data. 
 
-### Subareas
+### Legacy Subareas
 
 It was assumed that all subareas that would continue to collect attendance and revenue data were present in the modern A&R system before migration. Therefore, any subarea present only in the migration would be created in the modern system with an `isLegacy` flag.
 
@@ -278,8 +281,16 @@ Later, it was requested that some of these subareas get reopened for collecting 
 
 All legacy subareas include the `Legacy Data` activity regardless of whether the subarea has data in that category. 
 
-## Configs
+### Legacy Configs
 
 There are no config objects for legacy activities, as there is no need for an activity template. The modern A&R system will never create a modern activity record from a legacy config.
 
+### Legacy Activity Records
+
+In cases where properties of legacy data did not translate 1:1 into an existing modern data property, a new property was created. The field mapping for all fields can be found in the [ar-fieldmap](ar-fieldmap_2023-03-03.xlsx).
+
+### Legacy Variance Records
+
+Variances are currently calculated when a record is saved. Since a legacy record will never be updated/saved, there are no variance records that go back as far as 2019.
+Variance records compare data from activities spanning the previous 3 years. They will include data from legacy records if it is available, but there is no need to track these variances as `isLegacy`. 
 
