@@ -69,7 +69,7 @@ async function printVariance(record, oldORC){
 }
 async function printConfigs(area){
     const activityList = area.activities.values           
-    for( const activity of activityList ) {
+    for( activity of activityList ) {
         const config = await getConfigs(area);
         if(config.length > 0){
             console.log("Config exists: config::", area.sk)
