@@ -49,7 +49,7 @@ async function hasSubAreas(oldORC){
 
 async function printRecords(area, oldORC){
     const activityList = area.activities.values 
-    for ( activity of activityList ) {
+    for ( const activity of activityList ) {
         const recordsList = await getActivityRecords(area, activity);
         if(recordsList.length > 0){
             console.log(area.pk,"::", area.sk, " Has records.")
