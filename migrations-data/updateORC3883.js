@@ -363,7 +363,7 @@ async function getVariances(record, ORC) {
 const migrationName = 'updateORCS3883.js';
 const oldORC = '0281';
 const newORC = '3883';
-const newParkName = 'Tsutswecw Park';
+const newParkName = 'Tsútswecw Park';
 
 exports.down = async function () {};
 exports.up(oldORC, newORC, newParkName);
