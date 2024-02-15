@@ -40,6 +40,7 @@ function calculateVariance(
     varianceMessage: varianceMessage,
     varianceTriggered: varianceTriggered,
     percentageChange: +percentageChange,
+    averageHistoricValue: averageHistoricValue
   };
   logger.info("Variance return obj:", res);
   logger.info("=== Variance calulation complete ===");
