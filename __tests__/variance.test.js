@@ -250,6 +250,7 @@ describe("Variance Test", () => {
     const { calculateVariance } = require("../lambda/varianceUtils");
     const res = calculateVariance([8, 8, 8], 10, 0.2);
     expect(res).toEqual({
+      averageHistoricValue: 8,
       varianceMessage: "Variance triggered: +25%",
       varianceTriggered: true,
       percentageChange: 0.25,
@@ -260,6 +261,7 @@ describe("Variance Test", () => {
     const { calculateVariance } = require("../lambda/varianceUtils");
     const res = calculateVariance([8.5, 8.5, 8.5], 10.8, 0.2);
     expect(res).toEqual({
+      averageHistoricValue: 8.5,
       varianceMessage: "Variance triggered: +27%",
       varianceTriggered: true,
       percentageChange: 0.27,
@@ -270,6 +272,7 @@ describe("Variance Test", () => {
     const { calculateVariance } = require("../lambda/varianceUtils");
     const res = calculateVariance([8.5, 8.5, 8.5], 0.8, 0.2);
     expect(res).toEqual({
+      averageHistoricValue: 8.5,
       varianceMessage: "Variance triggered: +91%",
       varianceTriggered: true,
       percentageChange: -0.91,
@@ -280,6 +283,7 @@ describe("Variance Test", () => {
     const { calculateVariance } = require("../lambda/varianceUtils");
     const res = calculateVariance([10.2, 10.2, 10.2], 10.2, 0.25);
     expect(res).toEqual({
+      averageHistoricValue: 10.2,
       varianceMessage: "Variance triggered: -0%",
       varianceTriggered: false,
       percentageChange: 0,
@@ -290,6 +294,7 @@ describe("Variance Test", () => {
     const { calculateVariance } = require("../lambda/varianceUtils");
     const res = calculateVariance([8, 8, null], 10, 0.2);
     expect(res).toEqual({
+      averageHistoricValue: 8,
       varianceMessage: "Variance triggered: +25%",
       varianceTriggered: true,
       percentageChange: 0.25,

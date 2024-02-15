@@ -271,7 +271,11 @@ describe("Activity Test", () => {
       pk: 'variance::0041::202301',
       fields: [{
         key: 'picnicRevenueGross',
-        percentageChange: 99.1
+        percentageChange: 99.1,
+        historicalAverage: 50,
+        yearlyAverages: {
+          '2022': 50
+        }
       }],
       resolved: false,
       subAreaId: '0087',

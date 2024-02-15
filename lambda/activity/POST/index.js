@@ -26,6 +26,7 @@ async function main(event, context, lock = null) {
   try {
     const token = await decodeJWT(event);
     const permissionObject = resolvePermissions(token);
+    const warnIfVariance = event.queryStringParameters?.hasOwnProperty('warn') || false;
 
     if (!permissionObject.isAuthenticated) {
       logger.info('**NOT AUTHENTICATED, PUBLIC**');
@@ -93,10 +94,19 @@ async function main(event, context, lock = null) {
       lock = true;
     }
 
-    if (event?.queryStringParameters?.isForced == 'true') {
-      return await handleActivity(body, lock, context);
+    // Check variance. If 'warn', and no notes, return the variance without saving it and don't update the activity. 
+    const fields = await checkVarianceTrigger(body);
+    const notesOverride = Boolean(body.notes);
+       if (warnIfVariance && fields.length && !notesOverride) {
+      return sendResponse(200, { msg: 'Variance triggered, nothing saved.', fields: fields, varianceWarning: true }, context);
     } else {
-      return await handleVarianceTrigger(body, lock, context);
+      // Create variance object if variance was triggered or if a variance note exists
+      if (fields.length || body?.notes) {
+        await createVariance(body, fields);
+      } else {
+        await deleteVariance(body);
+      }
+      return await handleActivity(body, lock, context);
     }
   } catch (err) {
     logger.error(err);
@@ -104,26 +114,12 @@ async function main(event, context, lock = null) {
   }
 }
 
-async function handleVarianceTrigger(body, lock, context) {
-  // Check for variances.  If true, create a variance trigger, and if not, checks
-  // if there is an existing trigger and deletes it before returning.
-  try {
-    await checkVarianceTrigger(body);
-  } catch (e) {
-    // Something blew up checking the variance.
-    // TBD: What should we do?  For now fall-through.
-    logger.error(e);
-  }
-  logger.info('Adding activity record:', body);
-  return await handleActivity(body, lock, context);
-}
-
-async function deleteVariance(orcs, date, subAreaId, activity) {
+async function deleteVariance(body) {
   const params = {
     TableName: TABLE_NAME,
     Key: {
-      pk: { S: `variance::${orcs}::${date}` },
-      sk: { S: `${subAreaId}::${activity}` },
+      pk: { S: `variance::${body?.orcs}::${body?.date}` },
+      sk: { S: `${body?.subAreaId}::${body?.activity}` },
     },
   };
 
@@ -133,13 +129,9 @@ async function deleteVariance(orcs, date, subAreaId, activity) {
 }
 
 async function checkVarianceTrigger(body) {
-  const subAreaId = body.subAreaId;
-  const activity = body.activity;
-  const date = body.date;
-  const notes = body.notes;
-  const orcs = body.orcs;
-  const subAreaName = body.subAreaName;
-  const parkName = body.parkName;
+  const subAreaId = body?.subAreaId;
+  const activity = body?.activity;
+  const date = body?.date;
 
   // Create a variance field array
   let fields = [];
@@ -153,7 +145,6 @@ async function checkVarianceTrigger(body) {
 
   // Pull up to the last 3 years for this activity type and date.
   let records = await getPreviousYearData(3, subAreaId, activity, date);
-
   if (records.length > 0) {
     for (const field in fieldsToCheck) {
       logger.info(`Checking ${fieldsToCheck[field]}`);
@@ -161,6 +152,14 @@ async function checkVarianceTrigger(body) {
       let first = records[0]?.[fieldsToCheck[field]];
       let second = records[1]?.[fieldsToCheck[field]];
       let third = records[2]?.[fieldsToCheck[field]];
+
+      // Build the yearly averages object
+      let yearlyAverages = {};
+      for (let i = 0; i <= 2; i++) {
+        if (records[i]?.sk) {
+          yearlyAverages[records[i]?.sk.slice(0, 4)] = records[i]?.[fieldsToCheck[field]];
+        }
+      }
 
       // Grabs the field percentage from the object
       logger.info(
@@ -177,7 +176,12 @@ async function checkVarianceTrigger(body) {
       const res = calculateVariance([first, second, third], current, varianceConfig[fieldsToCheck[field]]);
       if (res.varianceTriggered) {
         varianceWasTriggered = true;
-        fields.push({ key: fieldsToCheck[field], percentageChange: res?.percentageChange });
+        fields.push({
+          key: fieldsToCheck[field],
+          percentageChange: res?.percentageChange,
+          historicalAverage: res?.averageHistoricValue,
+          yearlyAverages: yearlyAverages
+        });
       }
     }
     // By now, the varianceWasTriggered should be active and the fields array full
@@ -186,37 +190,32 @@ async function checkVarianceTrigger(body) {
     logger.info(fields);
   }
 
-  // Create variance object if variance was triggered or if a variance note exists
-  if (varianceWasTriggered || (notes !== '' && notes !== undefined && notes !== null)) {
-    await createVariance(orcs, date, subAreaId, activity, fields, notes, parkName, subAreaName);
-  } else {
-    // Attempt to delete any previous variances
-    await deleteVariance(orcs, date, subAreaId, activity);
-  }
+  return fields;
+
 }
 
-async function createVariance(orcs, date, subAreaId, activity, fields, notes, parkName, subAreaName) {
+async function createVariance(body, fields) {
   // TODO: Include bundle property on the config object and use that to get the
   // bundle for variance.
-  let subarea = await getOne(`park::${orcs}`, subAreaId);
+  let subarea = await getOne(`park::${body?.orcs}`, body?.subAreaId);
   let bundle = subarea?.bundle;
   if (bundle === undefined) {
     bundle = 'N/A';
   }
-  logger.info('Creating Variance:', orcs, date, subAreaId, activity, fields, notes, bundle);
+  logger.info('Creating Variance:', JSON.stringify(body));
   try {
     const newObject = {
-      pk: `variance::${orcs}::${date}`,
-      sk: `${subAreaId}::${activity}`,
+      pk: `variance::${body?.orcs}::${body?.date}`,
+      sk: `${body?.subAreaId}::${body?.activity}`,
       fields: fields,
-      notes: notes,
+      notes: body?.notes,
       resolved: false,
-      orcs: orcs,
-      parkName: parkName,
-      subAreaName: subAreaName,
-      subAreaId: subAreaId,
+      orcs: body?.orcs,
+      parkName: body?.parkName,
+      subAreaName: body?.subAreaName,
+      subAreaId: body?.subAreaId,
       bundle: bundle,
-      roles: ['sysadmin', `${orcs}:${subAreaId}`],
+      roles: ['sysadmin', `${body?.orcs}:${body?.subAreaId}`],
     };
     const putObj = {
       TableName: TABLE_NAME,
@@ -336,14 +335,14 @@ async function handleLockUnlock(record, lock, context) {
 async function handleActivity(body, lock = false, context) {
   // Set pk/sk
   try {
-    const pk = `${body.subAreaId}::${body.activity}`;
+    const pk = `${body?.subAreaId}::${body?.activity}`;
 
     // Get config to attach to activity
     const configObj = {
       TableName: TABLE_NAME,
       ExpressionAttributeValues: {
-        ':pk': { S: `config::${body.subAreaId}` },
-        ':sk': { S: body.activity },
+        ':pk': { S: `config::${body?.subAreaId}` },
+        ':sk': { S: body?.activity },
       },
       KeyConditionExpression: 'pk =:pk AND sk =:sk',
     };
