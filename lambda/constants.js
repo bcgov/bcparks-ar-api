@@ -179,7 +179,15 @@ const CSV_SYSADMIN_SCHEMA = [
     value: (report) => report.campingPartyNightsAttendanceLongStay,
   },
   {
-    column: "Frontcountry Camping - Camping Party Nights - Total attendance",
+    column: "Frontcountry Camping - Camping Party Nights",
+    type: Number,
+    width: 63,
+    backgroundColor: "#c7e3fd",
+    value: (report) =>
+      report.calc_frontCountryCamping_frontCountryCamping_campingPartyNights_totalNights,
+  },
+  {
+    column: "Frontcountry Camping - Total attendance (people)",
     type: Number,
     width: 63,
     backgroundColor: "#c7e3fd",

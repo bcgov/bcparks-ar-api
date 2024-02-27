@@ -218,7 +218,17 @@ async function modifyReportForCSV(report) {
   // Perform calcs according to activity
   switch (activity) {
     case "Frontcountry Camping":
-      // Camping Party Nights - TOTAL ATTENDANCE
+      // Camping Party Nights - TOTAL NIGHTS
+      report.calc_frontCountryCamping_frontCountryCamping_campingPartyNights_totalNights =
+        frontcountryCampingPartyAttendance(
+          [
+            report.campingPartyNightsAttendanceStandard,
+            report.campingPartyNightsAttendanceSenior,
+            report.campingPartyNightsAttendanceSocial,
+            report.campingPartyNightsAttendanceLongStay,
+          ],
+        ).result;
+      // Camping Party Nights - TOTAL ATTENDANCE (PEOPLE)
       report.calc_frontCountryCamping_frontCountryCamping_campingPartyNights_totalAttendance =
         frontcountryCampingPartyAttendance(
           [

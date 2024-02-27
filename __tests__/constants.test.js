@@ -6,10 +6,10 @@ describe("Constants Test", () => {
   });
 
   test("Handler - Constants has items", async () => {
-    
+
     const constants = require("../lambda/constants");
     // Checks to ensure the value functions returns the data we pass through to it based on the attribute.
-    expect(constants.CSV_SYSADMIN_SCHEMA.length).toEqual(95);
+    expect(constants.CSV_SYSADMIN_SCHEMA.length).toEqual(96);
     for(const row of constants.CSV_SYSADMIN_SCHEMA) {
       expect(row.value({
         region: 1,
@@ -26,6 +26,7 @@ describe("Constants Test", () => {
         campingPartyNightsAttendanceSenior: 1,
         campingPartyNightsAttendanceSocial: 1,
         campingPartyNightsAttendanceLongStay: 1,
+        calc_frontCountryCamping_frontCountryCamping_campingPartyNights_totalNights: 1,
         calc_frontCountryCamping_frontCountryCamping_campingPartyNights_totalAttendance: 1,
         campingPartyNightsRevenueGross: 1,
         calc_frontCountryCamping_campingPartyNights_netRevenue: 1,
