@@ -13,22 +13,22 @@ function formatTime(time) {
  * This function updates the console with the progress of the operation. Get a time stamp (`intervalStartTime = new Date()`)
  * before the for loop or nested for loop you want to track, then within the loop, place `updateConsoleProgress` where you want to update
  * the console with the current progress.
- * 
+ *
  * It will also update the console with the estimated time remaining if the `total` argument is passed.
- * 
+ *
  * The function continually overwrites the same console line, so be aware when using other instances of `console.log()` within your loop.
  * To cleanly finish the console updates and move to the next line, call `finishConsoleUpdates()` or `errorConsoleUpdates()`.
- * 
+ *
  * @param {Date} intervalStartTime - The timestamp before you want to start tracking console progress
  * @param {string} text - Text blurb to display in the console
- * @param {number} modulo - The number of loops to wait between updating the console with the current progress. With quick loops with many iterations, updating the 
+ * @param {number} modulo - The number of loops to wait between updating the console with the current progress. With quick loops with many iterations, updating the
  * console frequently can significantly slow down the operation. For example, setting `modulo` to 25 will only update the console every 25 loops.
- * @param {number} complete - the current number of completed steps (typically loops). For example, if you have a `for (let i = 0; i < n; i++)` loop, then 
+ * @param {number} complete - the current number of completed steps (typically loops). For example, if you have a `for (let i = 0; i < n; i++)` loop, then
  * you would pass in `i`.
  * @param {number} total (optional) - if you know the total number of steps you will have, you can pass them it to get a time estimate of how long your loop will
- * take to complete. For example, if you have a `for (let i = 0; i < n; i++)` loop, you would pass in `n`. If you have an indeterminate number of steps in your 
+ * take to complete. For example, if you have a `for (let i = 0; i < n; i++)` loop, you would pass in `n`. If you have an indeterminate number of steps in your
  * loop (i.e. `while()`), leave this argument blank.
- * 
+ *
  * @example
  * const intervalStartTime = new Date();
  * for (let i = 0; i < n; i++) {
@@ -56,7 +56,7 @@ function updateConsoleProgress(intervalStartTime, text, modulo = 1, complete = 0
 
 /**
  * Cleanly finish successful console updates and move to the next line.
- * 
+ *
  * @param {*} msg - Custom completion message. Defaults to 'Complete.'
  */
 function finishConsoleUpdates(msg = 'Complete.') {
@@ -66,12 +66,12 @@ function finishConsoleUpdates(msg = 'Complete.') {
 
 /**
  * Cleanly finish console updates with errors and move to the next line.
- * 
+ *
  * @param {*} error - Custom error message. Defaults to 'Error.'
  */
 function errorConsoleUpdates(error = 'Error.') {
   process.stdout.write('\n');
-  console.log(` > \x1b[31m${error}\x1b[0m`);
+  console.log(` >\x1b[31m Error: ${error}\x1b[0m`);
 }
 
 module.exports = {

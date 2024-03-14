@@ -5,6 +5,7 @@ const TABLE_NAME = process.env.TABLE_NAME || "ar-tests";
 const ORCS_INDEX = process.env.ORCS_INDEX || "orcs-index";
 const NAME_CACHE_TABLE_NAME = process.env.NAME_CACHE_TABLE_NAME || "name-cache";
 const CONFIG_TABLE_NAME = process.env.CONFIG_TABLE_NAME || "ar-config";
+const MAX_TRANSACTION_SIZE = 25;
 const options = {
   region: "ca-central-1",
 };
@@ -156,6 +157,45 @@ async function getParks(includeLegacy = true) {
   return await runQuery(parksQuery);
 }
 
+async function batchPut(items) {
+  await batchWrite(items, 'put');
+}
+
+async function batchWrite(items, action = 'put') {
+  for (let i = 0; i < items.length; i += MAX_TRANSACTION_SIZE) {
+    const chunk = items.slice(i, i + MAX_TRANSACTION_SIZE);
+    const batchChunk = { RequestItems: { [TABLE_NAME]: [] } };
+    for (const item of chunk) {
+      if (action === 'put') {
+        batchChunk.RequestItems[TABLE_NAME].push({
+          PutRequest: {
+            Item: AWS.DynamoDB.Converter.marshall(item)
+          }
+        });
+      }
+      if (action === 'delete') {
+        batchChunk.RequestItems[TABLE_NAME].push({
+          DeleteRequest: {
+            Key: {
+              pk: { S: item.pk },
+              sk: { S: item.sk }
+            }
+          }
+        });
+      }
+    }try{
+
+      await dynamodb.batchWriteItem(batchChunk).promise();
+    } catch (err) {
+      console.log('ashhh shit');
+      for (const item of items) {
+        console.log('item.fields:', item.fields);
+      }
+      console.log('err:', err);
+    }
+  }
+}
+
 // returns all subareas within an ORCS.
 // includeLegacy = false will only return subareas that are not marked as legacy.
 async function getSubAreas(orcs, includeLegacy = true) {
@@ -196,7 +236,7 @@ async function getRecords(subArea, bundle, section, region, filter = true, inclu
       recordQuery.ExpressionAttributeValues[":legacy"] = { BOOL: false };
     }
     let recordsFromQuery = await runQuery(recordQuery);
-    for(let rec of recordsFromQuery) {
+    for (let rec of recordsFromQuery) {
       // Tack these items from the subare record onto the report record as they are not found on the
       // activity entry
       rec.bundle = bundle;
@@ -241,6 +281,7 @@ module.exports = {
   dynamodb,
   runQuery,
   runScan,
+  batchPut,
   getOne,
   getParks,
   getSubAreas,
