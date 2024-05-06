@@ -82,7 +82,7 @@ exports.handler = async (event, context) => {
 
       await updateJobWithState(
         STATE_DICTIONARY.FETCHING,
-        `Fetching all entires for ${roles}`
+        `Fetching all entries for ${roles}`
       );
 
       logger.info(`=== Exporting filtered data ===`);
