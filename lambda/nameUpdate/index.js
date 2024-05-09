@@ -1,5 +1,5 @@
 const axios = require('axios');
-const AWS = require("aws-sdk");
+const { marshall } = require('@aws-sdk/util-dynamodb');
 const { runQuery, runScan, NAME_CACHE_TABLE_NAME, TABLE_NAME, ORCS_INDEX, dynamodb } = require("../dynamoUtil");
 const { logger } = require('../logger');
 const DATA_REGISTER_NAME_ENDPOINT = process.env.DATA_REGISTER_NAME_ENDPOINT || 'https://zloys5cfvf.execute-api.ca-central-1.amazonaws.com/api/parks/names?status=established';
@@ -81,9 +81,9 @@ async function updateLocalCache(item) {
   logger.debug(item);
   const putItem = {
     TableName: NAME_CACHE_TABLE_NAME,
-    Item: AWS.DynamoDB.Converter.marshall(item)
+    Item: marshall(item, { removeUndefinedValues: true })
   };
-  await dynamodb.putItem(putItem).promise();
+  await dynamodb.putItem(putItem);
   logger.info("Update complete")
 }
 
@@ -98,14 +98,14 @@ async function batchWriteCache(records) {
     // logger.info(`Processing record:`, record)
     batch.RequestItems[NAME_CACHE_TABLE_NAME].push({
       PutRequest: {
-        Item: AWS.DynamoDB.Converter.marshall(record)
+        Item: marshall(record, { removeUndefinedValues: true })
       }
     });
     // Check if we should write the batch
     if (batch.RequestItems[NAME_CACHE_TABLE_NAME].length === 25) {
       batchCount++;
       // Write the current batch and reset the batch
-      await dynamodb.batchWriteItem(batch).promise();
+      await dynamodb.batchWriteItem(batch);
       process.stdout.write(`.`);
       batch.RequestItems[NAME_CACHE_TABLE_NAME] = [];
     }
@@ -115,7 +115,7 @@ async function batchWriteCache(records) {
   if (batch.RequestItems[NAME_CACHE_TABLE_NAME].length > 0) {
     batchCount++;
     logger.info(`writing final batch #${batchCount}`);
-    await dynamodb.batchWriteItem(batch).promise();
+    await dynamodb.batchWriteItem(batch);
     logger.info(`Complete.`);
   }
 }
@@ -162,7 +162,7 @@ async function updateRecords(recordsToUpdate, updateObj) {
 
     try {
       process.stdout.write(`.`);
-      await dynamodb.updateItem(params).promise();
+      await dynamodb.updateItem(params);
     } catch (e) {
       logger.info(e);
       // TODO: Fall through, but record error somehow?

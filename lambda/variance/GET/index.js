@@ -1,5 +1,4 @@
 const { runQuery, TABLE_NAME } = require("../../dynamoUtil");
-const AWS = require("aws-sdk");
 const { sendResponse } = require("../../responseUtil");
 const {
   decodeJWT,

@@ -1,5 +1,5 @@
-const AWS = require("aws-sdk");
-const { DocumentClient } = require("aws-sdk/clients/dynamodb");
+const { DynamoDB, DynamoDBClient, PutItemCommand, GetItemCommand, ScanCommand, QueryCommand } = require('@aws-sdk/client-dynamodb');
+const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 const { REGION, ENDPOINT, TABLE_NAME } = require("./global/settings");
 const {
   PARKSLIST,
@@ -19,11 +19,11 @@ const emptyRole = {
 };
 
 async function setupDb() {
-  new AWS.DynamoDB({
+  dynamodb = new DynamoDB({
     region: REGION,
     endpoint: ENDPOINT,
   });
-  docClient = new DocumentClient({
+  docClient = new DynamoDBClient({
     region: REGION,
     endpoint: ENDPOINT,
     convertEmptyValues: true,
@@ -47,12 +47,12 @@ async function setupDb() {
 }
 
 async function genericPutDocument(item) {
-  return await docClient
-    .put({
-      TableName: TABLE_NAME,
-      Item: item,
-    })
-    .promise();
+  const input = {
+    Item: marshall(item, { convertEmptyValues: true }),
+    TableName: TABLE_NAME,
+  };
+  const command = new PutItemCommand(input);
+  return await docClient.send(command);
 }
 
 describe("Activity Test", () => {
@@ -63,7 +63,7 @@ describe("Activity Test", () => {
   });
 
   const mockedUnauthenticatedUser = {
-    decodeJWT: jest.fn((event) => {}),
+    decodeJWT: jest.fn((event) => { }),
     resolvePermissions: jest.fn((token) => {
       return {
         isAdmin: false,
@@ -77,7 +77,7 @@ describe("Activity Test", () => {
   };
 
   const mockedSysadmin = {
-    decodeJWT: jest.fn((event) => {}),
+    decodeJWT: jest.fn((event) => { }),
     resolvePermissions: jest.fn((token) => {
       return {
         isAdmin: true,
@@ -220,14 +220,18 @@ describe("Activity Test", () => {
     expect(response.statusCode).toBe(200);
 
     // Expect no variance to be created
-    const doc = await docClient.get({
-      TableName: TABLE_NAME,
+    const input = {
       Key: {
-        pk: `variance::${SUBAREA_ENTRIES[0].orcs}::202201`,
-        sk: `${SUBAREA_ENTRIES[0].pk.split("::")[0]}}::${SUBAREA_ENTRIES[0].pk.split("::")[1]}`
+        pk: marshall(`variance::${SUBAREA_ENTRIES[0].orcs}::202201`),
+        sk: marshall(`${SUBAREA_ENTRIES[0].pk.split("::")[0]}::${SUBAREA_ENTRIES[0].pk.split("::")[1]}`)
       },
-    }).promise();
-    expect(doc).toEqual({});
+      TableName: TABLE_NAME,
+    };
+    const command = new GetItemCommand(input);
+    const doc = await docClient.send(command);
+    expect(doc?.Item).toBe(undefined);
+
+
 
     // Change year and create a new record
     const secondResponse = await activityPOST.handlePost(
@@ -257,14 +261,16 @@ describe("Activity Test", () => {
     expect(secondResponse.statusCode).toBe(200);
 
     // Expect variance to be created
-    const doc2 = await docClient.get({
-      TableName: TABLE_NAME,
+    const input2 = {
       Key: {
-        pk: `variance::${SUBAREA_ENTRIES[0].orcs}::202301`,
-        sk: `${SUBAREA_ENTRIES[0].pk.split("::")[0]}::${SUBAREA_ENTRIES[0].pk.split("::")[1]}`
+        pk: marshall(`variance::${SUBAREA_ENTRIES[0].orcs}::202301`),
+        sk: marshall(`${SUBAREA_ENTRIES[0].pk.split("::")[0]}::${SUBAREA_ENTRIES[0].pk.split("::")[1]}`)
       },
-    }).promise();
-    expect(doc2.Item).toEqual({
+      TableName: TABLE_NAME,
+    };
+    const command2 = new GetItemCommand(input2);
+    const doc2 = await docClient.send(command2);
+    expect(unmarshall(doc2?.Item)).toEqual({
       parkName: 'Cultus Lake Park',
       orcs: '0041',
       sk: '0087::Day Use',
@@ -279,7 +285,7 @@ describe("Activity Test", () => {
       }],
       resolved: false,
       subAreaId: '0087',
-      roles: [ 'sysadmin', '0041:0087'],
+      roles: ['sysadmin', '0041:0087'],
       subAreaName: 'TBD',
       bundle: 'N/A'
     });

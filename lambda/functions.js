@@ -1,4 +1,4 @@
-const AWS = require("aws-sdk");
+const { marshall } = require('@aws-sdk/util-dynamodb');
 const { dynamodb } = require("./dynamoUtil");
 const crypto = require("crypto");
 
@@ -19,12 +19,12 @@ function convertRolesToMD5(roles, prefix = "") {
 async function updateJobEntry(jobObj, tableName) {
   jobObj.pk = "job";
 
-  let newObject = AWS.DynamoDB.Converter.marshall(jobObj);
+  let newObject = marshall(jobObj, {removeUndefinedValues: true});
   let putObject = {
     TableName: tableName,
     Item: newObject,
   };
-  await dynamodb.putItem(putObject).promise();
+  await dynamodb.putItem(putObject);
 }
 
 module.exports = {

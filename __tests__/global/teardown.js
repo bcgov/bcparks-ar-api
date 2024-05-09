@@ -1,10 +1,10 @@
-const AWS = require('aws-sdk');
+const { DynamoDB } = require('@aws-sdk/client-dynamodb');
 
 const { REGION, ENDPOINT, TABLE_NAME, CONFIG_TABLE_NAME, NAME_CACHE_TABLE_NAME } = require('./settings');
 const { logger } = require('../../lambda/logger');
 
 module.exports = async () => {
-  dynamoDb = new AWS.DynamoDB({
+  dynamoDb = new DynamoDB({
     region: REGION,
     endpoint: ENDPOINT
   });
@@ -13,18 +13,15 @@ module.exports = async () => {
     await dynamoDb
       .deleteTable({
         TableName: TABLE_NAME
-      })
-      .promise();
+      });
     await dynamoDb
       .deleteTable({
         TableName: NAME_CACHE_TABLE_NAME
-      })
-      .promise();
+      });
     await dynamoDb
       .deleteTable({
         TableName: CONFIG_TABLE_NAME
-      })
-      .promise();
+      });
   } catch (err) {
     logger.error(err);
   }

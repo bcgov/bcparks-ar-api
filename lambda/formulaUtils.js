@@ -1,4 +1,4 @@
-const AWS = require("aws-sdk");
+const { marshall } = require('@aws-sdk/util-dynamodb');
 const { TABLE_NAME } = require("./dynamoUtil");
 const { validActivities } = require("./subAreaUtils");
 
@@ -188,35 +188,35 @@ function createPutFormulaConfigObj(
     }
     formulaConfigObj = {
       pk: { S: "config::" + subAreaId },
-      sk: AWS.DynamoDB.Converter.input(activity),
-      parkName: AWS.DynamoDB.Converter.input(parkName),
-      orcs: AWS.DynamoDB.Converter.input(orcs),
-      subAreaId: AWS.DynamoDB.Converter.input(subAreaId),
-      subAreaName: AWS.DynamoDB.Converter.input(subAreaName),
+      sk: marshall(activity),
+      parkName: marshall(parkName),
+      orcs: marshall(orcs),
+      subAreaId: marshall(subAreaId),
+      subAreaName: marshall(subAreaName),
     };
     // Default formula configs
     switch (activity) {
       case "Frontcountry Camping":
         formulaConfigObj["attendanceModifier"] =
-          AWS.DynamoDB.Converter.input(3.2);
+          marshall(3.2);
         break;
       case "Day Use":
         formulaConfigObj["attendanceVehiclesModifier"] =
-          AWS.DynamoDB.Converter.input(3.5);
+          marshall(3.5);
         formulaConfigObj["attendanceBusModifier"] =
-          AWS.DynamoDB.Converter.input(40);
+          marshall(40);
         break;
       case "Backcountry Cabins":
         formulaConfigObj["attendanceModifier"] =
-          AWS.DynamoDB.Converter.input(3.2);
+          marshall(3.2);
         break;
       case "Boating":
         formulaConfigObj["attendanceModifier"] =
-          AWS.DynamoDB.Converter.input(3.2);
+          marshall(3.2);
         break;
       case "Frontcountry Cabins":
         formulaConfigObj["attendanceModifier"] =
-          AWS.DynamoDB.Converter.input(3.2);
+          marshall(3.2);
         break;
     }
     formulaConfigObjArray.push({

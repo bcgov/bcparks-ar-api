@@ -85,7 +85,7 @@ exports.handler = async (event, context) => {
       });
     }
 
-    const res = await dynamodb.transactWriteItems(transactionObj).promise();
+    const res = await dynamodb.transactWriteItems(transactionObj);
     logger.debug('res:', res);
 
     // Add Keycloak role

@@ -1,4 +1,5 @@
-const AWS = require("aws-sdk");
+const { DynamoDB } = require('@aws-sdk/client-dynamodb');
+const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 const { logger } = require("./logger");
 
 const TABLE_NAME = process.env.TABLE_NAME || "ar-tests";
@@ -39,20 +40,20 @@ const RECORD_ACTIVITY_LIST = [
   "Boating",
 ];
 
-const dynamodb = new AWS.DynamoDB(options);
+const dynamodb = new DynamoDB(options);
 
-exports.dynamodb = new AWS.DynamoDB();
+exports.dynamodb = new DynamoDB();
 
 // simple way to return a single Item by primary key.
 async function getOne(pk, sk) {
   logger.debug(`getItem: { pk: ${pk}, sk: ${sk} }`);
   const params = {
     TableName: TABLE_NAME,
-    Key: AWS.DynamoDB.Converter.marshall({ pk, sk }),
+    Key: marshall({ pk, sk }),
   };
-  let item = await dynamodb.getItem(params).promise();
+  let item = await dynamodb.getItem(params);
   if (item?.Item) {
-    return AWS.DynamoDB.Converter.unmarshall(item.Item);
+    return unmarshall(item.Item);
   }
   return {};
 }
@@ -70,10 +71,10 @@ async function runQuery(query, paginated = false) {
     if (pageData?.LastEvaluatedKey) {
       query.ExclusiveStartKey = pageData.LastEvaluatedKey;
     }
-    pageData = await dynamodb.query(query).promise();
+    pageData = await dynamodb.query(query);
     data = data.concat(
       pageData.Items.map((item) => {
-        return AWS.DynamoDB.Converter.unmarshall(item);
+        return unmarshall(item);
       })
     );
     if (page < 2) {
@@ -112,10 +113,10 @@ async function runScan(query, paginated = false) {
     if (pageData?.LastEvaluatedKey) {
       query.ExclusiveStartKey = pageData.LastEvaluatedKey;
     }
-    pageData = await dynamodb.scan(query).promise();
+    pageData = await dynamodb.scan(query);
     data = data.concat(
       pageData.Items.map((item) => {
-        return AWS.DynamoDB.Converter.unmarshall(item);
+        return unmarshall(item);
       })
     );
     if (page < 2) {
@@ -169,7 +170,7 @@ async function batchWrite(items, action = 'put') {
       if (action === 'put') {
         batchChunk.RequestItems[TABLE_NAME].push({
           PutRequest: {
-            Item: AWS.DynamoDB.Converter.marshall(item)
+            Item: marshall(item, {removeUndefinedValues: true })
           }
         });
       }
@@ -183,9 +184,9 @@ async function batchWrite(items, action = 'put') {
           }
         });
       }
-    }try{
+    } try {
 
-      await dynamodb.batchWriteItem(batchChunk).promise();
+      await dynamodb.batchWriteItem(batchChunk);
     } catch (err) {
       for (const item of items) {
         console.log('item.fields:', item.fields);
@@ -220,7 +221,7 @@ async function getRecords(subArea, bundle, section, region, filter = true, inclu
   let records = [];
   let filteredActivityList = RECORD_ACTIVITY_LIST;
   if (filter && subArea.activites) {
-    filteredActivityList = AWS.DynamoDB.Converter.unmarshall(subArea.activites);
+    filteredActivityList = unmarshall(subArea.activites);
   }
   for (let activity of filteredActivityList) {
     const recordQuery = {
@@ -259,7 +260,7 @@ async function incrementAndGetNextSubAreaID() {
     },
     ReturnValues: "UPDATED_NEW",
   };
-  const response = await dynamodb.updateItem(configUpdateObj).promise();
+  const response = await dynamodb.updateItem(configUpdateObj);
   return response?.Attributes?.lastID?.N;
 }
 

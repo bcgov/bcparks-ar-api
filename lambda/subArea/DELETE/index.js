@@ -1,12 +1,12 @@
-const AWS = require("aws-sdk");
 const { logger } = require("../../logger");
+const { marshall } = require('@aws-sdk/util-dynamodb');
 const { sendResponse } = require("../../responseUtil");
 const { requirePermissions } = require("../../permissionUtil");
 const { getOne, TABLE_NAME, dynamodb, runQuery } = require("../../dynamoUtil");
 
 exports.handler = async (event, context) => {
   logger.info("SubArea delete");
-  logger.info(event.queryStringParameters)
+  logger.info(event.queryStringParameters);
   // Check if there are any query string parameters
   if (!event.queryStringParameters
     || (event.queryStringParameters.archive !== "true" && event.queryStringParameters.archive !== "false")
@@ -18,23 +18,23 @@ exports.handler = async (event, context) => {
 
   // Check if the user is authenticated and has admin permissions.
   try {
-    await requirePermissions(event, { "isAuthenticated": true, "isAdmin": true});
+    await requirePermissions(event, { "isAuthenticated": true, "isAdmin": true });
   } catch (e) {
-    logger.error(e)
+    logger.error(e);
     return sendResponse(e.statusCode || 400, e.msg, context);
   }
 
   // Check if query string has archive flag set to true
   try {
     if (event.queryStringParameters.archive === "true") {
-      logger.info("Archiving")
+      logger.info("Archiving");
       return await archiveSubArea(event.queryStringParameters.subAreaId, event.queryStringParameters.orcs, context);
     } else {
-      logger.info("Deleting")
+      logger.info("Deleting");
       return await deleteSubArea(event.queryStringParameters.subAreaId, event.queryStringParameters.orcs, context);
     }
   } catch (e) {
-    logger.error(JSON.stringify(e))
+    logger.error(JSON.stringify(e));
     return sendResponse(e.statusCode || 400, { msg: e.msg }, context);
   }
 };
@@ -67,9 +67,9 @@ async function deleteActivityRecords(subAreaId, activities, context) {
         pk: { S: `config::${subAreaId}` },
         sk: { S: `${activity}` }
       }
-    }
+    };
     logger.info("Deleting activity config:", params);
-    const response = await dynamodb.deleteItem(params).promise();
+    const response = await dynamodb.deleteItem(params);
     logger.info("Response:", response);
   }
 
@@ -86,10 +86,10 @@ async function deleteActivityRecords(subAreaId, activities, context) {
 
   // Loop through all the items in the activity records
   for (let i = 0; i < activityrecords.length; i++) {
-    logger.info("activityrecord:", activityrecords[i])
+    logger.info("activityrecord:", activityrecords[i]);
     await deleteActivityRecord(activityrecords[i].pk, activityrecords[i].sk);
   }
-  logger.info("All done deleting activity records")
+  logger.info("All done deleting activity records");
 }
 
 async function deleteActivityRecord(pk, sk) {
@@ -100,11 +100,11 @@ async function deleteActivityRecord(pk, sk) {
       pk: { S: pk },
       sk: { S: sk }
     }
-  }
+  };
 
   logger.info("Deleting activity record:", params);
 
-  const response = await dynamodb.deleteItem(params).promise();
+  const response = await dynamodb.deleteItem(params);
 
   logger.info("Response:", response);
   return response;
@@ -119,15 +119,15 @@ async function deleteSubAreaRecords(subAreaId, orcs, context) {
       sk: { S: `${subAreaId}` }
     },
     ReturnValues: 'ALL_OLD'
-  }
+  };
   logger.info("Deleting subArea records:", params);
-  const response = await dynamodb.deleteItem(params).promise();
+  const response = await dynamodb.deleteItem(params);
   logger.info("Activities deleted:", response.Attributes?.activities.SS);
   return response.Attributes?.activities.SS;
 }
 
 async function archiveSubAreaRecord(subAreaId, orcs, context) {
-  logger.info("Archiving subareas")
+  logger.info("Archiving subareas");
   // update all items in dynamodb matching pk = `park::${orcs}` and sk = `${subAreaId}`
   const params = {
     TableName: TABLE_NAME,
@@ -136,20 +136,20 @@ async function archiveSubAreaRecord(subAreaId, orcs, context) {
       sk: { S: `${subAreaId}` }
     },
     ExpressionAttributeValues: {
-      ':archived': AWS.DynamoDB.Converter.input(true),
+      ':archived': marshall(true),
     },
     UpdateExpression: `SET archived =:archived`,
     ReturnValues: 'ALL_NEW'
   };
   logger.info("Archiving subArea records:", params);
-  const response = await dynamodb.updateItem(params).promise();
+  const response = await dynamodb.updateItem(params);
   logger.info("response:", response);
   return response;
 }
 
 async function deleteSubAreaFromPark(subAreaId, orcs, context) {
   const parkObject = await getOne('park', orcs);
-  logger.info("ParkObject:", parkObject)
+  logger.info("ParkObject:", parkObject);
   // Get the index of the subarea in the park object.
   const subAreaIdIndex = parkObject.subAreas.findIndex(element => element.id === subAreaId);
   if (subAreaIdIndex === -1) {
@@ -157,7 +157,7 @@ async function deleteSubAreaFromPark(subAreaId, orcs, context) {
   }
 
   logger.info(`Removing ${JSON.stringify(parkObject.subAreas[subAreaIdIndex])}`);
-  logger.info("Current size:", parkObject.subAreas.length)
+  logger.info("Current size:", parkObject.subAreas.length);
   // Remove the subarea from the park object.
   const updateParkObject = {
     TableName: TABLE_NAME,
@@ -166,7 +166,7 @@ async function deleteSubAreaFromPark(subAreaId, orcs, context) {
       sk: { S: orcs }
     },
     ExpressionAttributeValues: {
-      ":subAreaSize": AWS.DynamoDB.Converter.input(parkObject.subAreas.length)
+      ":subAreaSize": marshall(parkObject.subAreas.length, { removeUndefinedValues: true })
     },
     UpdateExpression: `REMOVE subAreas[${subAreaIdIndex}]`,
 
@@ -175,21 +175,20 @@ async function deleteSubAreaFromPark(subAreaId, orcs, context) {
     ReturnValues: 'ALL_NEW'
   };
 
-  const response = await dynamodb.updateItem(updateParkObject).promise();
-  const newParkObject = AWS.DynamoDB.Converter.unmarshall(response.Attributes);
-  logger.info("Park Object after update:", newParkObject)
-  return newParkObject;
+  const response = await dynamodb.updateItem(updateParkObject);
+  logger.info("Park Object after update:", response.Attributes);
+  return response.Attributes;
 }
 
 async function archiveSubArea(subAreaId, orcs, context) {
   // Update the park object by removing the subarea.
-  logger.info("Removing subarea from park")
+  logger.info("Removing subarea from park");
   await deleteSubAreaFromPark(subAreaId, orcs, context);
-  logger.info("Removed.  Archiving Subarea.")
+  logger.info("Removed.  Archiving Subarea.");
 
   // Go throught the subarea records and flag them as archived.
   await archiveSubAreaRecord(subAreaId, orcs, context);
-  logger.info("Archived.")
+  logger.info("Archived.");
 
   return sendResponse(200, { msg: "SubArea archived" }, context);
 };

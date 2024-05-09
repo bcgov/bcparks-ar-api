@@ -68,7 +68,7 @@ exports.handler = async (event, context) => {
       params.UpdateExpression = `SET ${updateExpressions.join(', ')}`;
     }
 
-    const res = await dynamodb.updateItem(params).promise();
+    const res = await dynamodb.updateItem(params);
     logger.info("Variance updated");
     logger.debug("Result:", res);
     return sendResponse(200, res);

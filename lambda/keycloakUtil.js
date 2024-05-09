@@ -1,5 +1,4 @@
 const axios = require("axios");
-const { mainModule } = require("process");
 const { logger } = require("./logger");
 
 const config = {

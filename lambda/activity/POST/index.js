@@ -1,4 +1,4 @@
-const AWS = require('aws-sdk');
+const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 const { dynamodb, runQuery, TABLE_NAME, getOne, FISCAL_YEAR_FINAL_MONTH, TIMEZONE } = require('../../dynamoUtil');
 const { sendResponse } = require('../../responseUtil');
 const { decodeJWT, resolvePermissions } = require('../../permissionUtil');
@@ -94,10 +94,10 @@ async function main(event, context, lock = null) {
       lock = true;
     }
 
-    // Check variance. If 'warn', and no notes, return the variance without saving it and don't update the activity. 
+    // Check variance. If 'warn', and no notes, return the variance without saving it and don't update the activity.
     const fields = await checkVarianceTrigger(body);
     const notesOverride = Boolean(body.notes);
-       if (warnIfVariance && fields.length && !notesOverride) {
+    if (warnIfVariance && fields.length && !notesOverride) {
       return sendResponse(200, { msg: 'Variance triggered, nothing saved.', fields: fields, varianceWarning: true }, context);
     } else {
       // Create variance object if variance was triggered or if a variance note exists
@@ -125,7 +125,7 @@ async function deleteVariance(body) {
 
   logger.info('Deleting variance record:', params);
 
-  await dynamodb.deleteItem(params).promise();
+  await dynamodb.deleteItem(params);
 }
 
 async function checkVarianceTrigger(body) {
@@ -204,7 +204,7 @@ async function createVariance(body, fields) {
   }
   logger.info('Creating Variance:', JSON.stringify(body));
   try {
-    const newObject = {
+    const newObject = marshall({
       pk: `variance::${body?.orcs}::${body?.date}`,
       sk: `${body?.subAreaId}::${body?.activity}`,
       fields: fields,
@@ -216,12 +216,12 @@ async function createVariance(body, fields) {
       subAreaId: body?.subAreaId,
       bundle: bundle,
       roles: ['sysadmin', `${body?.orcs}:${body?.subAreaId}`],
-    };
+    }, { removeUndefinedValues: true });
     const putObj = {
       TableName: TABLE_NAME,
-      Item: AWS.DynamoDB.Converter.marshall(newObject),
+      Item: newObject,
     };
-    await dynamodb.putItem(putObj).promise();
+    await dynamodb.putItem(putObj);
   } catch (e) {
     logger.error(e);
   }
@@ -311,12 +311,12 @@ async function handleLockUnlock(record, lock, context) {
     ReturnValues: 'ALL_NEW',
   };
   try {
-    const res = await dynamodb.updateItem(updateObj).promise();
+    const res = await dynamodb.updateItem(updateObj);
     logger.info(`Updated record pk: ${record.pk}, sk: ${record.sk} `);
     const s = lock ? 'locked' : 'unlocked';
     return sendResponse(200, {
       msg: `Record successfully ${s}`,
-      data: AWS.DynamoDB.Converter.unmarshall(res.Attributes),
+      data: unmarshall(res.Attributes),
     });
   } catch (err) {
     if (err.code === 'ConditionalCheckFailedException') {
@@ -366,14 +366,14 @@ async function handleActivity(body, lock = false, context) {
 
     body['isLocked'] = lock ?? false;
 
-    const newObject = AWS.DynamoDB.Converter.marshall(body);
+    const newObject = marshall(body, {removeUndefinedValues: true});
 
     let putObject = {
       TableName: TABLE_NAME,
       Item: newObject,
     };
 
-    await dynamodb.putItem(putObject).promise();
+    await dynamodb.putItem(putObject);
     logger.info('Activity Updated.');
     return sendResponse(200, body, context);
   } catch (err) {

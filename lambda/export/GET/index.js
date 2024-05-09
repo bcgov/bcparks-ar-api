@@ -1,5 +1,8 @@
-const AWS = require("aws-sdk");
-const s3 = new AWS.S3();
+const { Lambda } = require("@aws-sdk/client-lambda");
+const { S3 } = require("@aws-sdk/client-s3");
+const { marshall } = require('@aws-sdk/util-dynamodb');
+
+const s3 = new S3();
 
 const IS_OFFLINE =
   process.env.IS_OFFLINE && process.env.IS_OFFLINE === "true" ? true : false;
@@ -10,7 +13,7 @@ if (IS_OFFLINE) {
   // For local we use port 3002 because we're hitting an invokable
   options.endpoint = "http://localhost:3002";
 }
-const lambda = new AWS.Lambda(options);
+const lambda = new Lambda(options);
 
 const { runQuery, dynamodb, TABLE_NAME } = require("../../dynamoUtil");
 const { sendResponse } = require("../../responseUtil");
@@ -114,7 +117,7 @@ exports.handler = async (event, context) => {
         },
         ConditionExpression:
           "(attribute_not_exists(pk) AND attribute_not_exists(sk)) OR attribute_not_exists(progressState) OR progressState = :complete OR progressState = :error",
-        Item: AWS.DynamoDB.Converter.marshall({
+        Item: marshall({
           pk: "job",
           sk: sk,
           progressPercentage: 0,
@@ -126,7 +129,7 @@ exports.handler = async (event, context) => {
       logger.debug(putObject);
       let newJob;
       try {
-        newJob = await dynamodb.putItem(putObject).promise();
+        newJob = await dynamodb.putItem(putObject);
         // Check if there's already a report being generated.
         // If there are is no instance of a job or the job is 100% complete, generate a report.
         logger.debug("Creating a new export job.");
@@ -142,7 +145,7 @@ exports.handler = async (event, context) => {
           }),
         };
         // Invoke generate report function
-        await lambda.invoke(params).promise();
+        await lambda.invoke(params);
 
         return sendResponse(200, { status: "Export job created" }, context);
       } catch (error) {

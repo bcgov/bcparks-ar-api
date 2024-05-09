@@ -1,10 +1,11 @@
-const { logger } = require("../../logger")
-const AWS = require('aws-sdk');
+const { logger } = require("../../logger");
+const { S3 } = require('@aws-sdk/client-s3');
+const { marshall } = require('@aws-sdk/util-dynamodb');
 const fs = require('fs');
 
 const { VARIANCE_CSV_SCHEMA, VARIANCE_STATE_DICTIONARY } = require("../../constants");
 const { getParks, TABLE_NAME, dynamodb, runQuery } = require("../../dynamoUtil");
-const s3 = new AWS.S3();
+const s3 = S3();
 
 const FILE_PATH = process.env.FILE_PATH || "./";
 const FILE_NAME = process.env.FILE_NAME || "A&R_Variance_Report";
@@ -55,7 +56,7 @@ exports.handler = async (event, context) => {
       // upload csv to S3
       await uploadToS3(csv);
       await updateJobWithState(VARIANCE_STATE_DICTIONARY.UPLOADING);
-      
+
       // success!
       LAST_SUCCESSFUL_JOB = {
         key: S3_KEY,
@@ -132,9 +133,9 @@ async function updateJobWithState(state, percentageOverride = null) {
 async function updateJobEntry(jobObj) {
   const putObj = {
     TableName: TABLE_NAME,
-    Item: AWS.DynamoDB.Converter.marshall(jobObj)
+    Item: marshall(jobObj)
   }
-  await dynamodb.putItem(putObj).promise();
+  await dynamodb.putItem(putObj);
 }
 
 async function getVarianceRecords(fiscalYearEnd, roles) {
@@ -284,14 +285,14 @@ async function uploadToS3(csvData) {
   }
 
   if (!process.env.IS_OFFLINE) {
-    await s3.putObject(params).promise();
+    await s3.putObject(params);
   }
   logger.debug("Uploaded to S3");
 
 }
 
 function convertMonth(monthNumber){
-  
+
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
@@ -302,5 +303,5 @@ function convertMonth(monthNumber){
   } else {
     return 'Invalid month number';
   }
-  
+
 }

@@ -1,4 +1,4 @@
-const AWS = require("aws-sdk");
+const { marshall } = require('@aws-sdk/util-dynamodb');
 const {
   TABLE_NAME,
   dynamodb,
@@ -90,9 +90,9 @@ async function putFiscalYear(isLocked, params) {
     };
     const putObj = {
       TableName: TABLE_NAME,
-      Item: AWS.DynamoDB.Converter.marshall(newObject),
+      Item: marshall(newObject),
     };
-    await dynamodb.putItem(putObj).promise();
+    await dynamodb.putItem(putObj);
     logger.debug("Updated fiscalYearEnd Object:", newObject);
     return newObject;
   } catch (err) {
