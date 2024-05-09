@@ -132,7 +132,7 @@ exports.handler = async (event, context) => {
         newJob = await dynamodb.putItem(putObject);
         // Check if there's already a report being generated.
         // If there are is no instance of a job or the job is 100% complete, generate a report.
-        logger.debug("Creating a new export job.");
+        logger.debug("Creating a new export job.", newJob);
 
         const params = {
           FunctionName: EXPORT_FUNCTION_NAME,
