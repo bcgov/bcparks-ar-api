@@ -1,4 +1,4 @@
-const { DynamoDBClient, PutItemCommand, GetItemCommand } = require('@aws-sdk/client-dynamodb');
+const { DynamoDB, DynamoDBClient, PutItemCommand, GetItemCommand, ScanCommand, QueryCommand } = require('@aws-sdk/client-dynamodb');
 const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 const { REGION, ENDPOINT, TABLE_NAME } = require("./global/settings");
 const {
@@ -19,6 +19,10 @@ const emptyRole = {
 };
 
 async function setupDb() {
+  dynamodb = new DynamoDB({
+    region: REGION,
+    endpoint: ENDPOINT,
+  });
   docClient = new DynamoDBClient({
     region: REGION,
     endpoint: ENDPOINT,
