@@ -187,7 +187,6 @@ async function batchWrite(items, action = 'put') {
 
       await dynamodb.batchWriteItem(batchChunk).promise();
     } catch (err) {
-      console.log('ashhh shit');
       for (const item of items) {
         console.log('item.fields:', item.fields);
       }
