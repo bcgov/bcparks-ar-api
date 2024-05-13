@@ -4,7 +4,6 @@
   "description": "BCParks Attendance and Revenue Backend",
   "devDependencies": {
     "@digitalspace/dynamodb-migrate": "^1.0.6",
-    "aws-sdk-mock": "^5.4.0",
     "jest": "^29.5.0",
     "read-excel-file": "^5.3.4",
     "serverless": "^3.18.1",
@@ -28,6 +27,11 @@
     ]
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.529.1",
+    "@aws-sdk/client-lambda": "^3.568.0",
+    "@aws-sdk/client-s3": "^3.568.0",
+    "@aws-sdk/util-dynamodb": "^3.529.1",
+    "@babel/traverse": "7.23.2",
     "axios": "^1.4.0",
     "jsonwebtoken": "^9.0.0",
     "jwks-rsa": "^3.0.1",

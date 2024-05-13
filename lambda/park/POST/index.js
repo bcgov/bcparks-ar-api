@@ -41,7 +41,7 @@ exports.handler = async (event, context) => {
     };
 
     logger.debug("Creating park:", postObj);
-    const res = await dynamodb.putItem(postObj).promise();
+    const res = await dynamodb.putItem(postObj);
     logger.info("Park Created");
     logger.debug("Result:", res);
     return sendResponse(200, res);

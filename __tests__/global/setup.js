@@ -1,10 +1,10 @@
-const AWS = require('aws-sdk');
+const { DynamoDB } = require('@aws-sdk/client-dynamodb');
 
 const { REGION, ENDPOINT, TABLE_NAME, CONFIG_TABLE_NAME, NAME_CACHE_TABLE_NAME } = require('./settings');
 const { logger } = require('../../lambda/logger');
 
 module.exports = async () => {
-  dynamoDb = new AWS.DynamoDB({
+  dynamoDb = new DynamoDB({
     region: REGION,
     endpoint: ENDPOINT
   });
@@ -62,8 +62,7 @@ module.exports = async () => {
             }
           }
         ]
-      })
-      .promise();
+      });
 
     console.log("Creating name-cache table.");
     await dynamoDb
@@ -85,8 +84,7 @@ module.exports = async () => {
           ReadCapacityUnits: 1,
           WriteCapacityUnits: 1
         }
-      })
-      .promise();
+      });
 
     console.log("Creating config table.");
     await dynamoDb
@@ -108,8 +106,7 @@ module.exports = async () => {
           ReadCapacityUnits: 1,
           WriteCapacityUnits: 1
         }
-      })
-      .promise();
+      });
   } catch (err) {
     logger.error(err);
   }

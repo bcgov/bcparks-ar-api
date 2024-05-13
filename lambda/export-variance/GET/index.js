@@ -1,5 +1,7 @@
-const AWS = require("aws-sdk");
-const s3 = new AWS.S3();
+const { S3 } = require("@aws-sdk/client-s3");
+const { Lambda } = require("@aws-sdk/client-lambda");
+const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
+const s3 = new S3();
 
 const IS_OFFLINE =
   process.env.IS_OFFLINE && process.env.IS_OFFLINE === "true" ? true : false;
@@ -11,7 +13,7 @@ if (IS_OFFLINE) {
   options.endpoint = "http://localhost:3002";
 }
 
-const lambda = new AWS.Lambda(options);
+const lambda = new Lambda(options);
 
 const { logger } = require("../../logger");
 const { decodeJWT, resolvePermissions } = require("../../permissionUtil");
@@ -65,8 +67,8 @@ exports.handler = async (event, context) => {
   let jobObj = {};
 
   try {
-    const res = await dynamodb.query(existingJobQueryObj).promise();
-    jobObj = AWS.DynamoDB.Converter.unmarshall(res?.Items?.[0]) || null;
+    const res = await dynamodb.query(existingJobQueryObj);
+    jobObj = unmarshall(res?.Items?.[0]) || null;
   } catch (error) {
     logger.error("Error querying for existing job: ", error);
     return sendResponse(500, { msg: "Error querying for existing job" }, context);
@@ -138,7 +140,7 @@ exports.handler = async (event, context) => {
           ":error": { S: "error" },
         },
         ConditionExpression: "(attribute_not_exists(pk) AND attribute_not_exists(sk)) OR attribute_not_exists(progressState) OR progressState = :complete OR progressState = :error",
-        Item: AWS.DynamoDB.Converter.marshall({
+        Item: marshall({
           pk: pk,
           sk: hash,
           params: params,
@@ -151,7 +153,7 @@ exports.handler = async (event, context) => {
 
       logger.debug('Creating new job:', varianceExportPutObj);
 
-      const newJob = await dynamodb.putItem(varianceExportPutObj).promise();
+      const newJob = await dynamodb.putItem(varianceExportPutObj);
       logger.debug('New job created:', newJob);
 
       // run the export function
@@ -167,7 +169,7 @@ exports.handler = async (event, context) => {
       }
 
       // Invoke the variance report export lambda
-      await lambda.invoke(varianceExportParams).promise();
+      await lambda.invoke(varianceExportParams);
 
       return sendResponse(200, { msg: "Variance report export job created" }, context);
     } catch (error) {

@@ -77,7 +77,10 @@ exports.handler = async (event, context) => {
       let parkData;
       do {
         parkData = await runQuery(queryObj, true);
-        parkData.data.forEach((item) => results.push(item));
+        parkData.data.forEach((item) => {
+          item.activities = Array.from(item.activities);
+          results.push(item)
+        });
         queryObj.ExclusiveStartKey = parkData.LastEvaluatedKey;
       } while (typeof parkData.LastEvaluatedKey !== "undefined");
 

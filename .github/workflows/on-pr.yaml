@@ -28,7 +28,12 @@ jobs:
           port: 8000
           cors: "*"
 
-      - run: yarn test
+      - name: Sleep so DynamoDB has time to wake up
+        uses: GuillaumeFalourd/wait-sleep-action@v1
+        with:
+          time: '15' # for 15 seconds
+
+      - run: yarn test --coverage --runInBand
         env:
           IS_OFFLINE: true
           AWS_REGION: local-env

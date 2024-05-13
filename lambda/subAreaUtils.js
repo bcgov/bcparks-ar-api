@@ -1,4 +1,4 @@
-const AWS = require('aws-sdk');
+const { marshall } = require('@aws-sdk/util-dynamodb');
 const { TABLE_NAME } = require('./dynamoUtil');
 
 function createUpdateParkWithNewSubAreaObj(subAreaName, subAreaId, isLegacy, orcs) {
@@ -13,7 +13,7 @@ function createUpdateParkWithNewSubAreaObj(subAreaName, subAreaId, isLegacy, orc
       ':subAreas': {
         L: [
           {
-            M: AWS.DynamoDB.Converter.marshall({
+            M: marshall({
               name: subAreaName,
               id: subAreaId,
               isLegacy: isLegacy,
