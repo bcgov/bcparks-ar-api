@@ -17,6 +17,15 @@ plugins:
   - serverless-offline
   - serverless-plugin-include-dependencies
   - serverless-dotenv-plugin
+  - serverless-webpack
+
+custom:
+  webpack:
+    webpackConfig: 'webpack.config.js' # Name of webpack configuration file
+
+# package individually to avoid hitting the EMFILE limit
+package:
+  individually: true
 
 functions:
   ###########
