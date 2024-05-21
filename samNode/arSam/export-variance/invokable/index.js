@@ -1,10 +1,9 @@
-const { logger } = require("../../logger");
 const { S3 } = require('@aws-sdk/client-s3');
 const { marshall } = require('@aws-sdk/util-dynamodb');
 const fs = require('fs');
 
-const { VARIANCE_CSV_SCHEMA, VARIANCE_STATE_DICTIONARY } = require("../../constants");
-const { getParks, TABLE_NAME, dynamodb, runQuery } = require("../../dynamoUtil");
+const { VARIANCE_CSV_SCHEMA, VARIANCE_STATE_DICTIONARY } = require("/opt/constantsLayer");
+const { getParks, TABLE_NAME, dynamodb, runQuery, logger } = require("/opt/baseLayer");
 const s3 = S3();
 
 const FILE_PATH = process.env.FILE_PATH || "./";

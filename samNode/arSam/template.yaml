@@ -1,0 +1,829 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM deployment for A&R API
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+    Environment:
+      Variables:
+        SSO_ISSUER: !Ref SSOIssuerUrl
+        SSO_JWKSURI: !Ref SSOJWKSUri
+        IS_OFFLINE: false
+        DYNAMODB_ENDPOINT_URL: dynamodb.ca-central-1.amazonaws.com
+  Api:
+    Cors:
+      AllowMethods: "'POST,GET,OPTIONS, PUT'"
+      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-App-Version'"
+      AllowOrigin: "'*'"
+
+Parameters:
+  AWSAccountList:
+   Type: String
+   Default: 'defaultAccount'
+  ExportFunctionName:
+    Type: String
+    Default: 'bcparks-ar-api-api-exportInvokable'
+  ExportExpiryTime:
+    Type: String
+    Default: '30'
+  FilePath:
+    Type: String
+    Default: './'
+  FileNameExport:
+    Type: String
+    Default: 'A&R_Export'
+  FileNameVarianceExport:
+    Type: String
+    Default: 'A&R_Variance_Report'
+  CsvSysadminSchema:
+    Type: String
+    Default: 'defaultSchema'
+  JobUpdateModulo:
+    Type: String
+    Default: '1'
+  DisableProgressUpdates:
+    Type: String
+    Default: 'false'
+  DisableHighAccuracyProgressPercentage:
+    Type: String
+    Default: 'false'
+  S3BucketData:
+    Type: String
+    Default: 'defaultBucket' 
+  TableName:
+    Type: String
+    Default: 'ar-tests'
+  AWSRegion:
+    Type: String
+    Default: "ca-central-1"
+  ConfigTableName: 
+    Type: String
+    Default: "ar-config"
+  JwtSecret: 
+    Type: String 
+    Default: "defaultSecret"
+  JwtSignExpiry: 
+    Type: String
+    Default: "5"
+  CaptchaSignExpiry: 
+    Type: String
+    Default: "30"
+  PrivateKey: 
+    Type: String
+    Default: ""
+  DataRegisterNameEndpoint: 
+    Type: String
+    Default: "defaultEndpoint"
+  DataRegisterNameApiKey:
+    Type: String
+    Default: "defaultApiKey"
+  SSOIssuerUrl: 
+    Type: String
+    Default: "https://dev.loginproxy.gov.bc.ca/auth/realms/bcparks-service-transformation"
+  SSOJWKSUri: 
+    Type: String
+    Default: "https://dev.loginproxy.gov.bc.ca/auth/realms/bcparks-service-transformation/protocol/openid-connect/certs"
+
+Resources:
+### LAMBDA LAYERS ###
+  VarianceLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: varianceLayer
+      Description: Variance Layer
+      ContentUri: layers/varianceLayer/
+      CompatibleRuntimes:
+        - nodejs18.x
+      LicenseInfo: 'Apache-2.0'
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+  
+  SubAreaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: subAreaLayer
+      Description: SubArea Layer
+      ContentUri: layers/subAreaLayer/
+      CompatibleRuntimes:
+        - nodejs18.x
+      LicenseInfo: 'Apache-2.0'
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+
+  PermissionLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: permissionLayer
+      Description: Permission Layer
+      ContentUri: layers/permissionLayer/
+      CompatibleRuntimes:
+        - nodejs18.x
+      LicenseInfo: 'Apache-2.0'
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+
+  BaseLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: baseLayer
+      Description: Base Layer
+      ContentUri: layers/baseLayer/
+      CompatibleRuntimes:
+        - nodejs18.x
+      LicenseInfo: 'Apache-2.0'
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+
+  KeycloakLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: keycloakLayer
+      Description: Keycloak Layer
+      ContentUri: layers/keycloakLayer/
+      CompatibleRuntimes:
+        - nodejs18.x
+      LicenseInfo: 'Apache-2.0'
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+
+  FunctionsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: functionsLayer
+      Description: Functions Layer
+      ContentUri: layers/functionsLayer/
+      CompatibleRuntimes:
+        - nodejs18.x
+      LicenseInfo: 'Apache-2.0'
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+
+  FormulaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: formulaLayer
+      Description: Formula Layer
+      ContentUri: layers/formulaLayer/
+      CompatibleRuntimes:
+        - nodejs18.x
+      LicenseInfo: 'Apache-2.0'
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+
+  ConstantsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: constantsLayer
+      Description: Constants Layer
+      ContentUri: layers/constantsLayer/
+      CompatibleRuntimes:
+        - nodejs18.x
+      LicenseInfo: 'Apache-2.0'
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+
+  ### LAMBDA FUNCTIONS ###
+
+  ActivityGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          JWT_SECRET: !Ref JwtSecret
+          JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
+          CAPTCHA_SIGN_EXPIRY: !Ref CaptchaSignExpiry
+          PRIVATE_KEY: !Ref PrivateKey
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri
+          LOG_LEVEL: "info"
+      CodeUri: activity/GET/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Layers:
+          - !Ref BaseLayer
+          - !Ref PermissionLayer
+      Events:
+        activityGet:
+          Type: Api
+          Properties:
+            Path: /activity
+            Method: get
+
+  ActivityPostFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          JWT_SECRET: !Ref JwtSecret
+          JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
+          CAPTCHA_SIGN_EXPIRY: !Ref CaptchaSignExpiry
+          PRIVATE_KEY: !Ref PrivateKey
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri
+          LOG_LEVEL: "info"
+      CodeUri: activity/POST/
+      Timeout: 60
+      Handler: index.handlePost
+      Runtime: nodejs18.x
+      Layers:
+          - !Ref PermissionLayer
+          - !Ref BaseLayer
+          - !Ref VarianceLayer
+          - !Ref ConstantsLayer
+      Events:
+        activityPost:
+          Type: Api
+          Properties:
+            Path: /activity
+            Method: post
+
+  ActivityPostLockFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          JWT_SECRET: !Ref JwtSecret
+          JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
+          CAPTCHA_SIGN_EXPIRY: !Ref CaptchaSignExpiry
+          PRIVATE_KEY: !Ref PrivateKey
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri
+          LOG_LEVEL: "info"
+      CodeUri: activity/POST/
+      Timeout: 60
+      Handler: index.handleLock
+      Runtime: nodejs18.x
+      Layers:
+          - !Ref PermissionLayer
+          - !Ref BaseLayer
+          - !Ref VarianceLayer
+          - !Ref ConstantsLayer
+      Events:
+        activityRecordLock:
+          Type: Api
+          Properties:
+            Path: /activity/lock
+            Method: post
+    
+  ActivityPostUnlockFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          JWT_SECRET: !Ref JwtSecret
+          JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
+          CAPTCHA_SIGN_EXPIRY: !Ref CaptchaSignExpiry
+          PRIVATE_KEY: !Ref PrivateKey
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri
+          LOG_LEVEL: "info"
+      CodeUri: activity/POST/
+      Timeout: 60
+      Handler: index.handleUnlock
+      Runtime: nodejs18.x
+      Layers:
+          - !Ref PermissionLayer
+          - !Ref BaseLayer
+          - !Ref VarianceLayer
+          - !Ref ConstantsLayer
+      Events:
+        activityRecordUnlock:
+          Type: Api
+          Properties:
+            Path: /activity/unlock
+            Method: post
+
+  ActivityDeleteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          LOG_LEVEL: "info"
+      CodeUri: activity/DELETE/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Layers:
+          - !Ref BaseLayer
+      Events:
+        activityDelete:
+          Type: Api
+          Properties:
+            Path: /activity
+            Method: delete
+
+  ActivityPutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          LOG_LEVEL: "info"
+      CodeUri: activity/PUT/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Layers:
+          - !Ref BaseLayer
+      Events:
+        activityPut:
+          Type: Api
+          Properties:
+            Path: /activity
+            Method: put
+
+  CloudwatchAlarmFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: cloudwatchAlarm/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Layers:
+        - !Ref BaseLayer
+      Environment:
+        Variables:
+          AWS_ACCOUNT_LIST: !Ref AWSAccountList
+          LOG_LEVEL: "debug"
+      Events:
+        cloudwatchAlarm:
+          Type: Api
+          Properties:
+            Path: /cloudwatchAlarm
+            Method: get
+
+  ExportGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: export/GET/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_TABLE: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri
+          LOG_LEVEL: "info"
+          EXPORT_FUNCTION_NAME: !Ref ExportFunctionName
+          EXPORT_EXPIRY_TIME: !Ref ExportExpiryTime
+      Layers:
+          - !Ref PermissionLayer
+          - !Ref FunctionsLayer
+          - !Ref BaseLayer
+      Events:
+        exportGet:
+          Type: Api
+          Properties:
+            Path: /export
+            Method: get
+
+  ExportInvokableFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: export/invokable/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          FILE_PATH: !Ref FilePath
+          FILE_NAME: !Ref FileNameExport
+          CSV_SYSADMIN_SCHEMA: !Ref CsvSysadminSchema
+          JOB_UPDATE_MODULO: !Ref JobUpdateModulo
+          DISABLE_PROGRESS_UPDATES: !Ref DisableProgressUpdates
+          DISABLE_HIGH_ACCURACY_PROGRESS_PERCENTAGE: !Ref DisableHighAccuracyProgressPercentage
+          S3_BUCKET_DATA: !Ref S3BucketData
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          LOG_LEVEL: "info"
+      Layers:
+          - !Ref ConstantsLayer
+          - !Ref FunctionsLayer
+          - !Ref BaseLayer
+          - !Ref FormulaLayer
+
+  VarianceExportGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: export-variance/GET/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          JWT_SECRET: !Ref JwtSecret
+          JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
+          CAPTCHA_SIGN_EXPIRY: !Ref CaptchaSignExpiry
+          PRIVATE_KEY: !Ref PrivateKey
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri
+          LOG_LEVEL: "info"
+      Layers:
+          - !Ref BaseLayer
+          - !Ref PermissionLayer
+      Events:
+        varianceExportGet:
+          Type: Api
+          Properties:
+            Path: /export-variance
+            Method: get
+
+  VarianceExportInvokableFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: export-variance/invokable/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          FILE_PATH: !Ref FilePath
+          FILE_NAME: !Ref FileNameVarianceExport
+          S3_BUCKET_DATA: !Ref S3BucketData
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          LOG_LEVEL: "info"
+      Layers:
+          - !Ref BaseLayer
+          - !Ref ConstantsLayer
+
+  FiscalYearEndGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri
+          LOG_LEVEL: "info"
+      CodeUri: fiscalYearEnd/GET/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Layers:
+          - !Ref BaseLayer
+      Events:
+        fiscalYearEndGet:
+          Type: Api
+          Properties:
+            Path: /fiscalYearEnd
+            Method: get
+
+  FiscalYearEndPostLockFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri
+          LOG_LEVEL: "info"
+      CodeUri: fiscalYearEnd/POST/
+      Timeout: 60
+      Handler: index.lockFiscalYear
+      Runtime: nodejs18.x
+      Layers:
+          - !Ref BaseLayer
+          - !Ref PermissionLayer
+      Events:
+        fiscalYearEndLock:
+          Type: Api
+          Properties:
+            Path: /fiscalYearEnd/lock
+            Method: post
+
+  FiscalYearEndPostUnlockFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri
+          LOG_LEVEL: "info"
+      CodeUri: fiscalYearEnd/POST/
+      Timeout: 60
+      Handler: index.unlockFiscalYear
+      Runtime: nodejs18.x
+      Layers:
+          - !Ref BaseLayer
+          - !Ref PermissionLayer
+      Events:
+        fiscalYearEndUnlock:
+          Type: Api
+          Properties:
+            Path: /fiscalYearEnd/unlock
+            Method: post
+
+  NameUpdate:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          DATA_REGISTER_NAME_API_ENDPOINT: !Ref DataRegisterNameEndpoint
+          DATA_REGISTER_NAME_API_KEY: !Ref DataRegisterNameApiKey
+      CodeUri: nameUpdate/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Layers:
+          - !Ref BaseLayer
+
+  ParkGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          JWT_SECRET: !Ref JwtSecret
+          JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
+          CAPTCHA_SIGN_EXPIRY: !Ref CaptchaSignExpiry
+          PRIVATE_KEY: !Ref PrivateKey
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri
+          LOG_LEVEL: "info"
+      CodeUri: park/GET/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Layers:
+        - !Ref PermissionLayer
+        - !Ref BaseLayer
+      Events:
+        parkGet:
+          Type: Api
+          Properties:
+            Path: /park
+            Method: get
+
+  ParkPostFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri
+          LOC_LEVEL: "info"
+      CodeUri: park/POST/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Layers:
+        - !Ref PermissionLayer
+        - !Ref BaseLayer
+      Events:
+        fiscalYearEndLock:
+          Type: Api
+          Properties:
+            Path: /park
+            Method: post
+
+  ParkPutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          LOG_LEVEL: "info"
+      CodeUri: park/PUT/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Layers:
+        - !Ref BaseLayer
+      Events:
+        fiscalYearEndLock:
+          Type: Api
+          Properties:
+            Path: /park
+            Method: put
+
+  ReadConfigFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          LOG_LEVEL: "error"
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+      CodeUri: readConfig/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Layers:
+        - !Ref BaseLayer
+      Events:
+        readConfig:
+          Type: Api
+          Properties:
+            Path: /readConfig
+            Method: get
+
+  GetSubAreaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          LOG_LEVEL: "info"
+      CodeUri: subArea/GET/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Layers:
+        - !Ref BaseLayer
+      Events:
+        getSubArea:
+          Type: Api
+          Properties:
+            Path: /subArea
+            Method: get
+
+  DeleteSubAreaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          LOG_LEVEL: "info"
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri
+      CodeUri: subArea/DELETE/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Layers:
+        - !Ref BaseLayer
+        - !Ref PermissionLayer
+      Events:
+        deleteSubArea:
+          Type: Api
+          Properties:
+            Path: /subArea
+            Method: delete
+
+  PostSubAreaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          LOG_LEVEL: "info"
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri
+
+      CodeUri: subArea/POST/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Layers:
+        - !Ref BaseLayer
+        - !Ref KeycloakLayer
+        - !Ref FormulaLayer
+        - !Ref PermissionLayer
+        - !Ref SubAreaLayer
+      Events:
+        readConfig:
+          Type: Api
+          Properties:
+            Path: /subArea
+            Method: post
+
+  PutSubAreaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          LOG_LEVEL: "info"
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri
+      CodeUri: subArea/PUT/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Layers:
+        - !Ref BaseLayer
+        - !Ref PermissionLayer
+      Events:
+        deleteSubArea:
+          Type: Api
+          Properties:
+            Path: /subArea
+            Method: put
+  
+  GetVarianceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          LOG_LEVEL: "info"
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri 
+      CodeUri: variance/GET/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Layers:
+        - !Ref BaseLayer
+        - !Ref PermissionLayer
+      Events:
+        getVariance:
+          Type: Api
+          Properties:
+            Path: /variance
+            Method: get
+  
+  PostVarianceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          LOG_LEVEL: "info"
+      CodeUri: variance/POST/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Layers:
+        - !Ref BaseLayer
+      Events:
+        postVariance:
+          Type: Api
+          Properties:
+            Path: /variance
+            Method: post
+
+  PutVarianceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          LOG_LEVEL: "info"
+          TABLE_NAME: !Ref TableName
+          CONFIG_TABLE_NAME: !Ref ConfigTableName
+          AWS_REGION: !Ref AWSRegion
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri
+      CodeUri: variance/POST/
+      Timeout: 60
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Layers:
+        - !Ref BaseLayer
+        - !Ref PermissionLayer
+      Events:
+        putVariance:
+          Type: Api
+          Properties:
+            Path: /variance
+            Method: put
