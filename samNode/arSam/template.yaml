@@ -13,16 +13,17 @@ Globals:
         SSO_JWKSURI: !Ref SSOJWKSUri
         IS_OFFLINE: false
         DYNAMODB_ENDPOINT_URL: dynamodb.ca-central-1.amazonaws.com
-  Api:
-    Cors:
-      AllowMethods: "'POST,GET,OPTIONS, PUT'"
-      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-App-Version'"
-      AllowOrigin: "'*'"
 
 Parameters:
+  AccountId:
+    Type: String
+    Default: '123456789'
   AWSAccountList:
    Type: String
    Default: 'defaultAccount'
+  Stage:
+    Type: String
+    Default: 'dev'
   ExportFunctionName:
     Type: String
     Default: 'bcparks-ar-api-api-exportInvokable'
@@ -56,9 +57,6 @@ Parameters:
   TableName:
     Type: String
     Default: 'ar-tests'
-  AWSRegion:
-    Type: String
-    Default: "ca-central-1"
   ConfigTableName: 
     Type: String
     Default: "ar-config"
@@ -88,7 +86,46 @@ Parameters:
     Default: "https://dev.loginproxy.gov.bc.ca/auth/realms/bcparks-service-transformation/protocol/openid-connect/certs"
 
 Resources:
-### LAMBDA LAYERS ###
+  ## Roles
+  StreamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole'
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'
+      Policies:
+        - PolicyName: 'ProcessDynamoDBStreamRolePolicyOne'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:PutItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:UpdateItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:BatchGetItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:ConditionCheckItem
+                Resource: !Sub
+                  - 'arn:aws:dynamodb:ca-central-1:${AccountId}:table/Audit'
+                  - AccountId: !Ref AccountId
+                Effect: Allow
+
+  ### LAMBDA LAYERS ###
   VarianceLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
@@ -202,7 +239,6 @@ Resources:
         Variables:
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           JWT_SECRET: !Ref JwtSecret
           JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
           CAPTCHA_SIGN_EXPIRY: !Ref CaptchaSignExpiry
@@ -223,6 +259,17 @@ Resources:
           Properties:
             Path: /activity
             Method: get
+            RestApiId: !Ref ApiDeployment
+        activityOptions:
+          Type: Api
+          Properties:
+            Path: /activity
+            Method: options
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
   ActivityPostFunction:
     Type: AWS::Serverless::Function
@@ -231,7 +278,6 @@ Resources:
         Variables:
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           JWT_SECRET: !Ref JwtSecret
           JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
           CAPTCHA_SIGN_EXPIRY: !Ref CaptchaSignExpiry
@@ -254,6 +300,11 @@ Resources:
           Properties:
             Path: /activity
             Method: post
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
   ActivityPostLockFunction:
     Type: AWS::Serverless::Function
@@ -262,7 +313,6 @@ Resources:
         Variables:
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           JWT_SECRET: !Ref JwtSecret
           JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
           CAPTCHA_SIGN_EXPIRY: !Ref CaptchaSignExpiry
@@ -285,6 +335,11 @@ Resources:
           Properties:
             Path: /activity/lock
             Method: post
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
     
   ActivityPostUnlockFunction:
     Type: AWS::Serverless::Function
@@ -293,7 +348,6 @@ Resources:
         Variables:
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           JWT_SECRET: !Ref JwtSecret
           JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
           CAPTCHA_SIGN_EXPIRY: !Ref CaptchaSignExpiry
@@ -316,6 +370,11 @@ Resources:
           Properties:
             Path: /activity/unlock
             Method: post
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
   ActivityDeleteFunction:
     Type: AWS::Serverless::Function
@@ -335,6 +394,11 @@ Resources:
           Properties:
             Path: /activity
             Method: delete
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
   ActivityPutFunction:
     Type: AWS::Serverless::Function
@@ -354,6 +418,11 @@ Resources:
           Properties:
             Path: /activity
             Method: put
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
   CloudwatchAlarmFunction:
     Type: AWS::Serverless::Function
@@ -374,6 +443,17 @@ Resources:
           Properties:
             Path: /cloudwatchAlarm
             Method: get
+            RestApiId: !Ref ApiDeployment
+        cloudwatchAlarmOptions:
+          Type: Api
+          Properties:
+            Path: /cloudwatchAlarm
+            Method: options
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
   ExportGetFunction:
     Type: AWS::Serverless::Function
@@ -386,7 +466,6 @@ Resources:
         Variables:
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_TABLE: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
           LOG_LEVEL: "info"
@@ -402,6 +481,17 @@ Resources:
           Properties:
             Path: /export
             Method: get
+            RestApiId: !Ref ApiDeployment
+        exportOptions:
+          Type: Api
+          Properties:
+            Path: /export
+            Method: options
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
   ExportInvokableFunction:
     Type: AWS::Serverless::Function
@@ -421,7 +511,6 @@ Resources:
           S3_BUCKET_DATA: !Ref S3BucketData
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           LOG_LEVEL: "info"
       Layers:
           - !Ref ConstantsLayer
@@ -440,7 +529,6 @@ Resources:
         Variables:
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           JWT_SECRET: !Ref JwtSecret
           JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
           CAPTCHA_SIGN_EXPIRY: !Ref CaptchaSignExpiry
@@ -457,6 +545,17 @@ Resources:
           Properties:
             Path: /export-variance
             Method: get
+            RestApiId: !Ref ApiDeployment
+        varianceExportOptions:
+          Type: Api
+          Properties:
+            Path: /export-variance
+            Method: options
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
   VarianceExportInvokableFunction:
     Type: AWS::Serverless::Function
@@ -472,7 +571,6 @@ Resources:
           S3_BUCKET_DATA: !Ref S3BucketData
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           LOG_LEVEL: "info"
       Layers:
           - !Ref BaseLayer
@@ -485,7 +583,6 @@ Resources:
         Variables:
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
           LOG_LEVEL: "info"
@@ -501,6 +598,17 @@ Resources:
           Properties:
             Path: /fiscalYearEnd
             Method: get
+            RestApiId: !Ref ApiDeployment
+        fiscalYearEndOptions:
+          Type: Api
+          Properties:
+            Path: /fiscalYearEnd
+            Method: options
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
   FiscalYearEndPostLockFunction:
     Type: AWS::Serverless::Function
@@ -509,7 +617,6 @@ Resources:
         Variables:
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
           LOG_LEVEL: "info"
@@ -526,6 +633,11 @@ Resources:
           Properties:
             Path: /fiscalYearEnd/lock
             Method: post
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
   FiscalYearEndPostUnlockFunction:
     Type: AWS::Serverless::Function
@@ -534,7 +646,6 @@ Resources:
         Variables:
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
           LOG_LEVEL: "info"
@@ -551,6 +662,11 @@ Resources:
           Properties:
             Path: /fiscalYearEnd/unlock
             Method: post
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
   NameUpdate:
     Type: AWS::Serverless::Function
@@ -573,7 +689,6 @@ Resources:
         Variables:
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           JWT_SECRET: !Ref JwtSecret
           JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
           CAPTCHA_SIGN_EXPIRY: !Ref CaptchaSignExpiry
@@ -594,6 +709,17 @@ Resources:
           Properties:
             Path: /park
             Method: get
+            RestApiId: !Ref ApiDeployment
+        parkOptions:
+          Type: Api
+          Properties:
+            Path: /park
+            Method: options
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
   ParkPostFunction:
     Type: AWS::Serverless::Function
@@ -602,7 +728,6 @@ Resources:
         Variables:
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
           LOC_LEVEL: "info"
@@ -619,6 +744,11 @@ Resources:
           Properties:
             Path: /park
             Method: post
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
   ParkPutFunction:
     Type: AWS::Serverless::Function
@@ -638,6 +768,11 @@ Resources:
           Properties:
             Path: /park
             Method: put
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
   ReadConfigFunction:
     Type: AWS::Serverless::Function
@@ -647,7 +782,6 @@ Resources:
           LOG_LEVEL: "error"
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
       CodeUri: readConfig/
       Timeout: 60
       Handler: index.handler
@@ -655,13 +789,24 @@ Resources:
       Layers:
         - !Ref BaseLayer
       Events:
-        readConfig:
+        readConfigGet:
           Type: Api
           Properties:
             Path: /readConfig
             Method: get
+            RestApiId: !Ref ApiDeployment
+        readConfigOptions:
+          Type: Api
+          Properties:
+            Path: /readConfig
+            Method: options
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
-  GetSubAreaFunction:
+  SubAreaGetFunction:
     Type: AWS::Serverless::Function
     Properties:
       Environment:
@@ -674,13 +819,24 @@ Resources:
       Layers:
         - !Ref BaseLayer
       Events:
-        getSubArea:
+        subAreaGet:
           Type: Api
           Properties:
             Path: /subArea
             Method: get
+            RestApiId: !Ref ApiDeployment
+        subAreaOptions:
+          Type: Api
+          Properties:
+            Path: /subArea
+            Method: options
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
-  DeleteSubAreaFunction:
+  SubAreaDeleteFunction:
     Type: AWS::Serverless::Function
     Properties:
       Environment:
@@ -688,7 +844,6 @@ Resources:
           LOG_LEVEL: "info"
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
       CodeUri: subArea/DELETE/
@@ -699,13 +854,18 @@ Resources:
         - !Ref BaseLayer
         - !Ref PermissionLayer
       Events:
-        deleteSubArea:
+        subAreaDelete:
           Type: Api
           Properties:
             Path: /subArea
             Method: delete
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
-  PostSubAreaFunction:
+  SubAreaPostFunction:
     Type: AWS::Serverless::Function
     Properties:
       Environment:
@@ -713,7 +873,6 @@ Resources:
           LOG_LEVEL: "info"
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
 
@@ -728,13 +887,18 @@ Resources:
         - !Ref PermissionLayer
         - !Ref SubAreaLayer
       Events:
-        readConfig:
+        subAreaPost:
           Type: Api
           Properties:
             Path: /subArea
             Method: post
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
-  PutSubAreaFunction:
+  SubAreaPutFunction:
     Type: AWS::Serverless::Function
     Properties:
       Environment:
@@ -742,7 +906,6 @@ Resources:
           LOG_LEVEL: "info"
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
       CodeUri: subArea/PUT/
@@ -753,13 +916,18 @@ Resources:
         - !Ref BaseLayer
         - !Ref PermissionLayer
       Events:
-        deleteSubArea:
+        SubAreaPut:
           Type: Api
           Properties:
             Path: /subArea
             Method: put
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
   
-  GetVarianceFunction:
+  VarianceGetFunction:
     Type: AWS::Serverless::Function
     Properties:
       Environment:
@@ -767,7 +935,6 @@ Resources:
           LOG_LEVEL: "info"
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri 
       CodeUri: variance/GET/
@@ -778,13 +945,24 @@ Resources:
         - !Ref BaseLayer
         - !Ref PermissionLayer
       Events:
-        getVariance:
+        varianceGet:
           Type: Api
           Properties:
             Path: /variance
             Method: get
+            RestApiId: !Ref ApiDeployment
+        varianceOptions:
+          Type: Api
+          Properties:
+            Path: /variance
+            Method: options
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
   
-  PostVarianceFunction:
+  VariancePostFunction:
     Type: AWS::Serverless::Function
     Properties:
       Environment:
@@ -797,13 +975,18 @@ Resources:
       Layers:
         - !Ref BaseLayer
       Events:
-        postVariance:
+        variancePost:
           Type: Api
           Properties:
             Path: /variance
             Method: post
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
 
-  PutVarianceFunction:
+  VariancePutFunction:
     Type: AWS::Serverless::Function
     Properties:
       Environment:
@@ -811,10 +994,9 @@ Resources:
           LOG_LEVEL: "info"
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          AWS_REGION: !Ref AWSRegion
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
-      CodeUri: variance/POST/
+      CodeUri: variance/PUT/
       Timeout: 60
       Handler: index.handler
       Runtime: nodejs18.x
@@ -822,8 +1004,59 @@ Resources:
         - !Ref BaseLayer
         - !Ref PermissionLayer
       Events:
-        putVariance:
+        variancePut:
           Type: Api
           Properties:
             Path: /variance
             Method: put
+            RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
+
+  ### API ###
+  ApiDeployment:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+      Cors:
+        AllowMethods: "'POST,GET,OPTIONS,PUT'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+        MaxAge: "'600'"
+      Auth:
+        ApiKeyRequired: true
+        DefaultAuthorizer: KCAuthorizer
+        AddDefaultAuthorizerToCorsPreflight: false
+        Authorizers:
+          KCAuthorizer:
+            FunctionPayloadType: REQUEST
+            FunctionArn: !GetAtt Authorizer.Arn
+            Identity:
+              Headers:
+                - Authorization
+
+  ### AUTHORIZER ###
+  Authorizer:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: authorizer/
+      Handler: index.handler
+      Layers:
+        - !Ref BaseLayer
+        - !Ref PermissionLayer
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          LOG_LEVEL: info
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri
+
+Outputs:
+  #   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  #   # Find out more about other implicit resources you can reference within SAM
+  #   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  ApiDeployment:
+    Description: 'API Gateway endpoint URL for Stage for Config function'
+    Value: !Sub 'https://${ApiDeployment}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/config/'

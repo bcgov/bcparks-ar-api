@@ -68,12 +68,12 @@ jobs:
           SSO_ISSUER: ${{ secrets.SSO_ISSUER }}
           SSO_JWKSURI: ${{ secrets.SSO_JWKSURI }}
           S3_BUCKET_DATA: ${{ vars.S3_BUCKET_DATA }}
-          STACK_NAME: ${{ vars.PDR_API_STACK_NAME }}
-          STAGE: ${{ vars.PDR_API_STAGE }}
+          STACK_NAME: ${{ vars.AR_API_STACK_NAME }}
+          STAGE: ${{ vars.AR_API_STAGE }}
           DATA_REGISTER_NAME_ENDPOINT: ${{ secrets.DATA_REGISTER_NAME_ENDPOINT }}
           DATA_REGISTER_NAME_API_KEY: ${{ secrets.DATA_REGISTER_NAME_API_KEY }}
         run: |
-          sam deploy --stack-name $STACK_NAME --no-confirm-changeset --no-fail-on-empty-changeset --parameter-overrides "Stage=$STAGE" "SSOIssuerUrl=$SSO_ISSUER" "SSOJWKSUri=$SSO_JWKSURI" "AWSAccountList=$AWS_ACCOUNT_LIST" "S3BucketData=$S3_BUCKET_DATA" "DataRegisterNameEndpoint=$DATA_REGISTER_NAME_ENDPOINT "DataRegisterNameApiKey=$DATA_REGISTER_NAME_API_KEY"
+          sam deploy --stack-name $STACK_NAME --no-confirm-changeset --no-fail-on-empty-changeset --parameter-overrides "Stage=$STAGE" "SSOIssuerUrl=$SSO_ISSUER" "SSOJWKSUri=$SSO_JWKSURI" "AWSAccountList=$AWS_ACCOUNT_LIST" "S3BucketData=$S3_BUCKET_DATA" "DataRegisterNameEndpoint=$DATA_REGISTER_NAME_ENDPOINT" "DataRegisterNameApiKey=$DATA_REGISTER_NAME_API_KEY"
  
        - shell: bash
          env:
