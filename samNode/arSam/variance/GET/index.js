@@ -8,6 +8,11 @@ const {
 exports.handler = async (event, context) => {
   logger.debug("Variance get:", event);
 
+  // Allow CORS
+  if (event.httpMethod === 'OPTIONS') {
+    return sendResponse(200, {}, 'Success', null, context);
+  }
+
   try {
     const token = await decodeJWT(event);
     const permissionObject = resolvePermissions(token);

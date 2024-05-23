@@ -9,6 +9,11 @@ exports.handler = async (event, context) => {
   logger.info("GET: Park");
   logger.debug(event);
 
+  // Allow CORS
+  if (event.httpMethod === 'OPTIONS') {
+    return sendResponse(200, {}, 'Success', null, context);
+  }
+
   let queryObj = {
     TableName: TABLE_NAME,
   };

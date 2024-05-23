@@ -2,6 +2,12 @@ const { getOne, TABLE_NAME, runQuery, sendResponse, logger } = require("/opt/bas
 
 exports.handler = async (event, context) => {
   logger.debug("GET: dateConfig", event);
+
+  // Allow CORS
+  if (event.httpMethod === 'OPTIONS') {
+    return sendResponse(200, {}, 'Success', null, context);
+  }
+  
   try {
     const year = getDate(event);
     let res;

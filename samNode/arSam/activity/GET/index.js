@@ -4,6 +4,11 @@ const { decodeJWT, resolvePermissions } = require("/opt/permissionLayer");
 exports.handler = async (event, context) => {
   logger.debug("GET: Activity", event);
 
+  // Allow CORS
+  if (event.httpMethod === 'OPTIONS') {
+    return sendResponse(200, {}, 'Success', null, context);
+  }
+
   let queryObj = {
     TableName: TABLE_NAME,
   };

@@ -245,7 +245,7 @@ Resources:
           PRIVATE_KEY: !Ref PrivateKey
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
       CodeUri: activity/GET/
       Timeout: 60
       Handler: index.handler
@@ -260,6 +260,10 @@ Resources:
             Path: /activity
             Method: get
             RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
         activityOptions:
           Type: Api
           Properties:
@@ -284,7 +288,7 @@ Resources:
           PRIVATE_KEY: !Ref PrivateKey
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
       CodeUri: activity/POST/
       Timeout: 60
       Handler: index.handlePost
@@ -301,10 +305,6 @@ Resources:
             Path: /activity
             Method: post
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
 
   ActivityPostLockFunction:
     Type: AWS::Serverless::Function
@@ -319,7 +319,7 @@ Resources:
           PRIVATE_KEY: !Ref PrivateKey
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
       CodeUri: activity/POST/
       Timeout: 60
       Handler: index.handleLock
@@ -336,10 +336,6 @@ Resources:
             Path: /activity/lock
             Method: post
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
     
   ActivityPostUnlockFunction:
     Type: AWS::Serverless::Function
@@ -354,7 +350,7 @@ Resources:
           PRIVATE_KEY: !Ref PrivateKey
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
       CodeUri: activity/POST/
       Timeout: 60
       Handler: index.handleUnlock
@@ -371,17 +367,13 @@ Resources:
             Path: /activity/unlock
             Method: post
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
 
   ActivityDeleteFunction:
     Type: AWS::Serverless::Function
     Properties:
       Environment:
         Variables:
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
       CodeUri: activity/DELETE/
       Timeout: 60
       Handler: index.handler
@@ -395,17 +387,13 @@ Resources:
             Path: /activity
             Method: delete
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
 
   ActivityPutFunction:
     Type: AWS::Serverless::Function
     Properties:
       Environment:
         Variables:
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
       CodeUri: activity/PUT/
       Timeout: 60
       Handler: index.handler
@@ -419,10 +407,6 @@ Resources:
             Path: /activity
             Method: put
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
 
   CloudwatchAlarmFunction:
     Type: AWS::Serverless::Function
@@ -436,7 +420,7 @@ Resources:
       Environment:
         Variables:
           AWS_ACCOUNT_LIST: !Ref AWSAccountList
-          LOG_LEVEL: "debug"
+          LOG_LEVEL: debug
       Events:
         cloudwatchAlarm:
           Type: Api
@@ -444,6 +428,10 @@ Resources:
             Path: /cloudwatchAlarm
             Method: get
             RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
         cloudwatchAlarmOptions:
           Type: Api
           Properties:
@@ -468,7 +456,7 @@ Resources:
           CONFIG_TABLE_TABLE: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
           EXPORT_FUNCTION_NAME: !Ref ExportFunctionName
           EXPORT_EXPIRY_TIME: !Ref ExportExpiryTime
       Layers:
@@ -482,6 +470,10 @@ Resources:
             Path: /export
             Method: get
             RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
         exportOptions:
           Type: Api
           Properties:
@@ -511,7 +503,7 @@ Resources:
           S3_BUCKET_DATA: !Ref S3BucketData
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
       Layers:
           - !Ref ConstantsLayer
           - !Ref FunctionsLayer
@@ -535,7 +527,7 @@ Resources:
           PRIVATE_KEY: !Ref PrivateKey
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
       Layers:
           - !Ref BaseLayer
           - !Ref PermissionLayer
@@ -546,6 +538,10 @@ Resources:
             Path: /export-variance
             Method: get
             RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
         varianceExportOptions:
           Type: Api
           Properties:
@@ -571,7 +567,7 @@ Resources:
           S3_BUCKET_DATA: !Ref S3BucketData
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
       Layers:
           - !Ref BaseLayer
           - !Ref ConstantsLayer
@@ -585,7 +581,7 @@ Resources:
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
       CodeUri: fiscalYearEnd/GET/
       Timeout: 60
       Handler: index.handler
@@ -599,6 +595,10 @@ Resources:
             Path: /fiscalYearEnd
             Method: get
             RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
         fiscalYearEndOptions:
           Type: Api
           Properties:
@@ -619,7 +619,7 @@ Resources:
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
       CodeUri: fiscalYearEnd/POST/
       Timeout: 60
       Handler: index.lockFiscalYear
@@ -634,10 +634,6 @@ Resources:
             Path: /fiscalYearEnd/lock
             Method: post
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
 
   FiscalYearEndPostUnlockFunction:
     Type: AWS::Serverless::Function
@@ -648,7 +644,7 @@ Resources:
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
       CodeUri: fiscalYearEnd/POST/
       Timeout: 60
       Handler: index.unlockFiscalYear
@@ -663,10 +659,6 @@ Resources:
             Path: /fiscalYearEnd/unlock
             Method: post
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
 
   NameUpdate:
     Type: AWS::Serverless::Function
@@ -695,7 +687,7 @@ Resources:
           PRIVATE_KEY: !Ref PrivateKey
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
       CodeUri: park/GET/
       Timeout: 60
       Handler: index.handler
@@ -710,6 +702,10 @@ Resources:
             Path: /park
             Method: get
             RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
         parkOptions:
           Type: Api
           Properties:
@@ -745,17 +741,13 @@ Resources:
             Path: /park
             Method: post
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
 
   ParkPutFunction:
     Type: AWS::Serverless::Function
     Properties:
       Environment:
         Variables:
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
       CodeUri: park/PUT/
       Timeout: 60
       Handler: index.handler
@@ -769,17 +761,13 @@ Resources:
             Path: /park
             Method: put
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
 
   ReadConfigFunction:
     Type: AWS::Serverless::Function
     Properties:
       Environment:
         Variables:
-          LOG_LEVEL: "error"
+          LOG_LEVEL: error
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
       CodeUri: readConfig/
@@ -795,6 +783,10 @@ Resources:
             Path: /readConfig
             Method: get
             RestApiId: !Ref ApiDeployment
+            Auth:
+              ApiKeyRequired: false
+              Authorizer: NONE
+              OverrideApiAuth: true
         readConfigOptions:
           Type: Api
           Properties:
@@ -811,7 +803,7 @@ Resources:
     Properties:
       Environment:
         Variables:
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
       CodeUri: subArea/GET/
       Timeout: 60
       Handler: index.handler
@@ -841,7 +833,7 @@ Resources:
     Properties:
       Environment:
         Variables:
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
@@ -860,17 +852,13 @@ Resources:
             Path: /subArea
             Method: delete
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
 
   SubAreaPostFunction:
     Type: AWS::Serverless::Function
     Properties:
       Environment:
         Variables:
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
@@ -893,17 +881,13 @@ Resources:
             Path: /subArea
             Method: post
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
 
   SubAreaPutFunction:
     Type: AWS::Serverless::Function
     Properties:
       Environment:
         Variables:
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
@@ -922,17 +906,13 @@ Resources:
             Path: /subArea
             Method: put
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
   
   VarianceGetFunction:
     Type: AWS::Serverless::Function
     Properties:
       Environment:
         Variables:
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
@@ -967,7 +947,7 @@ Resources:
     Properties:
       Environment:
         Variables:
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
       CodeUri: variance/POST/
       Timeout: 60
       Handler: index.handler
@@ -981,17 +961,13 @@ Resources:
             Path: /variance
             Method: post
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
 
   VariancePutFunction:
     Type: AWS::Serverless::Function
     Properties:
       Environment:
         Variables:
-          LOG_LEVEL: "info"
+          LOG_LEVEL: info
           TABLE_NAME: !Ref TableName
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
@@ -1010,10 +986,6 @@ Resources:
             Path: /variance
             Method: put
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
 
   ### API ###
   ApiDeployment:

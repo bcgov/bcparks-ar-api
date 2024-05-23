@@ -3,6 +3,11 @@ const { runQuery, TABLE_NAME, sendResponse, logger } = require('/opt/baseLayer')
 exports.handler = async (event, context) => {
   logger.debug('Read Config', event);
 
+  // Allow CORS
+  if (event.httpMethod === 'OPTIONS') {
+    return sendResponse(200, {}, 'Success', null, context);
+  }
+
   let queryObj = {
     TableName: TABLE_NAME
   };

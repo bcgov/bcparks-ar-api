@@ -29,6 +29,11 @@ const EXPIRY_TIME = process.env.EXPORT_EXPIRY_TIME
 exports.handler = async (event, context) => {
   logger.info("GET: Export variances - ", event?.queryStringParameters);
 
+  // Allow CORS
+  if (event.httpMethod === 'OPTIONS') {
+    return sendResponse(200, {}, 'Success', null, context);
+  }
+
   // decode permissions
   const token = await decodeJWT(event);
   const permissionObject = resolvePermissions(token);
