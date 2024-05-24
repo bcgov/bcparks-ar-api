@@ -4,9 +4,10 @@ version = 0.1
 
 [default]
 [default.global.parameters]
-stack_name = "arSam"
+stack_name = "ar-api"
 
 [default.build.parameters]
+cached = false
 parallel = true
 
 [default.validate.parameters]
@@ -16,7 +17,9 @@ lint = true
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 resolve_s3 = true
-resolve_image_repos = true
+s3_prefix = "ar-api"
+region = "ca-central-1"
+image_repositories = []
 
 [default.package.parameters]
 resolve_s3 = true

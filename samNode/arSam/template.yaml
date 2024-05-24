@@ -12,15 +12,12 @@ Globals:
         SSO_ISSUER: !Ref SSOIssuerUrl
         SSO_JWKSURI: !Ref SSOJWKSUri
         IS_OFFLINE: false
-        DYNAMODB_ENDPOINT_URL: dynamodb.ca-central-1.amazonaws.com
+        DYNAMODB_ENDPOINT_URL: https://dynamodb.ca-central-1.amazonaws.com
 
 Parameters:
-  AccountId:
-    Type: String
-    Default: '123456789'
   AWSAccountList:
-   Type: String
-   Default: 'defaultAccount'
+    Type: String
+    Default: 'defaultAccount'
   Stage:
     Type: String
     Default: 'dev'
@@ -54,10 +51,13 @@ Parameters:
   S3BucketData:
     Type: String
     Default: 'defaultBucket' 
-  TableName:
+  TableNameAR:
     Type: String
-    Default: 'ar-tests'
-  ConfigTableName: 
+    Default: 'ParksAr'
+  TableNameCacheAR:
+    Type: String
+    Default: 'NameCacheAr'
+  ConfigTableName:
     Type: String
     Default: "ar-config"
   JwtSecret: 
@@ -86,45 +86,6 @@ Parameters:
     Default: "https://dev.loginproxy.gov.bc.ca/auth/realms/bcparks-service-transformation/protocol/openid-connect/certs"
 
 Resources:
-  ## Roles
-  StreamRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-      ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
-        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole'
-        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'
-      Policies:
-        - PolicyName: 'ProcessDynamoDBStreamRolePolicyOne'
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              -
-                Action:
-                  - dynamodb:GetItem
-                  - dynamodb:DeleteItem
-                  - dynamodb:PutItem
-                  - dynamodb:Scan
-                  - dynamodb:Query
-                  - dynamodb:UpdateItem
-                  - dynamodb:BatchWriteItem
-                  - dynamodb:BatchGetItem
-                  - dynamodb:DescribeTable
-                  - dynamodb:ConditionCheckItem
-                Resource: !Sub
-                  - 'arn:aws:dynamodb:ca-central-1:${AccountId}:table/Audit'
-                  - AccountId: !Ref AccountId
-                Effect: Allow
-
   ### LAMBDA LAYERS ###
   VarianceLayer:
     Type: AWS::Serverless::LayerVersion
@@ -237,7 +198,7 @@ Resources:
     Properties:
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           JWT_SECRET: !Ref JwtSecret
           JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
@@ -253,6 +214,9 @@ Resources:
       Layers:
           - !Ref BaseLayer
           - !Ref PermissionLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         activityGet:
           Type: Api
@@ -280,7 +244,7 @@ Resources:
     Properties:
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           JWT_SECRET: !Ref JwtSecret
           JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
@@ -298,6 +262,9 @@ Resources:
           - !Ref BaseLayer
           - !Ref VarianceLayer
           - !Ref ConstantsLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         activityPost:
           Type: Api
@@ -311,7 +278,7 @@ Resources:
     Properties:
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           JWT_SECRET: !Ref JwtSecret
           JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
@@ -329,6 +296,9 @@ Resources:
           - !Ref BaseLayer
           - !Ref VarianceLayer
           - !Ref ConstantsLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         activityRecordLock:
           Type: Api
@@ -342,7 +312,7 @@ Resources:
     Properties:
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           JWT_SECRET: !Ref JwtSecret
           JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
@@ -360,6 +330,9 @@ Resources:
           - !Ref BaseLayer
           - !Ref VarianceLayer
           - !Ref ConstantsLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         activityRecordUnlock:
           Type: Api
@@ -380,6 +353,9 @@ Resources:
       Runtime: nodejs18.x
       Layers:
           - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         activityDelete:
           Type: Api
@@ -400,6 +376,9 @@ Resources:
       Runtime: nodejs18.x
       Layers:
           - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         activityPut:
           Type: Api
@@ -452,7 +431,7 @@ Resources:
       Runtime: nodejs18.x
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_TABLE: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
@@ -463,6 +442,9 @@ Resources:
           - !Ref PermissionLayer
           - !Ref FunctionsLayer
           - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         exportGet:
           Type: Api
@@ -501,7 +483,7 @@ Resources:
           DISABLE_PROGRESS_UPDATES: !Ref DisableProgressUpdates
           DISABLE_HIGH_ACCURACY_PROGRESS_PERCENTAGE: !Ref DisableHighAccuracyProgressPercentage
           S3_BUCKET_DATA: !Ref S3BucketData
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           LOG_LEVEL: info
       Layers:
@@ -519,7 +501,7 @@ Resources:
       Runtime: nodejs18.x
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           JWT_SECRET: !Ref JwtSecret
           JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
@@ -531,6 +513,9 @@ Resources:
       Layers:
           - !Ref BaseLayer
           - !Ref PermissionLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         varianceExportGet:
           Type: Api
@@ -565,7 +550,7 @@ Resources:
           FILE_PATH: !Ref FilePath
           FILE_NAME: !Ref FileNameVarianceExport
           S3_BUCKET_DATA: !Ref S3BucketData
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           LOG_LEVEL: info
       Layers:
@@ -577,7 +562,7 @@ Resources:
     Properties:
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
@@ -588,6 +573,9 @@ Resources:
       Runtime: nodejs18.x
       Layers:
           - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         fiscalYearEndGet:
           Type: Api
@@ -615,7 +603,7 @@ Resources:
     Properties:
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
@@ -627,6 +615,9 @@ Resources:
       Layers:
           - !Ref BaseLayer
           - !Ref PermissionLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         fiscalYearEndLock:
           Type: Api
@@ -640,7 +631,7 @@ Resources:
     Properties:
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
@@ -652,6 +643,9 @@ Resources:
       Layers:
           - !Ref BaseLayer
           - !Ref PermissionLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         fiscalYearEndUnlock:
           Type: Api
@@ -679,7 +673,7 @@ Resources:
     Properties:
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           JWT_SECRET: !Ref JwtSecret
           JWT_SIGN_EXPIRY: !Ref JwtSignExpiry
@@ -695,6 +689,9 @@ Resources:
       Layers:
         - !Ref PermissionLayer
         - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         parkGet:
           Type: Api
@@ -722,7 +719,7 @@ Resources:
     Properties:
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
@@ -734,6 +731,9 @@ Resources:
       Layers:
         - !Ref PermissionLayer
         - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         fiscalYearEndLock:
           Type: Api
@@ -754,6 +754,9 @@ Resources:
       Runtime: nodejs18.x
       Layers:
         - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         fiscalYearEndLock:
           Type: Api
@@ -768,7 +771,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: error
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
       CodeUri: readConfig/
       Timeout: 60
@@ -776,6 +779,9 @@ Resources:
       Runtime: nodejs18.x
       Layers:
         - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         readConfigGet:
           Type: Api
@@ -810,6 +816,9 @@ Resources:
       Runtime: nodejs18.x
       Layers:
         - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         subAreaGet:
           Type: Api
@@ -834,7 +843,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: info
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
@@ -845,6 +854,9 @@ Resources:
       Layers:
         - !Ref BaseLayer
         - !Ref PermissionLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         subAreaDelete:
           Type: Api
@@ -859,7 +871,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: info
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
@@ -874,6 +886,9 @@ Resources:
         - !Ref FormulaLayer
         - !Ref PermissionLayer
         - !Ref SubAreaLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         subAreaPost:
           Type: Api
@@ -888,7 +903,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: info
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
@@ -899,6 +914,9 @@ Resources:
       Layers:
         - !Ref BaseLayer
         - !Ref PermissionLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         SubAreaPut:
           Type: Api
@@ -913,7 +931,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: info
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri 
@@ -924,6 +942,9 @@ Resources:
       Layers:
         - !Ref BaseLayer
         - !Ref PermissionLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         varianceGet:
           Type: Api
@@ -954,6 +975,9 @@ Resources:
       Runtime: nodejs18.x
       Layers:
         - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
       Events:
         variancePost:
           Type: Api
@@ -968,7 +992,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: info
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
@@ -979,6 +1003,9 @@ Resources:
       Layers:
         - !Ref BaseLayer
         - !Ref PermissionLayer
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !Ref TableNameAR
       Events:
         variancePut:
           Type: Api
@@ -986,6 +1013,53 @@ Resources:
             Path: /variance
             Method: put
             RestApiId: !Ref ApiDeployment
+
+  ### DYNAMODB TABLES ###
+
+  ParksAr:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Ref TableNameAR
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+        - AttributeName: orcs
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: orcs-index
+          KeySchema:
+            - AttributeName: orcs
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+  NameCacheAr:
+    Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Ref TableNameCacheAR
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+    DependsOn: ParksAr
 
   ### API ###
   ApiDeployment:
