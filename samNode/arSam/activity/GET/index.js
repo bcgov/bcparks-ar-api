@@ -1,5 +1,4 @@
 const { runQuery, TABLE_NAME, sendResponse, logger } = require("/opt/baseLayer");
-const { decodeJWT, resolvePermissions } = require("/opt/permissionLayer");
 
 exports.handler = async (event, context) => {
   logger.debug("GET: Activity", event);
@@ -14,14 +13,10 @@ exports.handler = async (event, context) => {
   };
 
   try {
-    const token = await decodeJWT(event);
-    const permissionObject = resolvePermissions(token);
-
-    if (!permissionObject.isAuthenticated) {
-      logger.info("**NOT AUTHENTICATED, PUBLIC**");
-      return sendResponse(403, { msg: "Error: UnAuthenticated." }, context);
-    }
-
+    let permissionObject = event.requestContext.authorizer
+    permissionObject.role = JSON.parse(permissionObject.role)
+       
+   
     if (
       event?.queryStringParameters?.subAreaId &&
       event?.queryStringParameters?.activity &&
@@ -36,7 +31,7 @@ exports.handler = async (event, context) => {
 
       if (
         !permissionObject.isAdmin &&
-        permissionObject.roles.includes(`${orcs}:${subAreaId}`) === false
+        permissionObject.role.includes(`${orcs}:${subAreaId}`) === false
       ) {
         logger.info("Not authorized.");
         logger.debug(permissionObject);

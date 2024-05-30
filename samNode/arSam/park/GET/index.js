@@ -1,13 +1,8 @@
 const { runQuery, TABLE_NAME, sendResponse, logger  } = require("/opt/baseLayer");
-const {
-  decodeJWT,
-  roleFilter,
-  resolvePermissions,
-} = require("/opt/permissionLayer");
+const {roleFilter} = require("/opt/permissionLayer");
 
 exports.handler = async (event, context) => {
   logger.info("GET: Park");
-  logger.debug(event);
 
   // Allow CORS
   if (event.httpMethod === 'OPTIONS') {
@@ -19,13 +14,9 @@ exports.handler = async (event, context) => {
   };
 
   try {
-    const token = await decodeJWT(event);
-    const permissionObject = resolvePermissions(token);
 
-    if (!permissionObject.isAuthenticated) {
-      logger.info("**NOT AUTHENTICATED, PUBLIC**");
-      return sendResponse(403, { msg: "Error: UnAuthenticated." }, context);
-    }
+    const permissionObject = event.requestContext.authorizer;
+    permissionObject.role = JSON.parse(permissionObject.role);
 
     if (!event.queryStringParameters) {
       // Get me a list of parks, with subareas
@@ -48,9 +39,9 @@ exports.handler = async (event, context) => {
         logger.info(
           "**Some other authenticated person with attendance-and-revenue roles**"
         );
-        logger.debug("permissionObject.roles:", permissionObject.roles);
+        logger.debug("permissionObject.roles:", permissionObject.role);
         // We're getting parks, so take their role and grab the orcs id from the front
-        const parkRoles = permissionObject.roles.map((item) => {
+        const parkRoles = permissionObject.role.map((item) => {
           return item.split(":")[0];
         });
         logger.debug("Effective park roles:", parkRoles);
@@ -93,10 +84,10 @@ exports.handler = async (event, context) => {
       } else {
         // Some other authenticated role
         logger.info(
-          "**Some other authenticated person with attendance-and-revenue roles**"
+          "**Some other authenticated person with attendance-and-revenue role**"
         );
-        logger.debug("permissionObject.roles:", permissionObject.roles);
-        results = await roleFilter(results, permissionObject.roles);
+        logger.debug("permissionObject.role:", permissionObject.role);
+        results = await roleFilter(results, permissionObject.role);
         logger.debug(JSON.stringify(results));
       }
 
@@ -133,7 +124,7 @@ async function filterSubAreaAccess(permissionObject, parks) {
       queryObj.ExclusiveStartKey = parkData.LastEvaluatedKey;
     } while (typeof parkData.LastEvaluatedKey !== "undefined");
 
-    results = await roleFilter(results, permissionObject.roles);
+    results = await roleFilter(results, permissionObject.role);
     results.forEach((item) => {
       parkSubAreaAccess.push({ name: item.subAreaName, id: item.sk });
     });

@@ -22,20 +22,18 @@ exports.handleUnlock = async (event, context) => {
 
 async function main(event, context, lock = null) {
   try {
-    const token = await decodeJWT(event);
-    const permissionObject = resolvePermissions(token);
-    const warnIfVariance = event.queryStringParameters?.hasOwnProperty('warn') || false;
 
-    if (!permissionObject.isAuthenticated) {
-      logger.info('**NOT AUTHENTICATED, PUBLIC**');
-      return sendResponse(403, { msg: 'Error: UnAuthenticated.' }, context);
-    }
+    const warnIfVariance = event.queryStringParameters?.hasOwnProperty('warn') || false;
+    let permissionObject = event.requestContext.authorizer;
+    permissionObject.role = JSON.parse(permissionObject.role);
+       
+   
 
     const body = JSON.parse(event.body);
 
-    if (!permissionObject.isAdmin && permissionObject.roles.includes(`${body.orcs}:${body.subAreaId}`) === false) {
+    if (!permissionObject.isAdmin && permissionObject.role.includes(`${body.orcs}:${body.subAreaId}`) === false) {
       logger.info('Not authorized.');
-      logger.debug(permissionObject.roles);
+      logger.debug(permissionObject.role);
       return sendResponse(403, { msg: 'Unauthorized.' }, context);
     }
 

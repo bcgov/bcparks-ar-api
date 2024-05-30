@@ -44,14 +44,14 @@ const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 const TABLE_NAME = process.env.TABLE_NAME || "ar-tests";
 const CONFIG_TABLE_NAME = process.env.CONFIG_TABLE_NAME || "ar-config";
 const AWS_REGION = process.env.AWS_REGION || "ca-central-1";
-const DYNAMODB_ENDPOINT_URL = process.env.DYNAMODB_ENDPOINT_URL || "http://172.17.0.26:8000"
+const DYNAMODB_ENDPOINT_URL = process.env.DYNAMODB_ENDPOINT_URL || "http://172.17.0.2:8000"
 const options = {
   region: AWS_REGION,
   endpoint: DYNAMODB_ENDPOINT_URL
 };
 if (process.env.IS_OFFLINE === 'true') {
   // If offline point at local
-  options[endpoint] = 'http://172.17.0.26:8000';
+  options.endpoint = 'http://172.17.0.2:8000';
 }
 const ACTIVE_STATUS = "active";
 const RESERVED_STATUS = "reserved";

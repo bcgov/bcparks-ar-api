@@ -1,17 +1,11 @@
 const { dynamodb, TABLE_NAME, logger, sendResponse } = require("/opt/baseLayer");
-const { decodeJWT, resolvePermissions } = require("/opt/permissionLayer");
 
 exports.handler = async (event, context) => {
   logger.debug("Variance PUT:", event);
   try {
-    const token = await decodeJWT(event);
-    const permissionObject = resolvePermissions(token);
-
-    if (!permissionObject.isAuthenticated) {
-      logger.info("**NOT AUTHENTICATED, PUBLIC**");
-      return sendResponse(403, { msg: "Error: Unauthenticated." }, context);
-    }
-
+    const permissionObject = event.requestContext.authorizer;
+    permissionObject.role = JSON.parse(permissionObject.role);
+       
     const body = JSON.parse(event.body);
 
     if (!permissionObject.isAdmin && !permissionObject.roles.includes(`${body.orcs}:${body.subAreaId}`)) {

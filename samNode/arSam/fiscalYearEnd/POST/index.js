@@ -7,7 +7,6 @@ const {
   sendResponse,
   logger
 } = require("/opt/baseLayer");
-const { decodeJWT, resolvePermissions } = require("/opt/permissionLayer");
 const { DateTime } = require("luxon");
 
 // lock the fiscal year from further edits
@@ -36,8 +35,10 @@ async function handleLockUnlock(isLocked, event, context) {
 }
 
 async function checkPermissions(event) {
-  const token = await decodeJWT(event);
-  const permissionObject = resolvePermissions(token);
+
+  const permissionObject = event.requestContext.authorizer
+  permissionObject.role = JSON.parse(permissionObject.role)
+
   if (!permissionObject.isAdmin) {
     throw {
       code: 403,

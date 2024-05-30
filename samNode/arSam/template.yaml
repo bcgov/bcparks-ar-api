@@ -224,10 +224,6 @@ Resources:
             Path: /activity
             Method: get
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
         activityOptions:
           Type: Api
           Properties:
@@ -407,10 +403,6 @@ Resources:
             Path: /cloudwatchAlarm
             Method: get
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
         cloudwatchAlarmOptions:
           Type: Api
           Properties:
@@ -452,10 +444,6 @@ Resources:
             Path: /export
             Method: get
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
         exportOptions:
           Type: Api
           Properties:
@@ -523,10 +511,6 @@ Resources:
             Path: /export-variance
             Method: get
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
         varianceExportOptions:
           Type: Api
           Properties:
@@ -699,20 +683,13 @@ Resources:
             Path: /park
             Method: get
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
         parkOptions:
           Type: Api
           Properties:
             Path: /park
             Method: options
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
+            
 
   ParkPostFunction:
     Type: AWS::Serverless::Function
@@ -723,7 +700,7 @@ Resources:
           CONFIG_TABLE_NAME: !Ref ConfigTableName
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
-          LOC_LEVEL: "info"
+          LOG_LEVEL: "info"
       CodeUri: park/POST/
       Timeout: 60
       Handler: index.handler
@@ -735,7 +712,7 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref TableNameAR
       Events:
-        fiscalYearEndLock:
+        ParkPostFunction:
           Type: Api
           Properties:
             Path: /park
@@ -758,7 +735,7 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref TableNameAR
       Events:
-        fiscalYearEndLock:
+        ParkPutFunction:
           Type: Api
           Properties:
             Path: /park

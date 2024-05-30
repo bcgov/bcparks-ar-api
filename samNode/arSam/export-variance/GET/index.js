@@ -35,15 +35,11 @@ exports.handler = async (event, context) => {
   }
 
   // decode permissions
-  const token = await decodeJWT(event);
-  const permissionObject = resolvePermissions(token);
-
-  if (!permissionObject.isAuthenticated) {
-    return sendResponse(403, { msg: "Error: Not authenticated" }, context);
-  }
+  let permissionObject = event.requestContext.authorizer;
+  permissionObject.role = JSON.parse(permissionObject.role);
 
   let params = event?.queryStringParameters || {};
-  params['roles'] = permissionObject.roles;
+  params['roles'] = permissionObject.role;
 
   // Must provide fiscal year end
   if (!params?.fiscalYearEnd) {
@@ -53,7 +49,7 @@ exports.handler = async (event, context) => {
   // generate a job id from params+role
   let hashParams = {...params};
   delete hashParams.getJob;
-  const decodedHash = JSON.stringify(hashParams) + JSON.stringify(permissionObject.roles);
+  const decodedHash = JSON.stringify(hashParams) + JSON.stringify(permissionObject.role);
   const hash = crypto.createHash('md5').update(decodedHash).digest('hex');
   const pk = "variance-exp-job";
 

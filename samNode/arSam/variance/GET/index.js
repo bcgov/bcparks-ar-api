@@ -14,23 +14,16 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const token = await decodeJWT(event);
-    const permissionObject = resolvePermissions(token);
+    const permissionObject = event.requestContext.authorizer;
+    permissionObject.role = JSON.parse(permissionObject.role);
 
     // Only admins see this route.
     if (permissionObject.isAdmin) {
       // Sysadmin, they get it all
       logger.info("**Sysadmin**");
     } else {
-      if (permissionObject.isAuthenticated) {
-        // Non-sysadmin role.
         logger.info("**Authenticated, non-sysadmin**");
-      } else {
-        logger.info("**Someone else**");
-        return sendResponse(403, { msg: "Error: UnAuthenticated." }, context);
-      }
     }
-
     // new pk/sk for variance:
     // pk: variance::ORCS::activityDate
     // sk: subAreaId::activity
@@ -104,8 +97,8 @@ async function getVarianceRecords(permissionObject, orcs, activityDate, subAreaI
   try {
     const data = await runQuery(queryObj, true);
     // Remove data that doesn't have permission to access.
-    logger.debug('User roles: ', permissionObject.roles);
-    const filteredData = await roleFilter(data.data, permissionObject.roles);
+    logger.debug('User roles: ', permissionObject.role);
+    const filteredData = await roleFilter(data.data, permissionObject.role);
 
     return sendResponse(200, { data: filteredData, lastEvaluatedKey: data.LastEvaluatedKey }, context);
   } catch (e) {

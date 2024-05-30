@@ -20,14 +20,9 @@ const SSO_CLIENT_ID = process.env.SSO_CLIENT_ID;
 exports.handler = async (event, context) => {
   logger.debug('Subarea POST:', event);
   try {
-    const token = await decodeJWT(event);
-    const permissionObject = resolvePermissions(token);
-
-    if (!permissionObject.isAuthenticated) {
-      logger.info('**NOT AUTHENTICATED, PUBLIC**');
-      return sendResponse(403, { msg: 'Unauthenticated.' }, context);
-    }
-
+    const permissionObject = event.requestContext.authorizer;
+    permissionObject.role = JSON.parse(permissionObject.role);
+       
     // Admins only
     if (!permissionObject.isAdmin) {
       logger.info('Not authorized.');

@@ -16,7 +16,6 @@ if (IS_OFFLINE) {
 const lambda = new Lambda(options);
 
 const { runQuery, dynamodb, TABLE_NAME, sendResponse, logger } = require("/opt/baseLayer");
-const { decodeJWT, resolvePermissions } = require("/opt/permissionLayer");
 const { convertRolesToMD5 } = require("/opt/functionsLayer");
 
 const EXPORT_FUNCTION_NAME =
@@ -35,15 +34,11 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const token = await decodeJWT(event);
-    const permissionObject = resolvePermissions(token);
-
-    if (!permissionObject.isAuthenticated) {
-      return sendResponse(403, { msg: "Error: UnAuthenticated." }, context);
-    }
+    let permissionObject = event.requestContext.authorizer;
+    permissionObject.role = JSON.parse(permissionObject.role);
 
     // This will give us the sk
-    const sk = convertRolesToMD5(permissionObject.roles, "export-");
+    const sk = convertRolesToMD5(permissionObject.role, "export-");
 
     // Check for existing job
     let queryObj = {
@@ -143,7 +138,7 @@ exports.handler = async (event, context) => {
           LogType: "None",
           Payload: JSON.stringify({
             jobId: sk,
-            roles: permissionObject.roles,
+            roles: permissionObject.role,
             lastSuccessfulJob: lastSuccessfulJob,
           }),
         };

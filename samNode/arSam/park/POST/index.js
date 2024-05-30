@@ -4,12 +4,12 @@ const { decodeJWT, resolvePermissions } = require("/opt/permissionLayer");
 exports.handler = async (event, context) => {
   logger.debug("Park POST:", event);
   try {
-    const token = await decodeJWT(event);
-    const permissionObject = resolvePermissions(token);
-
+    let permissionObject = event.requestContext.authorizer;
+    permissionObject.role = JSON.parse(permissionObject.role);
+    
     if (!permissionObject.isAuthenticated) {
       logger.info("**NOT AUTHENTICATED, PUBLIC**");
-      return sendResponse(403, { msg: "Error: Unauthenticated." }, context);
+      return sendResponse(403, { msg: "Error: UnAuthenticated." }, context);
     }
 
     // Admins only

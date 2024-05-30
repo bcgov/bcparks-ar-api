@@ -17,7 +17,6 @@ exports.handler = async function (event, context, callback) {
   let permissionObject = undefined;
 
   if (headers?.Authorization && headers.Authorization !== 'None') {
-    logger.info(`decoding JWT`);
     // Authorization: None is required because we don't have lambda@edge.
     // Until then, all unauth stuff needs to be here.
     // This is why methodARN isn't here.
@@ -89,7 +88,8 @@ function handleContextAndAPIKey(authResponse, permissionObject, headers) {
   authResponse.context = {
     isAdmin: permissionObject?.isAdmin,
     userID: permissionObject?.email,
-    role: JSON.stringify(permissionObject?.roles)
+    role: JSON.stringify(permissionObject?.roles),
+    isAuthenticated: permissionObject?.isAuthenticated
   };
 
   // Get and/or Set the api-key
