@@ -230,10 +230,7 @@ Resources:
             Path: /activity
             Method: options
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
+
 
   ActivityPostFunction:
     Type: AWS::Serverless::Function
@@ -409,10 +406,6 @@ Resources:
             Path: /cloudwatchAlarm
             Method: options
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
 
   ExportGetFunction:
     Type: AWS::Serverless::Function
@@ -450,10 +443,6 @@ Resources:
             Path: /export
             Method: options
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
 
   ExportInvokableFunction:
     Type: AWS::Serverless::Function
@@ -517,10 +506,6 @@ Resources:
             Path: /export-variance
             Method: options
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
 
   VarianceExportInvokableFunction:
     Type: AWS::Serverless::Function
@@ -567,20 +552,13 @@ Resources:
             Path: /fiscalYearEnd
             Method: get
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
         fiscalYearEndOptions:
           Type: Api
           Properties:
             Path: /fiscalYearEnd
             Method: options
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
+
 
   FiscalYearEndPostLockFunction:
     Type: AWS::Serverless::Function
@@ -766,20 +744,13 @@ Resources:
             Path: /readConfig
             Method: get
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
         readConfigOptions:
           Type: Api
           Properties:
             Path: /readConfig
             Method: options
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
+
 
   SubAreaGetFunction:
     Type: AWS::Serverless::Function
@@ -809,10 +780,7 @@ Resources:
             Path: /subArea
             Method: options
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
+
 
   SubAreaDeleteFunction:
     Type: AWS::Serverless::Function
@@ -935,10 +903,6 @@ Resources:
             Path: /variance
             Method: options
             RestApiId: !Ref ApiDeployment
-            Auth:
-              ApiKeyRequired: false
-              Authorizer: NONE
-              OverrideApiAuth: true
   
   VariancePostFunction:
     Type: AWS::Serverless::Function

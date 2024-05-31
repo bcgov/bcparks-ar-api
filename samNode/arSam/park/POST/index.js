@@ -4,7 +4,7 @@ const { decodeJWT, resolvePermissions } = require("/opt/permissionLayer");
 exports.handler = async (event, context) => {
   logger.debug("Park POST:", event);
   try {
-    let permissionObject = event.requestContext.authorizer;
+    const permissionObject = event.requestContext.authorizer;
     permissionObject.role = JSON.parse(permissionObject.role);
     
     if (!permissionObject.isAuthenticated) {
