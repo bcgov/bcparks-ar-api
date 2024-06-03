@@ -559,7 +559,6 @@ Resources:
             Method: options
             RestApiId: !Ref ApiDeployment
 
-
   FiscalYearEndPostLockFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -667,7 +666,6 @@ Resources:
             Path: /park
             Method: options
             RestApiId: !Ref ApiDeployment
-            
 
   ParkPostFunction:
     Type: AWS::Serverless::Function
@@ -751,7 +749,6 @@ Resources:
             Method: options
             RestApiId: !Ref ApiDeployment
 
-
   SubAreaGetFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -780,7 +777,6 @@ Resources:
             Path: /subArea
             Method: options
             RestApiId: !Ref ApiDeployment
-
 
   SubAreaDeleteFunction:
     Type: AWS::Serverless::Function
@@ -1013,7 +1009,6 @@ Resources:
         AllowOrigin: "'*'"
         MaxAge: "'600'"
       Auth:
-        ApiKeyRequired: true
         DefaultAuthorizer: KCAuthorizer
         AddDefaultAuthorizerToCorsPreflight: false
         Authorizers:

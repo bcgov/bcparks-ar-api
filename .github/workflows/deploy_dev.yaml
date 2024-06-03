@@ -55,7 +55,7 @@ jobs:
          with:
             path: |
               **/.aws-sam
-            key: ${{ github.sha }}-sam-cache
+            key: ${{ github.sha }}-ar-api-sam-cache
        - name: Run sam build
          if: steps.cache-sam-build.outputs.cache-hit != 'true'
          run: |
@@ -64,14 +64,14 @@ jobs:
        ### Prevent prompts and failure when the stack is unchanged
        - name: SAM deploy
          env:
-          ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
+          STAGE: ${{ vars.AR_API_STAGE }}
+          STACK_NAME: ${{ vars.AR_API_STACK_NAME }}
+          ACCOUNT_ID: ${{ vars.ACCOUNT_ID }}
           AWS_ACCOUNT_LIST: ${{ vars.AWS_ACCOUNT_LIST }}
           SSO_ISSUER: ${{ secrets.SSO_ISSUER }}
           SSO_JWKSURI: ${{ secrets.SSO_JWKSURI }}
           S3_BUCKET_DATA: ${{ vars.S3_BUCKET_DATA }}
-          STACK_NAME: ${{ vars.AR_API_STACK_NAME }}
-          STAGE: ${{ vars.AR_API_STAGE }}
-          DATA_REGISTER_NAME_ENDPOINT: ${{ vars.DATA_REGISTER_NAME_ENDPOINT }}
+          DATA_REGISTER_NAME_ENDPOINT: ${{ secrets.DATA_REGISTER_NAME_ENDPOINT }}
           DATA_REGISTER_NAME_API_KEY: ${{ secrets.DATA_REGISTER_NAME_API_KEY }}
         run: |
           sam deploy --stack-name $STACK_NAME --no-confirm-changeset --no-fail-on-empty-changeset --parameter-overrides "AccountId=$ACCOUNT_ID" "Stage=$STAGE" "SSOIssuerUrl=$SSO_ISSUER" "SSOJWKSUri=$SSO_JWKSURI" "AWSAccountList=$AWS_ACCOUNT_LIST" "S3BucketData=$S3_BUCKET_DATA" "DataRegisterNameEndpoint=$DATA_REGISTER_NAME_ENDPOINT" "DataRegisterNameApiKey=$DATA_REGISTER_NAME_API_KEY"
