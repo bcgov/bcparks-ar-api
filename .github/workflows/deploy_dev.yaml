@@ -1,17 +1,11 @@
 name: Deploy Dev
 
+run-name: Deploying ${{ github.ref_name }} to dev
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
-
-env:
-  TF_VERSION: 0.14.7
-  TG_VERSION: 0.37.1
-  TG_SRC_PATH: terraform
-  TFC_WORKSPACE: dev
-  TARGET_ENV: dev
-  GIT_BRANCH: main
 
 permissions:
   id-token: write
@@ -26,53 +20,64 @@ jobs:
       matrix:
         node-version: [18.x]
 
+    defaults:
+      run:
+        working-directory: "./"
     steps:
-      - name: Checkout
+      # Checkout GitHub Repo
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      ### Install if no cache exists ###
-      - name: Setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: "yarn"
-      - run: yarn install --silent --frozen-lockfile
-
-      ### Build if no cache exists ###
-      - name: Cache Build
-        id: cache-build
-        uses: actions/cache@v3
-        with:
-          path: |
-            **/terraform/src/artifacts
-          key: ${{ github.sha }}-artifacts
-      - name: Run Build
-        if: steps.cache-build.outputs.cache-hit != 'true'
-        run: yarn build-ci
-
-      ### Get environment variables from AWS Parameter Store ###
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-region: ${{ secrets.AWS_REGION }}
-          role-to-assume: ${{ vars.AWS_ROLE_ARN_TO_USE }}
-          role-duration-seconds: 900
-          role-session-name: parks-ar-api-sandbox-dev-action
-          role-skip-session-tagging: true
-
-      ### Run Terragrunt ###
-      - name: Setup terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-
-      - name: Setup Terragrunt
-        uses: autero1/action-terragrunt@v1.3.0
-        with:
-          terragrunt_version: ${{ env.TG_VERSION }}
-
-      - name: Terragrunt Apply
-        working-directory: ${{ env.TG_SRC_PATH }}/${{ env.TARGET_ENV }}
+      - shell: bash
         env:
-          aws_region: ${{ secrets.AWS_REGION }}
-        run: terragrunt apply -auto-approve --terragrunt-non-interactive -var target_aws_account_id=${{ vars.ACCOUNT_ID }} -var target_env=dev
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-Type: application/json' $WEBHOOK_URL --data '{"text":" A&R API deploy Dev"}'
+
+      # Setup AWS SAM
+      - name: Setup AWS SAM
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      # Assume AWS IAM Role
+      - name: Get AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-region: ${{ vars.AWS_REGION }}
+
+      # SAM Build
+       - name: Cache SAM Build
+         id: cache-sam-build
+         uses: actions/cache@v3
+         with:
+            path: |
+              **/.aws-sam
+            key: ${{ github.sha }}-ar-api-sam-cache
+       - name: Run sam build
+         if: steps.cache-sam-build.outputs.cache-hit != 'true'
+         run: |
+            sam build --cached
+ 
+       # Prevent prompts and failure when the stack is unchanged
+       - name: SAM deploy
+         env:
+          STAGE: ${{ vars.AR_API_STAGE }}
+          STACK_NAME: ${{ vars.AR_API_STACK_NAME }}
+          ACCOUNT_ID: ${{ vars.ACCOUNT_ID }}
+          AWS_ACCOUNT_LIST: ${{ vars.AWS_ACCOUNT_LIST }}
+          SSO_ISSUER: ${{ secrets.SSO_ISSUER }}
+          SSO_JWKSURI: ${{ secrets.SSO_JWKSURI }}
+          S3_BUCKET_DATA: ${{ vars.S3_BUCKET_DATA }}
+          DATA_REGISTER_NAME_ENDPOINT: ${{ secrets.DATA_REGISTER_NAME_ENDPOINT }}
+          DATA_REGISTER_NAME_API_KEY: ${{ secrets.DATA_REGISTER_NAME_API_KEY }}
+        run: |
+          sam deploy --stack-name $STACK_NAME --no-confirm-changeset --no-fail-on-empty-changeset --parameter-overrides "AccountId=$ACCOUNT_ID" "Stage=$STAGE" "SSOIssuerUrl=$SSO_ISSUER" "SSOJWKSUri=$SSO_JWKSURI" "AWSAccountList=$AWS_ACCOUNT_LIST" "S3BucketData=$S3_BUCKET_DATA" "DataRegisterNameEndpoint=$DATA_REGISTER_NAME_ENDPOINT" "DataRegisterNameApiKey=$DATA_REGISTER_NAME_API_KEY"
+ 
+       - shell: bash
+         env:
+            WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+         run: |
+            curl -X POST -H 'Content-Type: application/json' $WEBHOOK_URL --data '{"text":" A&R API - Deploy Dev Complete"}'
