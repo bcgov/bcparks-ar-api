@@ -1,0 +1,10 @@
+{
+    "name": "functionsLayer",
+    "version": "0.0.1",
+    "author": "?/////.",
+    "license": "MIT",
+    "dependencies": {
+      "@aws-sdk/util-dynamodb": "^3.529.1",
+      "crypto": "1.0.1"
+    }
+  } 
