@@ -1,0 +1,942 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM deployment for A&R API
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+    Environment:
+      Variables:
+        SSO_ISSUER: !Ref SSOIssuerUrl
+        SSO_JWKSURI: !Ref SSOJWKSUri
+        IS_OFFLINE: false
+        DYNAMODB_ENDPOINT_URL: https://dynamodb.ca-central-1.amazonaws.com
+
+Parameters:
+  AWSAccountList:
+    Type: String
+    Default: 'defaultAccount'
+  Stage:
+    Type: String
+    Default: 'dev'
+  ExportFunctionName:
+    Type: String
+    Default: 'ar-api-ExportInvokableFunction'
+  VarianceExportFunctionName:
+    Type: String
+    Default: 'ar-api-VarianceExportInvokableFunction'
+  ExportExpiryTime:
+    Type: String
+    Default: '900'
+  FilePath:
+    Type: String
+    Default: './'
+  FileNameExport:
+    Type: String
+    Default: 'A&R_Export'
+  FileNameVarianceExport:
+    Type: String
+    Default: 'A&R_Variance_Report'
+  CsvSysadminSchema:
+    Type: String
+    Default: 'defaultSchema'
+  JobUpdateModulo:
+    Type: String
+    Default: '1'
+  DisableProgressUpdates:
+    Type: String
+    Default: 'false'
+  DisableHighAccuracyProgressPercentage:
+    Type: String
+    Default: 'false'
+  S3BucketData:
+    Type: String
+    Default: 'parks-ar-assets-test' 
+  TableNameAR:
+    Type: String
+    Default: 'ParksAr'
+  TableNameCacheAR:
+    Type: String
+    Default: 'NameCacheAr'
+  TableNameConfigAR:
+    Type: String
+    Default: "ConfigAr"
+  DataRegisterNameEndpoint: 
+    Type: String
+    Default: "defaultEndpoint"
+  DataRegisterNameApiKey:
+    Type: String
+    Default: "defaultApiKey"
+  SSOIssuerUrl: 
+    Type: String
+    Default: "https://dev.loginproxy.gov.bc.ca/auth/realms/bcparks-service-transformation"
+  SSOJWKSUri: 
+    Type: String
+    Default: "https://dev.loginproxy.gov.bc.ca/auth/realms/bcparks-service-transformation/protocol/openid-connect/certs"
+  SSOOrigin:
+    Type: String
+    Default: "https://dev.loginproxy.gov.bc.ca"
+  SSOClientId:
+    Type: String
+    Default: "defaultClientId"
+
+Resources:
+  ### LAMBDA LAYERS ###
+  VarianceLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: varianceLayer
+      Description: Variance Layer
+      ContentUri: layers/varianceLayer/
+      CompatibleRuntimes:
+        - nodejs18.x
+      LicenseInfo: 'Apache-2.0'
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+  
+  SubAreaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: subAreaLayer
+      Description: SubArea Layer
+      ContentUri: layers/subAreaLayer/
+      CompatibleRuntimes:
+        - nodejs18.x
+      LicenseInfo: 'Apache-2.0'
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+
+  PermissionLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: permissionLayer
+      Description: Permission Layer
+      ContentUri: layers/permissionLayer/
+      CompatibleRuntimes:
+        - nodejs18.x
+      LicenseInfo: 'Apache-2.0'
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+
+  BaseLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: baseLayer
+      Description: Base Layer
+      ContentUri: layers/baseLayer/
+      CompatibleRuntimes:
+        - nodejs18.x
+      LicenseInfo: 'Apache-2.0'
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+
+  KeycloakLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: keycloakLayer
+      Description: Keycloak Layer
+      ContentUri: layers/keycloakLayer/
+      CompatibleRuntimes:
+        - nodejs18.x
+      LicenseInfo: 'Apache-2.0'
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+
+  FunctionsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: functionsLayer
+      Description: Functions Layer
+      ContentUri: layers/functionsLayer/
+      CompatibleRuntimes:
+        - nodejs18.x
+      LicenseInfo: 'Apache-2.0'
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+
+  FormulaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: formulaLayer
+      Description: Formula Layer
+      ContentUri: layers/formulaLayer/
+      CompatibleRuntimes:
+        - nodejs18.x
+      LicenseInfo: 'Apache-2.0'
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+
+  ConstantsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: constantsLayer
+      Description: Constants Layer
+      ContentUri: layers/constantsLayer/
+      CompatibleRuntimes:
+        - nodejs18.x
+      LicenseInfo: 'Apache-2.0'
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+
+  ### LAMBDA FUNCTIONS ###
+
+  ActivityGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/activity/GET/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: info
+      Layers:
+          - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
+      Events:
+        activityGet:
+          Type: Api
+          Properties:
+            Path: /activity
+            Method: GET
+            RestApiId: !Ref ApiDeployment
+        activityOptions:
+          Type: Api
+          Properties:
+            Path: /activity
+            Method: OPTIONS
+            RestApiId: !Ref ApiDeployment
+
+  ActivityPostFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/activity/POST/
+      Handler: index.handlePost
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: info
+      Layers:
+          - !Ref BaseLayer
+          - !Ref VarianceLayer
+          - !Ref ConstantsLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
+      Events:
+        activityPost:
+          Type: Api
+          Properties:
+            Path: /activity
+            Method: POST
+            RestApiId: !Ref ApiDeployment
+
+  ActivityPostLockFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/activity/POST/
+      Handler: index.handleLock
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: info
+      Layers:
+          - !Ref BaseLayer
+          - !Ref VarianceLayer
+          - !Ref ConstantsLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
+      Events:
+        activityRecordLock:
+          Type: Api
+          Properties:
+            Path: /activity/lock
+            Method: POST
+            RestApiId: !Ref ApiDeployment
+    
+  ActivityPostUnlockFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/activity/POST/
+      Handler: index.handleUnlock
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: info
+      Layers:
+          - !Ref BaseLayer
+          - !Ref VarianceLayer
+          - !Ref ConstantsLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
+      Events:
+        activityRecordUnlock:
+          Type: Api
+          Properties:
+            Path: /activity/unlock
+            Method: POST
+            RestApiId: !Ref ApiDeployment
+
+  ActivityDeleteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/activity/DELETE/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          LOG_LEVEL: info
+      Layers:
+          - !Ref BaseLayer
+      Events:
+        activityDelete:
+          Type: Api
+          Properties:
+            Path: /activity
+            Method: DELETE
+            RestApiId: !Ref ApiDeployment
+
+  ActivityPutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/activity/PUT/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          LOG_LEVEL: info
+      Layers:
+          - !Ref BaseLayer
+      Events:
+        activityPut:
+          Type: Api
+          Properties:
+            Path: /activity
+            Method: PUT
+            RestApiId: !Ref ApiDeployment
+
+  CloudwatchAlarmFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/cloudwatchAlarm/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameAR
+          AWS_ACCOUNT_LIST: !Ref AWSAccountList
+          LOG_LEVEL: debug
+      Layers:
+        - !Ref BaseLayer
+      Events:
+        cloudwatchAlarm:
+          Type: Api
+          Properties:
+            Path: /cloudwatchAlarm
+            Method: GET
+            RestApiId: !Ref ApiDeployment
+        cloudwatchAlarmOptions:
+          Type: Api
+          Properties:
+            Path: /cloudwatchAlarm
+            Method: OPTIONS
+            RestApiId: !Ref ApiDeployment
+
+  ExportGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/export/GET/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: info
+          EXPORT_FUNCTION_NAME: !Ref ExportFunctionName
+          EXPORT_EXPIRY_TIME: !Ref ExportExpiryTime
+      Layers:
+          - !Ref FunctionsLayer
+          - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
+      Events:
+        exportGet:
+          Type: Api
+          Properties:
+            Path: /export
+            Method: GET
+            RestApiId: !Ref ApiDeployment
+        exportOptions:
+          Type: Api
+          Properties:
+            Path: /export
+            Method: OPTIONS
+            RestApiId: !Ref ApiDeployment
+
+  ExportInvokableFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/export/invokable/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      FunctionName: !Ref ExportFunctionName
+      Environment:
+        Variables:
+          FILE_PATH: !Ref FilePath
+          FILE_NAME: !Ref FileNameExport
+          CSV_SYSADMIN_SCHEMA: !Ref CsvSysadminSchema
+          JOB_UPDATE_MODULO: !Ref JobUpdateModulo
+          DISABLE_PROGRESS_UPDATES: !Ref DisableProgressUpdates
+          DISABLE_HIGH_ACCURACY_PROGRESS_PERCENTAGE: !Ref DisableHighAccuracyProgressPercentage
+          S3_BUCKET_DATA: !Ref S3BucketData
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: info
+      Layers:
+          - !Ref ConstantsLayer
+          - !Ref FunctionsLayer
+          - !Ref BaseLayer
+          - !Ref FormulaLayer
+
+  VarianceExportGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/export-variance/GET/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: info
+          VARIANCE_EXPORT_FUNCTION_NAME: !Ref VarianceExportFunctionName
+          S3_BUCKET_DATA: !Ref S3BucketData
+          EXPORT_EXPIRY_TIME: !Ref ExportExpiryTime
+      Layers:
+          - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
+      Events:
+        varianceExportGet:
+          Type: Api
+          Properties:
+            Path: /export-variance
+            Method: GET
+            RestApiId: !Ref ApiDeployment
+        varianceExportOptions:
+          Type: Api
+          Properties:
+            Path: /export-variance
+            Method: OPTIONS
+            RestApiId: !Ref ApiDeployment
+
+  VarianceExportInvokableFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/export-variance/invokable/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      FunctionName: !Ref VarianceExportFunctionName
+      Environment:
+        Variables:
+          FILE_PATH: !Ref FilePath
+          FILE_NAME_VARIANCE: !Ref FileNameVarianceExport
+          S3_BUCKET_DATA: !Ref S3BucketData
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: info
+      Layers:
+          - !Ref BaseLayer
+          - !Ref ConstantsLayer
+
+  FiscalYearEndGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/fiscalYearEnd/GET/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: info
+      Layers:
+          - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
+      Events:
+        fiscalYearEndGet:
+          Type: Api
+          Properties:
+            Path: /fiscalYearEnd
+            Method: GET
+            RestApiId: !Ref ApiDeployment
+        fiscalYearEndOptions:
+          Type: Api
+          Properties:
+            Path: /fiscalYearEnd
+            Method: OPTIONS
+            RestApiId: !Ref ApiDeployment
+
+  FiscalYearEndPostLockFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/fiscalYearEnd/POST/
+      Handler: index.lockFiscalYear
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: info
+      Layers:
+          - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
+      Events:
+        fiscalYearEndLock:
+          Type: Api
+          Properties:
+            Path: /fiscalYearEnd/lock
+            Method: POST
+            RestApiId: !Ref ApiDeployment
+
+  FiscalYearEndPostUnlockFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/fiscalYearEnd/POST/
+      Handler: index.unlockFiscalYear
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: info
+      Layers:
+          - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
+      Events:
+        fiscalYearEndUnlock:
+          Type: Api
+          Properties:
+            Path: /fiscalYearEnd/unlock
+            Method: POST
+            RestApiId: !Ref ApiDeployment
+
+  NameUpdate:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/nameUpdate/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameAR
+          NAME_CACHE_TABLE_NAME: !Ref TableNameCacheAR
+          LOG_LEVEL: info
+          DATA_REGISTER_NAME_API_ENDPOINT: !Ref DataRegisterNameEndpoint
+          DATA_REGISTER_NAME_API_KEY: !Ref DataRegisterNameApiKey
+      Layers:
+          - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
+            TableName: !Ref TableNameCacheAR
+
+  ParkGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/park/GET/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: info
+      Layers:
+        - !Ref BaseLayer
+        - !Ref PermissionLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
+      Events:
+        parkGet:
+          Type: Api
+          Properties:
+            Path: /park
+            Method: GET
+            RestApiId: !Ref ApiDeployment
+        parkOptions:
+          Type: Api
+          Properties:
+            Path: /park
+            Method: OPTIONS
+            RestApiId: !Ref ApiDeployment
+
+  ParkPostFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/park/POST/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: info
+      Layers:
+        - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
+      Events:
+        ParkPostFunction:
+          Type: Api
+          Properties:
+            Path: /park
+            Method: POST
+            RestApiId: !Ref ApiDeployment
+
+  ParkPutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/park/PUT/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          LOG_LEVEL: info
+      Layers:
+        - !Ref BaseLayer
+      Events:
+        ParkPutFunction:
+          Type: Api
+          Properties:
+            Path: /park
+            Method: PUT
+            RestApiId: !Ref ApiDeployment
+
+  ReadConfigFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/readConfig/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: error
+      Layers:
+        - !Ref BaseLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
+      Events:
+        readConfigGet:
+          Type: Api
+          Properties:
+            Path: /readConfig
+            Method: GET
+            RestApiId: !Ref ApiDeployment
+        readConfigOptions:
+          Type: Api
+          Properties:
+            Path: /readConfig
+            Method: OPTIONS
+            RestApiId: !Ref ApiDeployment
+
+  SubAreaGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/subArea/GET/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          LOG_LEVEL: info
+      Layers:
+        - !Ref BaseLayer
+      Events:
+        subAreaGet:
+          Type: Api
+          Properties:
+            Path: /subArea
+            Method: GET
+            RestApiId: !Ref ApiDeployment
+        subAreaOptions:
+          Type: Api
+          Properties:
+            Path: /subArea
+            Method: OPTIONS
+            RestApiId: !Ref ApiDeployment
+
+  SubAreaDeleteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/subArea/DELETE/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          LOG_LEVEL: info
+          TABLE_NAME: !Ref TableNameAR
+      Layers:
+        - !Ref BaseLayer
+        - !Ref PermissionLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
+      Events:
+        subAreaDelete:
+          Type: Api
+          Properties:
+            Path: /subArea
+            Method: DELETE
+            RestApiId: !Ref ApiDeployment
+
+  SubAreaPostFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/subArea/POST/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          LOG_LEVEL: info
+          TABLE_NAME: !Ref TableNameAR
+          CONFIG_TABLE_NAME: !Ref TableNameConfigAR
+          SSO_ORIGIN: !Ref SSOOrigin
+          SSO_CLIENT_ID: !Ref SSOClientId
+      Layers:
+        - !Ref BaseLayer
+        - !Ref KeycloakLayer
+        - !Ref FormulaLayer
+        - !Ref SubAreaLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
+            TableNameConfig: !Ref TableNameConfigAR
+      Events:
+        subAreaPost:
+          Type: Api
+          Properties:
+            Path: /subArea
+            Method: POST
+            RestApiId: !Ref ApiDeployment
+
+  SubAreaPutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/subArea/PUT/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          LOG_LEVEL: info
+      Layers:
+        - !Ref BaseLayer
+      Events:
+        SubAreaPut:
+          Type: Api
+          Properties:
+            Path: /subArea
+            Method: PUT
+            RestApiId: !Ref ApiDeployment
+  
+  VarianceGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/variance/GET/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          LOG_LEVEL: info
+          TABLE_NAME: !Ref TableNameAR
+      Layers:
+        - !Ref BaseLayer
+        - !Ref PermissionLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameAR
+      Events:
+        varianceGet:
+          Type: Api
+          Properties:
+            Path: /variance
+            Method: GET
+            RestApiId: !Ref ApiDeployment
+        varianceOptions:
+          Type: Api
+          Properties:
+            Path: /variance
+            Method: OPTIONS
+            RestApiId: !Ref ApiDeployment
+  
+  VariancePostFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/variance/POST/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          LOG_LEVEL: info
+      Layers:
+        - !Ref BaseLayer
+      Events:
+        variancePost:
+          Type: Api
+          Properties:
+            Path: /variance
+            Method: POST
+            RestApiId: !Ref ApiDeployment
+
+  VariancePutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/variance/PUT/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          LOG_LEVEL: info
+          TABLE_NAME: !Ref TableNameAR
+      Layers:
+        - !Ref BaseLayer
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !Ref TableNameAR
+      Events:
+        variancePut:
+          Type: Api
+          Properties:
+            Path: /variance
+            Method: PUT
+            RestApiId: !Ref ApiDeployment
+
+  ### DYNAMODB TABLES ###
+
+  ParksAr:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Ref TableNameAR
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+        - AttributeName: orcs
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: orcs-index
+          KeySchema:
+            - AttributeName: orcs
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+  NameCacheAr:
+    Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Ref TableNameCacheAR
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+    DependsOn: ParksAr
+  ConfigAr:
+    Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Ref TableNameConfigAR
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+    DependsOn: NameCacheAr
+
+  ### API ###
+  ApiDeployment:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+      Cors:
+        AllowMethods: "'POST,GET,OPTIONS,PUT,DELETE'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-App-Version'"
+        AllowOrigin: "'*'"
+        MaxAge: "'600'"
+      Auth:
+        DefaultAuthorizer: KCAuthorizer
+        AddDefaultAuthorizerToCorsPreflight: false
+        Authorizers:
+          KCAuthorizer:
+            FunctionPayloadType: REQUEST
+            FunctionArn: !GetAtt Authorizer.Arn
+            Identity:
+              Headers:
+                - Authorization
+
+  ### AUTHORIZER ###
+  Authorizer:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/authorizer/
+      Handler: index.handler
+      Environment:
+        Variables:
+          LOG_LEVEL: info
+          SSO_ISSUER: !Ref SSOIssuerUrl
+          SSO_JWKSURI: !Ref SSOJWKSUri
+      Layers:
+        - !Ref BaseLayer
+        - !Ref PermissionLayer
+      Runtime: nodejs18.x
+
+Outputs:
+    # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+    # Find out more about other implicit resources you can reference within SAM
+    # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  ApiDeployment:
+    Description: 'API Gateway endpoint URL for Stage for Config function'
+    Value: !Sub 'https://${ApiDeployment}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/config/'
