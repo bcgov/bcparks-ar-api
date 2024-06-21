@@ -1,16 +1,11 @@
 const axios = require('axios');
 const { DateTime } = require('luxon');
 const { TIMEZONE, logger } = require('/opt/baseLayer');
+const WEBHOOK_URL = process.env.WEBHOOK_URL;
 const AWS_ACCOUNT_LIST = JSON.parse(process.env.AWS_ACCOUNT_LIST);
 
 exports.handler = async (event, context) => {
   logger.debug('Cloudwatch Alarm Event:', event, context);
-
-  // Allow CORS
-  if (event.httpMethod === 'OPTIONS') {
-    return sendResponse(200, {}, 'Success', null, context);
-  }
-
   try {
     // parse through the records
     for (const record of event.Records) {

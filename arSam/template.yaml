@@ -81,6 +81,9 @@ Parameters:
   SSOClientId:
     Type: String
     Default: "defaultClientId"
+  WebhookUrl:
+    Type: String
+    Default: "defaultWebhookUrl"
 
 Resources:
   ### LAMBDA LAYERS ###
@@ -343,6 +346,7 @@ Resources:
           TABLE_NAME: !Ref TableNameAR
           AWS_ACCOUNT_LIST: !Ref AWSAccountList
           LOG_LEVEL: debug
+          WEBHOOK_URL: !Ref WebhookUrl
       Layers:
         - !Ref BaseLayer
       Events:

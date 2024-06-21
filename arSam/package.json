@@ -3,7 +3,26 @@
 		"start": "sam local start-api --env-vars vars.json --debug",
 		"start-full": "yarn build && yarn start",
 		"build": "sam build",
-		"test": "export AWS_REGION=local-env && export TABLE_NAME=bcparks-ar-tests && yarn build && jest --coverage"
+		"test": "yarn build && jest --coverage"
+	},
+  	"jest": {
+		"verbose": true,
+		"globalSetup": "./__tests__/setup.js",
+		"globalTeardown": "./__tests__/teardown.js",
+		"modulePathIgnorePatterns": [
+			"<rootDir>/__tests__",
+			"<rootDir>/.aws-sam/"
+    	],
+		"moduleNameMapper": {
+			"^/opt/baseLayer": "<rootDir>/.aws-sam/build/BaseLayer/baseLayer",
+			"^/opt/constantsLayer": "<rootDir>/.aws-sam/build/ConstantsLayer/constantsLayer",
+			"^/opt/formulaLayer": "<rootDir>/.aws-sam/build/FormulaLayer/formulaLayer",
+			"^/opt/functionsLayer": "<rootDir>/.aws-sam/build/FunctionsLayer/functionsLayer",
+			"^/opt/keycloakLayer": "<rootDir>/.aws-sam/build/KeycloakLayer/keycloakLayer",
+			"^/opt/permissionLayer": "<rootDir>/.aws-sam/build/PermissionLayer/permissionLayer",
+			"^/opt/subAreaLayer": "<rootDir>/.aws-sam/build/SubAreaLayer/subAreaLayer",
+			"^/opt/varianceLayer": "<rootDir>/.aws-sam/build/VarianceLayer/varianceLayer"
+		}
 	},
 	"devDependencies": {
 		"@digitalspace/dynamodb-migrate": "^1.0.6",

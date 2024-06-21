@@ -32,7 +32,7 @@ exports.handler = async (event, context) => {
   if (event.httpMethod === 'OPTIONS') {
     return sendResponse(200, {}, 'Success', null, context);
   }
-
+  
   try {
     let permissionObject = event.requestContext.authorizer;
     permissionObject.roles = JSON.parse(permissionObject.roles);
@@ -40,7 +40,7 @@ exports.handler = async (event, context) => {
     if (!permissionObject.isAuthenticated) {
       return sendResponse(403, { msg: "Error: UnAuthenticated." }, context);
     }
-
+    
     // This will give us the sk
     const sk = convertRolesToMD5(permissionObject.roles, "export-");
 
