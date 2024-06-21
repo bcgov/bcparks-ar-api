@@ -1,5 +1,5 @@
 const AWS = require("aws-sdk");
-const { runScan, TABLE_NAME, dynamodb } = require("../../lambda/dynamoUtil");
+const { runScan, TABLE_NAME, dynamodb } = require("/opt/baseLayer");
 const { getConsoleInput, updateConsoleProgress, clientIDsAR, removeRoleFromKeycloak, isTokenExpired } = require("./legacy-data-functions");
 
 const MAX_TRANSACTION_SIZE = 25;
