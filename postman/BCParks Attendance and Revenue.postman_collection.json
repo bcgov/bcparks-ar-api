@@ -66,16 +66,16 @@
 								{
 									"key": "orcs",
 									"value": "0001",
-									"description": "Get all subareas under this Park ORCS id."
+									"description": "Get all subAreas under this Park ORCS id."
 								},
 								{
 									"key": "subAreaId",
 									"value": "0403",
-									"description": "(Optional) Get specific subarea by subAreaId."
+									"description": "(Optional) Get specific subArea by subAreaId."
 								}
 							]
 						},
-						"description": "Get specific subareas, either all subareas belonging to a specific park, or a single subarea given park ORCS and subarea ID."
+						"description": "Get specific subAreas, either all subAreas belonging to a specific park, or a single subArea given park ORCS and subArea ID."
 					},
 					"response": []
 				},
@@ -263,7 +263,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"date\": \"202009\",\r\n    \"subAreaId\": \"TEST\",\r\n    \"activity\": \"Backcountry Camping\",\r\n}",
+							"raw": "{\r\n\t\"activities\": [\"Day Use\"],\r\n\t\"orcs\": \"0001\",\r\n\t\"managementArea\": \"Strathcona\",\r\n\t\"section\": \"South Central Coast/North Island\",\r\n\t\"region\": \"West Coast\",\r\n\t\"bundle\": \"N/A\",\r\n\t\"subAreaName\": \"Test Sub Area\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -271,9 +271,9 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}subarea",
+							"raw": "{{base_url}}subArea",
 							"host": [
-								"{{base_url}}subarea"
+								"{{base_url}}subArea"
 							],
 							"query": [
 								{
@@ -284,60 +284,6 @@
 							]
 						},
 						"description": "Create record. Must provide the following body as a minimum:\n\nStartFragment\n\n```\n{\n    \"date\": \"202209\", // date yyyyMM\n    \"subAreaId\": \"TEST\",\n    \"activity\": \"Backcountry Camping\"\n}\n\n```"
-					},
-					"response": []
-				},
-				{
-					"name": "Lock Record",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"date\": \"202209\",\r\n    \"subAreaId\": \"TEST\",\r\n    \"activity\": \"Backcountry Camping\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{base_url}}subarea/lock",
-							"host": [
-								"{{base_url}}subarea"
-							],
-							"path": [
-								"lock"
-							]
-						},
-						"description": "Locks a record given the following info in the request body:\n\n```\n{\n    \"date\": \"202209\", // date \"yyyyMM\"\n    \"subAreaId\": \"TEST\", // subAreaId\n    \"activity\": \"Backcountry Camping\" //activity\n}\n\n```\n\nIf the record doesn't exist, a blank one will be created using the config object for that record, and locked."
-					},
-					"response": []
-				},
-				{
-					"name": "Unlock Record",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"date\": \"202209\",\r\n    \"subAreaId\": \"TEST\",\r\n    \"activity\": \"Backcountry Camping\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{base_url}}subarea/unlock",
-							"host": [
-								"{{base_url}}subarea"
-							],
-							"path": [
-								"unlock"
-							]
-						},
-						"description": "Unlocks a record. The following is required in the request body:\n\n```\n{\n    \"date\": \"202209\", // date \"yyyyMM\"\n    \"subAreaId\": \"TEST\", // subareaID\n    \"activity\": \"Backcountry Camping\" //activity\n}\n\n```"
 					},
 					"response": []
 				}

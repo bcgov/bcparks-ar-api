@@ -262,8 +262,8 @@ async function getSubAreas(orcs, includeLegacy = true) {
 async function getRecords(subArea, bundle, section, region, filter = true, includeLegacy = true) {
   let records = [];
   let filteredActivityList = RECORD_ACTIVITY_LIST;
-  if (filter && subArea.activites) {
-    filteredActivityList = unmarshall(subArea.activites);
+  if (filter && subArea.activities) {
+    filteredActivityList = unmarshall(subArea.activities);
   }
   for (let activity of filteredActivityList) {
     const recordQuery = {
@@ -279,7 +279,7 @@ async function getRecords(subArea, bundle, section, region, filter = true, inclu
     }
     let recordsFromQuery = await runQuery(recordQuery);
     for (let rec of recordsFromQuery) {
-      // Tack these items from the subare record onto the report record as they are not found on the
+      // Tack these items from the subArea record onto the report record as they are not found on the
       // activity entry
       rec.bundle = bundle;
       rec.section = section;
