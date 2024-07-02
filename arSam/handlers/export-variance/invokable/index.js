@@ -1,12 +1,12 @@
 const { S3 } = require('@aws-sdk/client-s3');
+const s3 = new S3();
 const { marshall } = require('@aws-sdk/util-dynamodb');
 const fs = require('fs');
 
 const { VARIANCE_CSV_SCHEMA, VARIANCE_STATE_DICTIONARY } = require("/opt/constantsLayer");
 const { getParks, TABLE_NAME, dynamodb, runQuery, logger } = require("/opt/baseLayer");
-const s3 = S3();
 
-const FILE_PATH = process.env.FILE_PATH || "./";
+const FILE_PATH = process.env.FILE_PATH || "/tmp/";
 const FILE_NAME = process.env.FILE_NAME || "A&R_Variance_Report";
 
 let LAST_SUCCESSFUL_JOB = {};
@@ -38,8 +38,13 @@ exports.handler = async (event, context) => {
         throw new Error("Missing fiscal year end parameter");
       }
 
-      await updateJobWithState(VARIANCE_STATE_DICTIONARY.FETCHING);
+      await updateJobWithState(
+        VARIANCE_STATE_DICTIONARY.FETCHING,
+        `Fetching all entries for ${roles}`
+      );
 
+      logger.info(`=== Exporting filtered data ===`);
+      
       // collect variance records
       const records = await getVarianceRecords(fiscalYearEnd, roles);
       await updateJobWithState(VARIANCE_STATE_DICTIONARY.FORMATTING);
@@ -281,13 +286,10 @@ async function uploadToS3(csvData) {
     Bucket: process.env.S3_BUCKET_DATA,
     Key: S3_KEY,
     Body: buffer,
-  }
+  };
 
-  if (!process.env.IS_OFFLINE) {
-    await s3.putObject(params);
-  }
-  logger.debug("Uploaded to S3");
-
+  await s3.putObject(params);
+  logger.debug("File successfully uploaded to S3");
 }
 
 function convertMonth(monthNumber){

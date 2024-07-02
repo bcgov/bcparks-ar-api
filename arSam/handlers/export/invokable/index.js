@@ -29,8 +29,8 @@ const {
   boatingAttendance,
 } = require("/opt/formulaLayer");
 
-const FILE_PATH = process.env.FILE_PATH || "./";
-const FILE_NAME = process.env.FILE_NAME || "A&R_Export";
+const FILE_PATH = process.env.FILE_PATH || "/tmp/";
+const FILE_NAME = process.env.FILE_NAME || "A&R_Variance_Report";
 
 const SYSADMIN_SCHEMA = process.env.CSV_SYSADMIN_SCHEMA
   ? JSON.parse(process.env.CSV_SYSADMIN_SCHEMA)

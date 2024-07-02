@@ -1,7 +1,11 @@
-const { S3 } = require("@aws-sdk/client-s3");
 const { Lambda } = require("@aws-sdk/client-lambda");
-const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
-const s3 = new S3();
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { marshall } = require('@aws-sdk/util-dynamodb');
+
+const defaultRegion = process.env.AWS_REGION || "ca-central-1";
+const s3Client = new S3Client({ region: defaultRegion });
+const bucket = process.env.S3_BUCKET_DATA || "parks-ar-assets-tools";
 
 const IS_OFFLINE =
   process.env.IS_OFFLINE && process.env.IS_OFFLINE === "true" ? true : false;
@@ -15,7 +19,7 @@ if (IS_OFFLINE) {
 
 const lambda = new Lambda(options);
 
-const { TABLE_NAME, dynamodb, sendResponse, logger } = require("/opt/baseLayer");
+const { runQuery, TABLE_NAME, dynamodb, sendResponse, logger } = require("/opt/baseLayer");
 const crypto = require('crypto');
 
 const VARIANCE_EXPORT_FUNCTION_NAME =
@@ -33,107 +37,98 @@ exports.handler = async (event, context) => {
     return sendResponse(200, {}, 'Success', null, context);
   }
 
-  // decode permissions
-  let permissionObject = event.requestContext.authorizer;
-  permissionObject.roles = JSON.parse(permissionObject.roles);
-
-  if (!permissionObject.isAuthenticated) {
-    return sendResponse(403, { msg: "Error: Not authenticated" }, context);
-  }
-
-  let params = event?.queryStringParameters || {};
-  params['roles'] = permissionObject.roles;
-
-  // Must provide fiscal year end
-  if (!params?.fiscalYearEnd) {
-    return sendResponse(400, { msg: "No fiscal year end provided." }, context);
-  }
-
-  // generate a job id from params+role
-  let hashParams = {...params};
-  delete hashParams.getJob;
-  const decodedHash = JSON.stringify(hashParams) + JSON.stringify(permissionObject.roles);
-  const hash = crypto.createHash('md5').update(decodedHash).digest('hex');
-  const pk = "variance-exp-job";
-
-  // check for existing job
-  let existingJobQueryObj = {
-    TableName: TABLE_NAME,
-    ExpressionAttributeValues: {
-      ":pk": { S: pk },
-      ":sk": { S: hash }
-    },
-    KeyConditionExpression: "pk = :pk and sk = :sk"
-  }
-
-  let jobObj = {};
-
   try {
-    const res = await dynamodb.query(existingJobQueryObj);
-    jobObj = unmarshall(res?.Items?.[0]) || null;
-  } catch (error) {
-    logger.error("Error querying for existing job: ", error);
-    return sendResponse(500, { msg: "Error querying for existing job" }, context);
-  }
+    let permissionObject = event.requestContext.authorizer;
+    permissionObject.roles = JSON.parse(permissionObject.roles);
 
-  if (params?.getJob) {
-    // We're trying to download an existing job
-    if (!jobObj || !jobObj?.sk) {
-      // Job doesn't exist.
-      return sendResponse(200, { msg: "Requested job does not exist" }, context);
-    } else if (
-      jobObj?.progressState === "complete" ||
-      jobObj?.progressState === "error"
-    ) {
-      // Job is not currently running. Return signed URL
-      try {
-        let urlKey = jobObj?.key;
+    if (!permissionObject.isAuthenticated) {
+      return sendResponse(403, { msg: "Error: Not authenticated" }, context);
+    }
+    let params = event?.queryStringParameters || {};
+    params['roles'] = permissionObject.roles;
+
+    // Must provide fiscal year end
+    if (!params?.fiscalYearEnd) {
+      return sendResponse(400, { msg: "No fiscal year end provided." }, context);
+    }
+    // generate a job id from params+role
+    let hashParams = {...params};
+    delete hashParams.getJob;
+    const decodedHash = JSON.stringify(hashParams) + JSON.stringify(permissionObject.roles);
+    const hash = crypto.createHash('md5').update(decodedHash).digest('hex');
+    const pk = "variance-exp-job";
+
+    // check for existing job
+    let queryObj = {
+      TableName: TABLE_NAME,
+      ExpressionAttributeValues: {
+        ":pk": { S: pk },
+        ":sk": { S: hash }
+      },
+      KeyConditionExpression: "pk = :pk and sk = :sk"
+    }
+
+    const res = (await runQuery(queryObj))[0];
+
+    if (params?.getJob) {
+      // We're trying to download an existing job
+      
+      if (!res) {
+        // Job doesn't exist.
+        return sendResponse(200, { msg: "Requested job does not exist" }, context);
+      } else if (
+        res.progressState === "complete" ||
+        res.progressState === "error"
+      ) {
+        // Job is not currently running. Return signed URL
+        let urlKey = res.key;
         let message = 'Job completed';
-        if (jobObj?.progressState === 'error') {
-          urlKey = jobObj?.lastSuccessfulJob?.key;
+        if (res.progressState === 'error') {
+          urlKey = res.lastSuccessfulJob.key || {};
           message = 'Job failed. Returning last successful job.';
         }
         let URL = "";
-        if (!process.env.IS_OFFLINE) {
+        if (!IS_OFFLINE) {
           logger.debug('S3_BUCKET_DATA:', process.env.S3_BUCKET_DATA);
           logger.debug('Url key:', urlKey);
-          URL = await s3.getSignedUrl("getObject", {
-            Bucket: process.env.S3_BUCKET_DATA,
-            Expires: EXPIRY_TIME,
-            Key: urlKey,
-          });
+          let command = new GetObjectCommand({ Bucket: bucket, Key: urlKey });
+          URL = await getSignedUrl(
+            s3Client,
+            command,
+            { expiresIn: EXPIRY_TIME });
         }
         // send back new job object
-        delete jobObj.pk;
-        delete jobObj.sk;
-        delete jobObj.key;
-        return sendResponse(200, { msg: message, signedURL: URL, jobObj: jobObj }, context);
-      } catch (error) {
-        logger.error("Error getting signed URL: ", error);
-        return sendResponse(500, { msg: "Error getting signed URL" }, context);
+        delete res.pk;
+        delete res.sk;
+        delete res.key;
+        return sendResponse(
+          200,
+          { msg: message, signedURL: URL, jobObj: res },
+          context
+        );
+      } else {
+        // Job is currently running. Return latest job object
+        delete res?.pk;
+        delete res?.sk;
+        delete res?.key;
+        return sendResponse(
+          200,
+          { msg: "Job is currently running", jobObj: res },
+          context
+        );
       }
-
     } else {
-      // Job is currently running. Return latest job object
-      delete jobObj?.pk;
-      delete jobObj?.sk;
-      delete jobObj?.key;
-      return sendResponse(200, { msg: "Job is currently running", jobObj: jobObj }, context);
-    }
-  } else {
-    // We are trying to generate a new report
-    // If there's already a completed job, we want to save this in case the new job fails
-    let lastSuccessfulJob = {};
-    if (jobObj && jobObj?.progressState === "complete" && jobObj?.key) {
-      lastSuccessfulJob = {
-        key: jobObj?.key,
-        dateGenerated: jobObj?.dateGenerated || new Date().toISOString(),
+      // We are trying to generate a new report
+      // If there's already a completed job, we want to save this in case the new job fails
+      let lastSuccessfulJob = {};
+      if (res?.progressState === "complete" && res?.key) {
+        lastSuccessfulJob = {
+          key: res?.key,
+          dateGenerated: res?.dateGenerated || new Date().toISOString(),
+        }
+      } else if (res?.progressState === "error") {
+        lastSuccessfulJob = res?.lastSuccessfulJob || {};
       }
-    } else if (jobObj?.progressState === "error") {
-      lastSuccessfulJob = jobObj?.lastSuccessfulJob || {};
-    }
-
-    try {
       // create the new job object
       const varianceExportPutObj = {
         TableName: TABLE_NAME,
@@ -154,31 +149,37 @@ exports.handler = async (event, context) => {
       };
 
       logger.debug('Creating new job:', varianceExportPutObj);
+      let newJob;
+      try {
+        newJob = await dynamodb.putItem(varianceExportPutObj);
+        // Check if there's already a report being generated.
+        // If there are is no instance of a job or the job is 100% complete, generate a report.
+        logger.debug('New job created:', newJob);
 
-      const newJob = await dynamodb.putItem(varianceExportPutObj);
-      logger.debug('New job created:', newJob);
+        // run the export function
+        const varianceExportParams = {
+          FunctionName: VARIANCE_EXPORT_FUNCTION_NAME,
+          InvocationType: "Event",
+          LogType: "None",
+          Payload: JSON.stringify({
+            jobId: hash,
+            params: params,
+            lastSuccessfulJob: lastSuccessfulJob
+          })
+        }
+        // Invoke the variance report export lambda
+        await lambda.invoke(varianceExportParams);
 
-      // run the export function
-      const varianceExportParams = {
-        FunctionName: VARIANCE_EXPORT_FUNCTION_NAME,
-        InvocationType: "Event",
-        LogType: "None",
-        Payload: JSON.stringify({
-          jobId: hash,
-          params: params,
-          lastSuccessfulJob: lastSuccessfulJob
-        })
+        return sendResponse(200, { msg: "Variance report export job created" }, context);
+      } catch (error) {
+        // a job already exists
+        logger.error("Error creating new job:", error);
+        return sendResponse(200, { msg: "Variance report export job already running" }, context);
+
       }
-
-      // Invoke the variance report export lambda
-      await lambda.invoke(varianceExportParams);
-
-      return sendResponse(200, { msg: "Variance report export job created" }, context);
-    } catch (error) {
-      // a job already exists
-      logger.error("Error creating new job:", error);
-      return sendResponse(200, { msg: "Variance report export job already running" }, context);
-
     }
+  } catch (error) {
+    logger.error(error);
+    return sendResponse(400, { error: error }, context);
   }
-}
+};

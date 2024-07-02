@@ -263,7 +263,7 @@ async function getRecords(subArea, bundle, section, region, filter = true, inclu
   let records = [];
   let filteredActivityList = RECORD_ACTIVITY_LIST;
   if (filter && subArea.activities) {
-    filteredActivityList = unmarshall(subArea.activities);
+    filteredActivityList = Array.from(subArea.activities);
   }
   for (let activity of filteredActivityList) {
     const recordQuery = {

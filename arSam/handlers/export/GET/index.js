@@ -1,8 +1,11 @@
 const { Lambda } = require("@aws-sdk/client-lambda");
-const { S3 } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
 const { marshall } = require('@aws-sdk/util-dynamodb');
 
-const s3 = new S3();
+const defaultRegion = process.env.AWS_REGION || "ca-central-1";
+const s3Client = new S3Client({ region: defaultRegion });
+const bucket = process.env.S3_BUCKET_DATA || "parks-ar-assets-tools";
 
 const IS_OFFLINE =
   process.env.IS_OFFLINE && process.env.IS_OFFLINE === "true" ? true : false;
@@ -73,12 +76,12 @@ exports.handler = async (event, context) => {
           message = "Job failed. Returning last successful job.";
         }
         let URL = "";
-        if (!process.env.IS_OFFLINE) {
-          URL = await s3.getSignedUrl("getObject", {
-            Bucket: process.env.S3_BUCKET_DATA,
-            Expires: EXPIRY_TIME,
-            Key: urlKey,
-          });
+        if (!IS_OFFLINE) {
+          let command = new GetObjectCommand({ Bucket: bucket, Key: urlKey });
+          URL = await getSignedUrl(
+            s3Client,
+            command,
+            { expiresIn: EXPIRY_TIME });
         }
         delete res.pk;
         delete res.sk;

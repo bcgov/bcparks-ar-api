@@ -32,16 +32,13 @@ Parameters:
     Default: '900'
   FilePath:
     Type: String
-    Default: './'
+    Default: '/tmp/'
   FileNameExport:
     Type: String
     Default: 'A&R_Export'
   FileNameVarianceExport:
     Type: String
     Default: 'A&R_Variance_Report'
-  CsvSysadminSchema:
-    Type: String
-    Default: 'defaultSchema'
   JobUpdateModulo:
     Type: String
     Default: '1'
@@ -53,7 +50,7 @@ Parameters:
     Default: 'false'
   S3BucketData:
     Type: String
-    Default: 'parks-ar-assets-test' 
+    Default: 'parks-ar-assets-tools' 
   TableNameAR:
     Type: String
     Default: 'ParksAr'
@@ -206,8 +203,8 @@ Resources:
       Layers:
           - !Ref BaseLayer
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TableNameAR
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
       Events:
         activityGet:
           Type: Api
@@ -237,8 +234,8 @@ Resources:
           - !Ref VarianceLayer
           - !Ref ConstantsLayer
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TableNameAR
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
       Events:
         activityPost:
           Type: Api
@@ -262,8 +259,8 @@ Resources:
           - !Ref VarianceLayer
           - !Ref ConstantsLayer
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TableNameAR
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
       Events:
         activityRecordLock:
           Type: Api
@@ -287,8 +284,8 @@ Resources:
           - !Ref VarianceLayer
           - !Ref ConstantsLayer
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TableNameAR
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
       Events:
         activityRecordUnlock:
           Type: Api
@@ -348,7 +345,7 @@ Resources:
           LOG_LEVEL: debug
           WEBHOOK_URL: !Ref WebhookUrl
       Layers:
-        - !Ref BaseLayer
+          - !Ref BaseLayer
       Events:
         cloudwatchAlarm:
           Type: Api
@@ -375,12 +372,18 @@ Resources:
           LOG_LEVEL: info
           EXPORT_FUNCTION_NAME: !Ref ExportFunctionName
           EXPORT_EXPIRY_TIME: !Ref ExportExpiryTime
+          S3_BUCKET_DATA: !Ref S3BucketData
       Layers:
           - !Ref FunctionsLayer
           - !Ref BaseLayer
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TableNameAR
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
+          - LambdaInvokePolicy:
+              FunctionName:
+                !Ref ExportInvokableFunction
+          - S3FullAccessPolicy:
+              BucketName: !Ref S3BucketData
       Events:
         exportGet:
           Type: Api
@@ -398,6 +401,7 @@ Resources:
   ExportInvokableFunction:
     Type: AWS::Serverless::Function
     Properties:
+      Timeout: 300
       CodeUri: handlers/export/invokable/
       Handler: index.handler
       Runtime: nodejs18.x
@@ -406,7 +410,6 @@ Resources:
         Variables:
           FILE_PATH: !Ref FilePath
           FILE_NAME: !Ref FileNameExport
-          CSV_SYSADMIN_SCHEMA: !Ref CsvSysadminSchema
           JOB_UPDATE_MODULO: !Ref JobUpdateModulo
           DISABLE_PROGRESS_UPDATES: !Ref DisableProgressUpdates
           DISABLE_HIGH_ACCURACY_PROGRESS_PERCENTAGE: !Ref DisableHighAccuracyProgressPercentage
@@ -418,6 +421,12 @@ Resources:
           - !Ref FunctionsLayer
           - !Ref BaseLayer
           - !Ref FormulaLayer
+          - !Ref SubAreaLayer
+      Policies:
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
+          - S3FullAccessPolicy:
+              BucketName: !Ref S3BucketData
 
   VarianceExportGetFunction:
     Type: AWS::Serverless::Function
@@ -435,8 +444,13 @@ Resources:
       Layers:
           - !Ref BaseLayer
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TableNameAR
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
+          - LambdaInvokePolicy:
+              FunctionName:
+                !Ref VarianceExportInvokableFunction
+          - S3FullAccessPolicy:
+              BucketName: !Ref S3BucketData
       Events:
         varianceExportGet:
           Type: Api
@@ -454,6 +468,7 @@ Resources:
   VarianceExportInvokableFunction:
     Type: AWS::Serverless::Function
     Properties:
+      Timeout: 300
       CodeUri: handlers/export-variance/invokable/
       Handler: index.handler
       Runtime: nodejs18.x
@@ -468,6 +483,11 @@ Resources:
       Layers:
           - !Ref BaseLayer
           - !Ref ConstantsLayer
+      Policies:
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
+          - S3FullAccessPolicy:
+              BucketName: !Ref S3BucketData
 
   FiscalYearEndGetFunction:
     Type: AWS::Serverless::Function
@@ -482,8 +502,8 @@ Resources:
       Layers:
           - !Ref BaseLayer
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TableNameAR
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
       Events:
         fiscalYearEndGet:
           Type: Api
@@ -511,8 +531,8 @@ Resources:
       Layers:
           - !Ref BaseLayer
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TableNameAR
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
       Events:
         fiscalYearEndLock:
           Type: Api
@@ -534,8 +554,8 @@ Resources:
       Layers:
           - !Ref BaseLayer
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TableNameAR
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
       Events:
         fiscalYearEndUnlock:
           Type: Api
@@ -575,11 +595,11 @@ Resources:
           TABLE_NAME: !Ref TableNameAR
           LOG_LEVEL: info
       Layers:
-        - !Ref BaseLayer
-        - !Ref PermissionLayer
+          - !Ref BaseLayer
+          - !Ref PermissionLayer
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TableNameAR
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
       Events:
         parkGet:
           Type: Api
@@ -605,10 +625,10 @@ Resources:
           TABLE_NAME: !Ref TableNameAR
           LOG_LEVEL: info
       Layers:
-        - !Ref BaseLayer
+          - !Ref BaseLayer
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TableNameAR
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
       Events:
         ParkPostFunction:
           Type: Api
@@ -627,7 +647,7 @@ Resources:
         Variables:
           LOG_LEVEL: info
       Layers:
-        - !Ref BaseLayer
+          - !Ref BaseLayer
       Events:
         ParkPutFunction:
           Type: Api
@@ -647,10 +667,10 @@ Resources:
           TABLE_NAME: !Ref TableNameAR
           LOG_LEVEL: error
       Layers:
-        - !Ref BaseLayer
+          - !Ref BaseLayer
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TableNameAR
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
       Events:
         readConfigGet:
           Type: Api
@@ -675,7 +695,7 @@ Resources:
         Variables:
           LOG_LEVEL: info
       Layers:
-        - !Ref BaseLayer
+          - !Ref BaseLayer
       Events:
         subAreaGet:
           Type: Api
@@ -701,11 +721,11 @@ Resources:
           LOG_LEVEL: info
           TABLE_NAME: !Ref TableNameAR
       Layers:
-        - !Ref BaseLayer
-        - !Ref PermissionLayer
+          - !Ref BaseLayer
+          - !Ref PermissionLayer
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TableNameAR
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
       Events:
         subAreaDelete:
           Type: Api
@@ -728,14 +748,14 @@ Resources:
           SSO_ORIGIN: !Ref SSOOrigin
           SSO_CLIENT_ID: !Ref SSOClientId
       Layers:
-        - !Ref BaseLayer
-        - !Ref KeycloakLayer
-        - !Ref FormulaLayer
-        - !Ref SubAreaLayer
+          - !Ref BaseLayer
+          - !Ref KeycloakLayer
+          - !Ref FormulaLayer
+          - !Ref SubAreaLayer
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TableNameAR
-            TableNameConfig: !Ref TableNameConfigAR
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
+              TableNameConfig: !Ref TableNameConfigAR
       Events:
         subAreaPost:
           Type: Api
@@ -754,7 +774,7 @@ Resources:
         Variables:
           LOG_LEVEL: info
       Layers:
-        - !Ref BaseLayer
+          - !Ref BaseLayer
       Events:
         SubAreaPut:
           Type: Api
@@ -774,11 +794,11 @@ Resources:
           LOG_LEVEL: info
           TABLE_NAME: !Ref TableNameAR
       Layers:
-        - !Ref BaseLayer
-        - !Ref PermissionLayer
+          - !Ref BaseLayer
+          - !Ref PermissionLayer
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TableNameAR
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
       Events:
         varianceGet:
           Type: Api
@@ -803,7 +823,7 @@ Resources:
         Variables:
           LOG_LEVEL: info
       Layers:
-        - !Ref BaseLayer
+          - !Ref BaseLayer
       Events:
         variancePost:
           Type: Api
@@ -823,10 +843,10 @@ Resources:
           LOG_LEVEL: info
           TABLE_NAME: !Ref TableNameAR
       Layers:
-        - !Ref BaseLayer
+          - !Ref BaseLayer
       Policies:
-      - DynamoDBCrudPolicy:
-          TableName: !Ref TableNameAR
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
       Events:
         variancePut:
           Type: Api
@@ -933,9 +953,15 @@ Resources:
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
       Layers:
-        - !Ref BaseLayer
-        - !Ref PermissionLayer
+          - !Ref BaseLayer
+          - !Ref PermissionLayer
       Runtime: nodejs18.x
+
+  ### S3 BUCKET ###
+  ParksArAssetsS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Ref S3BucketData
 
 Outputs:
     # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
