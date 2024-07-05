@@ -8,6 +8,6 @@ for item in dump["Items"]:
     formattedString = json.dumps(item, separators=(',', ':'))
     formattedString = formattedString.replace('"', r'\"')
 
-    cmd = "aws --endpoint-url=http://localhost:8000 dynamodb put-item --table-name=ParksAr --item=\"{0}\"".format(
+    cmd = "aws --endpoint-url=http://localhost:8000 dynamodb put-item --table-name=parksreso --item=\"{0}\"".format(
         formattedString)
     os.system(cmd)

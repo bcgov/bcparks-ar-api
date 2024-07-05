@@ -1,9 +1,0 @@
-{
-  "name": "loggerLayer",
-  "version": "0.0.1",
-  "author": "Digitalspace <contact@digitalspace.ca>",
-  "license": "MIT",
-  "dependencies": {
-    "axios": "^1.4.0"
-  }
-} 

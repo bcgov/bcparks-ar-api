@@ -1,6 +1,6 @@
 'use strict';
 const AWS = require('aws-sdk');
-const { getParks, getSubAreas, getOne, TABLE_NAME, dynamodb } = require('/opt/baseLayer');
+const { getParks, getSubAreas, getOne, TABLE_NAME, dynamodb } = require('../lambda/dynamoUtil');
 const { calculateVariance } = require('../lambda/varianceUtils');
 const { updateConsoleProgress, finishConsoleUpdates, errorConsoleUpdates } = require('../tools/progress-indicator');
 const { EXPORT_VARIANCE_CONFIG } = require('../lambda/constants');

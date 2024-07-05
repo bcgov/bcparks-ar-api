@@ -8,6 +8,3 @@ terraform/sandbox/artifacts/
 .env
 terraform/tools/.terraform.lock.hcl
 terraform/tools/.terragrunt-cache/
-
-# AWS SAM Template vars.json for Environment variables
-*vars.json

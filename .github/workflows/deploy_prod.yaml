@@ -1,13 +1,21 @@
 name: Deploy Prod
 
-run-name: Deploying ${{ github.ref_name }} to prod
+run-name: Deploying ${{ github.event.inputs.releaseTag }} to prod
 
 on:
   workflow_dispatch:
     inputs:
       releaseTag:
-        description: "Tag of version to be promoted to prod"
+        description: 'Tag of version to be promoted to prod'
         required: true
+
+env:
+  TF_VERSION: 0.14.7
+  TG_VERSION: 0.37.1
+  TG_SRC_PATH: terraform
+  TFC_WORKSPACE: prod
+  TARGET_ENV: prod
+  GIT_BRANCH: main
 
 permissions:
   id-token: write
@@ -15,82 +23,78 @@ permissions:
 
 jobs:
   ci:
-    name: Build and Deploy
+    name: Push to AWS Lambda
     runs-on: ubuntu-latest
     environment: prod
     strategy:
       matrix:
         node-version: [18.x]
 
-    defaults:
-      run:
-        working-directory: "./"
     steps:
-      # Checkout GitHub Repo
-      - name: Checkout repo
+      - name: Attempt to checkout tag
         uses: actions/checkout@v3
         with:
           ref: ${{ github.event.inputs.releaseTag }}
 
-      - shell: bash
-        env:
-          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
-        run: |
-          curl -X POST -H 'Content-Type: application/json' $WEBHOOK_URL --data '{"text":"A&R API API Prod"}'
-
-      # Tag not found
       - name: Tag not found
         if: ${{ failure() }}
         run: |
           echo "::error::Git Tag not found, please double check input"
           exit 1
 
-      # Setup AWS SAM
-      - name: Setup AWS SAM
-        uses: aws-actions/setup-sam@v2
+      ### Install if no cache exists ###
+      - name: Setup node
+        uses: actions/setup-node@v3
         with:
-          use-installer: true
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+      - run: yarn install --silent --frozen-lockfile
 
-      # Assume AWS IAM Role
-      - name: Get AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+      ### Build if no cache exists ###
+      - name: Cache Build
+        id: cache-build
+        uses: actions/cache@v3
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          role-session-name: GitHub_to_AWS_via_FederatedOIDC
-          aws-region: ${{ vars.AWS_REGION }}
+          path: |
+            **/terraform/src/artifacts
+          key: ${{ github.sha }}-artifacts
+      - name: Run Build
+        if: steps.cache-build.outputs.cache-hit != 'true'
+        run: yarn build-ci
 
-      # SAM Build
-       - name: Cache SAM Build
-         id: cache-sam-build
-         uses: actions/cache@v3
-         with:
-            path: |
-              **/.aws-sam
-            key: ${{ github.sha }}-ar-api-sam-cache
-       - name: Run sam build
-         if: steps.cache-sam-build.outputs.cache-hit != 'true'
-         run: |
-            sam build --cached
+      ### Get environment variables from AWS Parameter Store ###
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN_TO_USE }}
+          role-duration-seconds: 900
+          role-session-name: parks-ar-api-sandbox-gh-action
+          role-skip-session-tagging: true
 
-      # Prevent prompts and failure when the stack is unchanged
-       - name: SAM deploy
-         env:
-          STAGE: ${{ vars.AR_API_STAGE }}
-          STACK_NAME: ${{ vars.AR_API_STACK_NAME }}
-          ACCOUNT_ID: ${{ vars.ACCOUNT_ID }}
-          AWS_ACCOUNT_LIST: ${{ vars.AWS_ACCOUNT_LIST }}
-          SSO_ISSUER: ${{ vars.SSO_ISSUER }}
-          SSO_JWKSURI: ${{ vars.SSO_JWKSURI }}
-          SSO_CLIENT_ID: ${{ secrets.SSO_CLIENT_ID }}
-          SSO_ORIGIN: ${{ vars.SSO_ORIGIN }}
-          S3_BUCKET_DATA: ${{ vars.S3_BUCKET_DATA }}
-          DATA_REGISTER_NAME_ENDPOINT: ${{ secrets.DATA_REGISTER_NAME_ENDPOINT }}
-          DATA_REGISTER_NAME_API_KEY: ${{ secrets.DATA_REGISTER_NAME_API_KEY }}
-        run: |
-          sam deploy --stack-name $STACK_NAME --no-confirm-changeset --no-fail-on-empty-changeset --parameter-overrides "AccountId=$ACCOUNT_ID" "Stage=$STAGE" "SSOIssuerUrl=$SSO_ISSUER" "SSOJWKSUri=$SSO_JWKSURI" "SSOClientId=$SSO_CLIENT_ID" "SSOOrigin=$SSO_ORIGIN" "AWSAccountList=$AWS_ACCOUNT_LIST" "S3BucketData=$S3_BUCKET_DATA" "DataRegisterNameEndpoint=$DATA_REGISTER_NAME_ENDPOINT" "DataRegisterNameApiKey=$DATA_REGISTER_NAME_API_KEY"
+      ### Run Terragrunt ###
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
 
-      - shell: bash
+      - name: Setup Terragrunt
+        uses: autero1/action-terragrunt@v1.3.0
+        with:
+          terragrunt_version: ${{ env.TG_VERSION }}
+
+      - name: Terragrunt Apply
+        working-directory: ${{ env.TG_SRC_PATH }}/${{ env.TFC_WORKSPACE }}
         env:
-          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          aws_region: ${{ secrets.AWS_REGION }}
+        run: terragrunt apply -auto-approve --terragrunt-non-interactive -var target_aws_account_id=${{ vars.ACCOUNT_ID }} -var target_env=prod
+
+  alert-if-failure:
+    if: ${{ always() && (needs.ci.result=='failure')}}
+    runs-on: ubuntu-latest
+    needs: [ci]
+    steps:
+      - name: Send alert if building api-prod fails.
+        id: failure_alert
         run: |
-          curl -X POST -H 'Content-Type: application/json' $WEBHOOK_URL --data '{"text":"A&R API - Deploy Prod Complete"}'
+          curl -X POST -H 'Content-Type: application/json' --data '{"text": "Prod Deployment Failed for AR-API"}' ${{ secrets.WEBHOOK_URL }}

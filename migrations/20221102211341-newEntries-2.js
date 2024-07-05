@@ -1,6 +1,6 @@
 'use strict';
 const AWS = require('aws-sdk');
-const { TABLE_NAME, dynamodb, runQuery } = require('/opt/baseLayer');
+const { TABLE_NAME, dynamodb, runQuery } = require('../lambda/dynamoUtil');
 const { doMigration } = require('../migrations-data/addFromCSV');
 
 const dataFile = '20221102211341_data.xlsx';

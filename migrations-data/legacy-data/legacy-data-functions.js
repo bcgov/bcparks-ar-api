@@ -1,6 +1,6 @@
 const fs = require('fs');
 const readline = require('readline');
-const { getParks, getSubAreas } = require('/opt/baseLayer');
+const { getParks, getSubAreas } = require('../../lambda/dynamoUtil');
 const { activitiesEnum } = require('./legacy-data-constants');
 const axios = require('axios');
 const jwt = require("jsonwebtoken");

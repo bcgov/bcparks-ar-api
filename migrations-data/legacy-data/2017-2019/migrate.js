@@ -1,6 +1,6 @@
 const AWS = require("aws-sdk");
 const readXlsxFile = require('read-excel-file/node');
-const { TABLE_NAME, dynamodb } = require('/opt/baseLayer');
+const { TABLE_NAME, dynamodb } = require('../../../lambda/dynamoUtil');
 const { createCSV, getDBSnapshot, validateSchema, updateConsoleProgress, determineActivities, createLegacySubAreaObject, createLegacyParkObject, getConsoleInput, createLegacyRecordObject, clientIDsAR, addRoleToKeycloak, isTokenExpired } = require('../legacy-data-functions');
 const { schema } = require('../legacy-data-constants');
 
