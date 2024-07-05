@@ -1,0 +1,9 @@
+{
+    "name": "formulaLayer",
+    "version": "0.0.1",
+    "author": "Digitalspace <contact@digitalspace.ca>",
+    "license": "MIT",
+    "dependencies": {
+      "@aws-sdk/util-dynamodb": "^3.529.1"
+	  }
+  } 

@@ -5,7 +5,7 @@ const {
   createPutSubAreaObj,
 } = require("../lambda/subAreaUtils");
 const region = 'localhost';
-const { TABLE_NAME, dynamodb, runQuery, getSubAreas } = require('../lambda/dynamoUtil');
+const { TABLE_NAME, dynamodb, runQuery, getSubAreas } = require('/opt/baseLayer');
 
 let endpoint;
 if (region === 'localhost') {

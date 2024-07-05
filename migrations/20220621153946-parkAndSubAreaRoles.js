@@ -1,6 +1,6 @@
 'use strict';
 const AWS = require('aws-sdk');
-const { runQuery, TABLE_NAME, dynamodb } = require('../lambda/dynamoUtil');
+const { runQuery, TABLE_NAME, dynamodb } = require('/opt/baseLayer');
 
 const readXlsxFile = require('read-excel-file/node');
 

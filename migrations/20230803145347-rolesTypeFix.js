@@ -1,6 +1,6 @@
 'use strict';
 const AWS = require('aws-sdk');
-const { TABLE_NAME, getParks, dynamodb } = require('../lambda/dynamoUtil');
+const { TABLE_NAME, getParks, dynamodb } = require('/opt/baseLayer');
 
 exports.up = async function (dbOptions) {
   const parks = await getParks();
