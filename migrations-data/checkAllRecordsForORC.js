@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk');
 const region = 'localhost';
-const { TABLE_NAME, dynamodb, runQuery, getSubAreas } = require('/opt/baseLayer');
+const { TABLE_NAME, dynamodb, runQuery, getSubAreas } = require('../lambda/dynamoUtil');
 
 let endpoint;
 if (region === 'localhost') {

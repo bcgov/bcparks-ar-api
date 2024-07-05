@@ -1,4 +1,4 @@
-const { TABLE_NAME, getParks, dynamodb } = require('/opt/baseLayer');
+const { TABLE_NAME, getParks, dynamodb } = require('../lambda/dynamoUtil');
 
 async function fixSubAreaRoles() {
   const parks = await getParks();

@@ -1,5 +1,5 @@
 const { DateTime } = require('luxon');
-const { getParks, TABLE_NAME, getOne, runQuery, dynamodb, batchPut } = require('/opt/baseLayer');
+const { getParks, TABLE_NAME, getOne, runQuery, dynamodb, batchPut } = require('../lambda/dynamoUtil');
 const { updateConsoleProgress, errorConsoleUpdates, finishConsoleUpdates } = require('../tools/progress-indicator');
 
 const tz = 'America/Vancouver';

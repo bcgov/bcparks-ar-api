@@ -1,5 +1,5 @@
 const AWS = require('aws-sdk');
-const { dynamodb, TABLE_NAME, getOne } = require('/opt/baseLayer');
+const { dynamodb, TABLE_NAME, getOne } = require('../lambda/dynamoUtil');
 
 const readXlsxFile = require('read-excel-file/node');
 const sourcePaths = ['tools/Park Name Comparisons.xlsx'];

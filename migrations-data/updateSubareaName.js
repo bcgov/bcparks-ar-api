@@ -1,4 +1,4 @@
-const { getParks, getSubAreas, TABLE_NAME, dynamodb, runQuery } = require("/opt/baseLayer");
+const { getParks, getSubAreas, TABLE_NAME, dynamodb, runQuery } = require("../lambda/dynamoUtil");
 const { marshall } = require("@aws-sdk/util-dynamodb");
 const { DateTime } = require('luxon');
 

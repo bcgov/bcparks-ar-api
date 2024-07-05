@@ -1,4 +1,4 @@
-const { TABLE_NAME, getSubAreas, dynamodb } = require("/opt/baseLayer");
+const { TABLE_NAME, getSubAreas, dynamodb } = require("../lambda/dynamoUtil");
 const { updateSubareaName, marshallAndPutItem } = require("../migrations-data/updateSubareaName");
 
 

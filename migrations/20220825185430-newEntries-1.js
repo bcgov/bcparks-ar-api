@@ -2,7 +2,7 @@
 const AWS = require('aws-sdk');
 
 const { doMigration } = require('../migrations-data/addFromCSV');
-const { TABLE_NAME, dynamodb, runQuery } = require('/opt/baseLayer');
+const { TABLE_NAME, dynamodb, runQuery } = require('../lambda/dynamoUtil');
 
 const dataFile = '20220825185430_data.xlsx';
 const dataFolder = 'migrations-data/'
