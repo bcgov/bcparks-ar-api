@@ -582,6 +582,7 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref TableNameAR
+        - DynamoDBCrudPolicy:
             TableName: !Ref TableNameCacheAR
 
   ParkGetFunction:
@@ -755,7 +756,8 @@ Resources:
       Policies:
           - DynamoDBCrudPolicy:
               TableName: !Ref TableNameAR
-              TableNameConfig: !Ref TableNameConfigAR
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameConfigAR
       Events:
         subAreaPost:
           Type: Api

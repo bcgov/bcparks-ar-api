@@ -1,5 +1,5 @@
-const { S3 } = require("@aws-sdk/client-s3");
-const s3 = new S3();
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const s3Client = new S3Client({});
 const fs = require("fs");
 const writeXlsxFile = require("write-excel-file/node");
 const {
@@ -574,7 +574,8 @@ async function uploadToS3() {
     Body: buffer,
   };
 
-  await s3.putObject(params);
+  const command = new PutObjectCommand(params);
+  await s3Client.send(command);
   logger.debug("File successfully uploaded to S3");
 }
 

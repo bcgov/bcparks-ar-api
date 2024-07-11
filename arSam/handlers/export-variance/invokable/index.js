@@ -1,5 +1,5 @@
-const { S3 } = require('@aws-sdk/client-s3');
-const s3 = new S3();
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const s3Client = new S3Client({});
 const { marshall } = require('@aws-sdk/util-dynamodb');
 const fs = require('fs');
 
@@ -288,7 +288,8 @@ async function uploadToS3(csvData) {
     Body: buffer,
   };
 
-  await s3.putObject(params);
+  const command = new PutObjectCommand(params);
+  await s3Client.send(command);
   logger.debug("File successfully uploaded to S3");
 }
 
