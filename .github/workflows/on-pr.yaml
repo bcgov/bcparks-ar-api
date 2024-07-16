@@ -1,14 +1,10 @@
-name: PR Checks
-run-name: Run test on PR ${{ github.event.number }}
+name: Run Tests
 
-on:
-  pull_request:
-    paths: ["./**"]
+on: [pull_request]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    environment: dev
     strategy:
       matrix:
         node-version: [18.x]
@@ -69,4 +65,4 @@ jobs:
           AWS_REGION: local-env
           AWS_ACCESS_KEY_ID: notused
           AWS_SECRET_ACCESS_KEY: notused
-        run: ./node_modules/jest/bin/jest.js --coverage --runInBand
+        run: ./arSam/node_modules/jest/bin/jest.js --coverage --runInBand
