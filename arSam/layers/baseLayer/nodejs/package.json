@@ -4,8 +4,8 @@
     "author": "Digitalspace <contact@digitalspace.ca>",
     "license": "MIT",
     "dependencies": {
-        "@aws-sdk/client-dynamodb": "^3.529.1",
-        "@aws-sdk/util-dynamodb": "^3.529.1",
+        "@aws-sdk/client-dynamodb": "^3.614.0",
+        "@aws-sdk/util-dynamodb": "^3.614.0",
         "winston": "^3.8.0"
 	}
 } 
