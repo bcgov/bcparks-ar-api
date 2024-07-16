@@ -22,7 +22,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: "./"
+        working-directory: "./arSam"
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -48,21 +48,21 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       # SAM Build
-       - name: Cache SAM Build
-         id: cache-sam-build
-         uses: actions/cache@v3
-         with:
-            path: |
-              **/.aws-sam
-            key: ${{ github.sha }}-ar-api-sam-cache
-       - name: Run sam build
-         if: steps.cache-sam-build.outputs.cache-hit != 'true'
-         run: |
-            sam build --cached
+      - name: Cache SAM Build
+        id: cache-sam-build
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/.aws-sam
+          key: ${{ github.sha }}-ar-api-sam-cache
+      - name: Run sam build
+        if: steps.cache-sam-build.outputs.cache-hit != 'true'
+        run: |
+          sam build --cached
  
        # Prevent prompts and failure when the stack is unchanged
-       - name: SAM deploy
-         env:
+      - name: SAM deploy
+        env:
           STAGE: ${{ vars.AR_API_STAGE }}
           STACK_NAME: ${{ vars.AR_API_STACK_NAME }}
           ACCOUNT_ID: ${{ vars.ACCOUNT_ID }}
@@ -76,9 +76,9 @@ jobs:
           DATA_REGISTER_NAME_API_KEY: ${{ secrets.DATA_REGISTER_NAME_API_KEY }}
         run: |
           sam deploy --stack-name $STACK_NAME --no-confirm-changeset --no-fail-on-empty-changeset --parameter-overrides "AccountId=$ACCOUNT_ID" "Stage=$STAGE" "SSOIssuerUrl=$SSO_ISSUER" "SSOJWKSUri=$SSO_JWKSURI" "SSOClientId=$SSO_CLIENT_ID" "SSOOrigin=$SSO_ORIGIN" "AWSAccountList=$AWS_ACCOUNT_LIST" "S3BucketData=$S3_BUCKET_DATA" "DataRegisterNameEndpoint=$DATA_REGISTER_NAME_ENDPOINT" "DataRegisterNameApiKey=$DATA_REGISTER_NAME_API_KEY"
- 
-       - shell: bash
-         env:
-            WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
-         run: |
-            curl -X POST -H 'Content-Type: application/json' $WEBHOOK_URL --data '{"text":" A&R API - Deploy Dev Complete"}'
+
+      - shell: bash
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-Type: application/json' $WEBHOOK_URL --data '{"text":" A&R API - Deploy Dev Complete"}'
