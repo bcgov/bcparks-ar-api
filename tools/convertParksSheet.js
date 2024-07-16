@@ -1,5 +1,5 @@
 const AWS = require('aws-sdk');
-const { dynamodb, TABLE_NAME } = require('../lambda/dynamoUtil');
+const { dynamodb, TABLE_NAME } = require('/opt/baseLayer');
 
 const readXlsxFile = require('read-excel-file/node');
 

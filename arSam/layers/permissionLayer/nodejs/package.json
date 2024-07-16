@@ -1,0 +1,10 @@
+{
+  "name": "permissionLayer",
+  "version": "0.0.1",
+  "author": "Digitalspace <contact@digitalspace.ca>",
+  "license": "MIT",
+  "dependencies": {
+    "jsonwebtoken": "^9.0.0",
+    "jwks-rsa": "^3.0.1"
+  }
+}

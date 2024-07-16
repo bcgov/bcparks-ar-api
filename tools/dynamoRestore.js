@@ -3,7 +3,7 @@ const AWS = require('aws-sdk');
 const data = require('./dump.json');
 const { updateConsoleProgress, finishConsoleUpdates, errorConsoleUpdates } = require('./progress-indicator');
 
-const TABLE_NAME = process.env.TABLE_NAME || 'ar-tests';
+const TABLE_NAME = process.env.TABLE_NAME || 'ParksAr';
 const MAX_TRANSACTION_SIZE = 25;
 
 const options = {

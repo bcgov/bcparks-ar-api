@@ -1,6 +1,6 @@
 'use strict';
 const AWS = require('aws-sdk');
-const { TABLE_NAME, dynamodb, getSubAreas } = require('../lambda/dynamoUtil');
+const { TABLE_NAME, dynamodb, getSubAreas } = require('/opt/baseLayer');
 
 //parks to update, section updates to be applied to every subarea within the park
 const changes = [
