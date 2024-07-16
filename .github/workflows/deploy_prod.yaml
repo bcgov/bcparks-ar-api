@@ -24,7 +24,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: "./arSam"
+        working-directory: "arSam"
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
