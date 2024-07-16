@@ -56,6 +56,9 @@ jobs:
         with:
           time: '15' # for 15 seconds
 
+      - name: List Jest Binary
+        run: ls ${{ github.workspace }}/arSam/node_modules/.bin
+
       # Run Tests
       - name: Run Tests
         env:
@@ -68,3 +71,4 @@ jobs:
           AWS_ACCESS_KEY_ID: notused
           AWS_SECRET_ACCESS_KEY: notused
         run: ./node_modules/jest/bin/jest.js --coverage --runInBand
+        working-directory: ./arSam
