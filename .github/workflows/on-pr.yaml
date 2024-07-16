@@ -61,8 +61,10 @@ jobs:
         env:
           TABLE_NAME: ParksAr-tests
           IS_OFFLINE: true
-          DYNAMODB_ENDPOINT_URL: http://127.0.0.1:8000
-          AWS_REGION: local-env
+          ENDPOINT: http://localhost:8000
+          REGION: local
+          CONFIG_TABLE_NAME: ConfigAr-tests
+          NAME_CACHE_TABLE_NAME: NameCacheAr-tests
           AWS_ACCESS_KEY_ID: notused
           AWS_SECRET_ACCESS_KEY: notused
-        run: ./arSam/node_modules/jest/bin/jest.js --coverage --runInBand
+        run: ./node_modules/jest/bin/jest.js --coverage --runInBand
