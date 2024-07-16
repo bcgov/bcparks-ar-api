@@ -24,7 +24,6 @@ jobs:
       run:
         working-directory: "./"
     steps:
-      # Checkout GitHub Repo
       - name: Checkout repo
         uses: actions/checkout@v3
 
