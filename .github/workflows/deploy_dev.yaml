@@ -48,17 +48,9 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       # SAM Build
-      - name: Cache SAM Build
-        id: cache-sam-build
-        uses: actions/cache@v3
-        with:
-          path: |
-            **arSam/.aws-sam
-          key: ${{ github.sha }}-ar-api-sam-cache
       - name: Run sam build
-        if: steps.cache-sam-build.outputs.cache-hit != 'true'
         run: |
-          sam build --cached
+          sam build
  
        # Prevent prompts and failure when the stack is unchanged
       - name: SAM deploy
