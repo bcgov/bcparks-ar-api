@@ -6,7 +6,7 @@ exports.handler = async (event, context) => {
 
   // Allow CORS
   if (event.httpMethod === 'OPTIONS') {
-    return sendResponse(200, {}, 'Success', null, context);
+    return sendResponse(200, {}, context);
   }
 
   try {

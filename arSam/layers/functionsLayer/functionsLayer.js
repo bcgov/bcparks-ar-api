@@ -1,10 +1,10 @@
 const { marshall } = require('@aws-sdk/util-dynamodb');
 const { dynamodb } = require("/opt/baseLayer");
-const crypto = require("crypto");
+const { createHash } = require("node:crypto");
 
 function convertRolesToMD5(roles, prefix = "") {
   const codedRoles = prefix + roles.join("-");
-  const hash = crypto.createHash("md5").update(codedRoles).digest("hex");
+  const hash = createHash("md5").update(codedRoles).digest("hex");
   return hash;
 }
 

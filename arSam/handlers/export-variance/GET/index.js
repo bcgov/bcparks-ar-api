@@ -20,7 +20,7 @@ if (IS_OFFLINE) {
 const lambda = new Lambda(options);
 
 const { runQuery, TABLE_NAME, dynamodb, sendResponse, logger } = require("/opt/baseLayer");
-const crypto = require('crypto');
+const { createHash } = require('node:crypto');
 
 const VARIANCE_EXPORT_FUNCTION_NAME =
   process.env.VARIANCE_EXPORT_FUNCTION_NAME || "ar-api-VarianceExportInvokableFunction";
@@ -34,7 +34,7 @@ exports.handler = async (event, context) => {
 
   // Allow CORS
   if (event.httpMethod === 'OPTIONS') {
-    return sendResponse(200, {}, 'Success', null, context);
+    return sendResponse(200, {}, context);
   }
 
   try {
@@ -55,7 +55,7 @@ exports.handler = async (event, context) => {
     let hashParams = {...params};
     delete hashParams.getJob;
     const decodedHash = JSON.stringify(hashParams) + JSON.stringify(permissionObject.roles);
-    const hash = crypto.createHash('md5').update(decodedHash).digest('hex');
+    const hash = createHash('md5').update(decodedHash).digest('hex');
     const pk = "variance-exp-job";
 
     // check for existing job
