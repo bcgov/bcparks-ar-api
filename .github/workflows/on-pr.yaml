@@ -20,9 +20,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "yarn"
-          cache-dependency-path: "arSam/yarn.lock"
-      - run: yarn install --silent --frozen-lockfile
+          cache: "npm"
+          cache-dependency-path: "arSam/package-lock.json"
+      - run: npm install
 
       # Setup AWS SAM
       - name: Setup AWS SAM

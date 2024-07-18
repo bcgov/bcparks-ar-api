@@ -249,7 +249,7 @@ describe("Variance Test", () => {
   });
 
   test("Variance should trigger", async () => {
-    const { calculateVariance } = require("/opt/varianceLayer");
+    const { calculateVariance } = require("/opt/baseLayer");
     const res = calculateVariance([8, 8, 8], 10, 0.2);
     expect(res).toEqual({
       averageHistoricValue: 8,
@@ -260,7 +260,7 @@ describe("Variance Test", () => {
   });
 
   test("Variance should trigger 2", async () => {
-    const { calculateVariance } = require("/opt/varianceLayer");
+    const { calculateVariance } = require("/opt/baseLayer");
     const res = calculateVariance([8.5, 8.5, 8.5], 10.8, 0.2);
     expect(res).toEqual({
       averageHistoricValue: 8.5,
@@ -271,7 +271,7 @@ describe("Variance Test", () => {
   });
 
   test("Variance should trigger 3", async () => {
-    const { calculateVariance } = require("/opt/varianceLayer");
+    const { calculateVariance } = require("/opt/baseLayer");
     const res = calculateVariance([8.5, 8.5, 8.5], 0.8, 0.2);
     expect(res).toEqual({
       averageHistoricValue: 8.5,
@@ -282,7 +282,7 @@ describe("Variance Test", () => {
   });
 
   test("Variance should not trigger", async () => {
-    const { calculateVariance } = require("/opt/varianceLayer");
+    const { calculateVariance } = require("/opt/baseLayer");
     const res = calculateVariance([10.2, 10.2, 10.2], 10.2, 0.25);
     expect(res).toEqual({
       averageHistoricValue: 10.2,
@@ -293,7 +293,7 @@ describe("Variance Test", () => {
   });
 
   test("Variance should calculate variance with two years", async () => {
-    const { calculateVariance } = require("/opt/varianceLayer");
+    const { calculateVariance } = require("/opt/baseLayer");
     const res = calculateVariance([8, 8, null], 10, 0.2);
     expect(res).toEqual({
       averageHistoricValue: 8,

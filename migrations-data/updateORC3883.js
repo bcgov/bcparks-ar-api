@@ -3,7 +3,7 @@ const {
   getValidSubareaObj,
   createUpdateParkWithNewSubAreaObj,
   createPutSubAreaObj,
-} = require("../lambda/subAreaUtils");
+} = require("/opt/subAreaLayer");
 const region = 'localhost';
 const { TABLE_NAME, dynamodb, runQuery, getSubAreas } = require('/opt/baseLayer');
 

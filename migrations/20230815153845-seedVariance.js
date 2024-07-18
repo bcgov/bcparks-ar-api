@@ -1,9 +1,13 @@
 'use strict';
 const AWS = require('aws-sdk');
-const { getParks, getSubAreas, getOne, TABLE_NAME, dynamodb } = require('/opt/baseLayer');
-const { calculateVariance } = require('../lambda/varianceUtils');
+const { getParks,
+  getSubAreas,
+  getOne,
+  TABLE_NAME,
+  dynamodb,
+  calculateVariance } = require('/opt/baseLayer');
 const { updateConsoleProgress, finishConsoleUpdates, errorConsoleUpdates } = require('../tools/progress-indicator');
-const { EXPORT_VARIANCE_CONFIG } = require('../lambda/constants');
+const { EXPORT_VARIANCE_CONFIG } = require('/opt/constants');
 const { DateTime } = require('luxon');
 
 const MAX_TRANSACTION_SIZE = 25;
