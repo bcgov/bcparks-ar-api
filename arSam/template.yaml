@@ -20,7 +20,7 @@ Parameters:
     Default: 'defaultAccount'
   Stage:
     Type: String
-    Default: 'dev'
+    Default: 'api'
   ExportFunctionName:
     Type: String
     Default: 'ar-api-ExportInvokableFunction'
@@ -676,13 +676,13 @@ Resources:
         readConfigGet:
           Type: Api
           Properties:
-            Path: /readConfig
+            Path: /config
             Method: GET
             RestApiId: !Ref ApiDeployment
         readConfigOptions:
           Type: Api
           Properties:
-            Path: /readConfig
+            Path: /config
             Method: OPTIONS
             RestApiId: !Ref ApiDeployment
 
