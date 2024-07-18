@@ -84,19 +84,6 @@ Parameters:
 
 Resources:
   ### LAMBDA LAYERS ###
-  VarianceLayer:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: varianceLayer
-      Description: Variance Layer
-      ContentUri: layers/varianceLayer/
-      CompatibleRuntimes:
-        - nodejs18.x
-      LicenseInfo: 'Apache-2.0'
-      RetentionPolicy: Retain
-    Metadata:
-      BuildMethod: makefile
-  
   SubAreaLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
@@ -104,7 +91,7 @@ Resources:
       Description: SubArea Layer
       ContentUri: layers/subAreaLayer/
       CompatibleRuntimes:
-        - nodejs18.x
+        - nodejs20.x
       LicenseInfo: 'Apache-2.0'
       RetentionPolicy: Retain
     Metadata:
@@ -117,7 +104,7 @@ Resources:
       Description: Permission Layer
       ContentUri: layers/permissionLayer/
       CompatibleRuntimes:
-        - nodejs18.x
+        - nodejs20.x
       LicenseInfo: 'Apache-2.0'
       RetentionPolicy: Retain
     Metadata:
@@ -130,7 +117,7 @@ Resources:
       Description: Base Layer
       ContentUri: layers/baseLayer/
       CompatibleRuntimes:
-        - nodejs18.x
+        - nodejs20.x
       LicenseInfo: 'Apache-2.0'
       RetentionPolicy: Retain
     Metadata:
@@ -143,7 +130,7 @@ Resources:
       Description: Keycloak Layer
       ContentUri: layers/keycloakLayer/
       CompatibleRuntimes:
-        - nodejs18.x
+        - nodejs20.x
       LicenseInfo: 'Apache-2.0'
       RetentionPolicy: Retain
     Metadata:
@@ -156,7 +143,7 @@ Resources:
       Description: Functions Layer
       ContentUri: layers/functionsLayer/
       CompatibleRuntimes:
-        - nodejs18.x
+        - nodejs20.x
       LicenseInfo: 'Apache-2.0'
       RetentionPolicy: Retain
     Metadata:
@@ -169,7 +156,7 @@ Resources:
       Description: Formula Layer
       ContentUri: layers/formulaLayer/
       CompatibleRuntimes:
-        - nodejs18.x
+        - nodejs20.x
       LicenseInfo: 'Apache-2.0'
       RetentionPolicy: Retain
     Metadata:
@@ -182,7 +169,7 @@ Resources:
       Description: Constants Layer
       ContentUri: layers/constantsLayer/
       CompatibleRuntimes:
-        - nodejs18.x
+        - nodejs20.x
       LicenseInfo: 'Apache-2.0'
       RetentionPolicy: Retain
     Metadata:
@@ -195,7 +182,7 @@ Resources:
     Properties:
       CodeUri: handlers/activity/GET/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
@@ -224,14 +211,13 @@ Resources:
     Properties:
       CodeUri: handlers/activity/POST/
       Handler: index.handlePost
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
           LOG_LEVEL: info
       Layers:
           - !Ref BaseLayer
-          - !Ref VarianceLayer
           - !Ref ConstantsLayer
       Policies:
           - DynamoDBCrudPolicy:
@@ -249,14 +235,13 @@ Resources:
     Properties:
       CodeUri: handlers/activity/POST/
       Handler: index.handleLock
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
           LOG_LEVEL: info
       Layers:
           - !Ref BaseLayer
-          - !Ref VarianceLayer
           - !Ref ConstantsLayer
       Policies:
           - DynamoDBCrudPolicy:
@@ -274,14 +259,13 @@ Resources:
     Properties:
       CodeUri: handlers/activity/POST/
       Handler: index.handleUnlock
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
           LOG_LEVEL: info
       Layers:
           - !Ref BaseLayer
-          - !Ref VarianceLayer
           - !Ref ConstantsLayer
       Policies:
           - DynamoDBCrudPolicy:
@@ -299,7 +283,7 @@ Resources:
     Properties:
       CodeUri: handlers/activity/DELETE/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           LOG_LEVEL: info
@@ -318,7 +302,7 @@ Resources:
     Properties:
       CodeUri: handlers/activity/PUT/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           LOG_LEVEL: info
@@ -337,7 +321,7 @@ Resources:
     Properties:
       CodeUri: handlers/cloudwatchAlarm/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
@@ -365,7 +349,7 @@ Resources:
     Properties:
       CodeUri: handlers/export/GET/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
@@ -404,7 +388,7 @@ Resources:
       Timeout: 300
       CodeUri: handlers/export/invokable/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       FunctionName: !Ref ExportFunctionName
       Environment:
         Variables:
@@ -433,7 +417,7 @@ Resources:
     Properties:
       CodeUri: handlers/export-variance/GET/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
@@ -471,7 +455,7 @@ Resources:
       Timeout: 300
       CodeUri: handlers/export-variance/invokable/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       FunctionName: !Ref VarianceExportFunctionName
       Environment:
         Variables:
@@ -494,7 +478,7 @@ Resources:
     Properties:
       CodeUri: handlers/fiscalYearEnd/GET/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
@@ -523,7 +507,7 @@ Resources:
     Properties:
       CodeUri: handlers/fiscalYearEnd/POST/
       Handler: index.lockFiscalYear
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
@@ -546,7 +530,7 @@ Resources:
     Properties:
       CodeUri: handlers/fiscalYearEnd/POST/
       Handler: index.unlockFiscalYear
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
@@ -569,7 +553,7 @@ Resources:
     Properties:
       CodeUri: handlers/nameUpdate/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
@@ -590,7 +574,7 @@ Resources:
     Properties:
       CodeUri: handlers/park/GET/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
@@ -620,7 +604,7 @@ Resources:
     Properties:
       CodeUri: handlers/park/POST/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
@@ -643,7 +627,7 @@ Resources:
     Properties:
       CodeUri: handlers/park/PUT/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           LOG_LEVEL: info
@@ -662,7 +646,7 @@ Resources:
     Properties:
       CodeUri: handlers/readConfig/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
@@ -691,7 +675,7 @@ Resources:
     Properties:
       CodeUri: handlers/subArea/GET/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           LOG_LEVEL: info
@@ -716,7 +700,7 @@ Resources:
     Properties:
       CodeUri: handlers/subArea/DELETE/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           LOG_LEVEL: info
@@ -740,7 +724,7 @@ Resources:
     Properties:
       CodeUri: handlers/subArea/POST/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           LOG_LEVEL: info
@@ -771,7 +755,7 @@ Resources:
     Properties:
       CodeUri: handlers/subArea/PUT/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           LOG_LEVEL: info
@@ -790,7 +774,7 @@ Resources:
     Properties:
       CodeUri: handlers/variance/GET/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           LOG_LEVEL: info
@@ -820,7 +804,7 @@ Resources:
     Properties:
       CodeUri: handlers/variance/POST/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           LOG_LEVEL: info
@@ -839,7 +823,7 @@ Resources:
     Properties:
       CodeUri: handlers/variance/PUT/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Environment:
         Variables:
           LOG_LEVEL: info
@@ -957,7 +941,7 @@ Resources:
       Layers:
           - !Ref BaseLayer
           - !Ref PermissionLayer
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
 
   ### S3 BUCKET ###
   ParksArAssetsS3Bucket:

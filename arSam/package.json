@@ -1,9 +1,9 @@
 {
 	"scripts": {
 		"start": "sam local start-api --env-vars vars.json --debug",
-		"start-full": "yarn build && yarn start",
+		"start-full": "npm run build && npm run start",
 		"build": "sam build",
-		"test": "yarn build && jest --coverage"
+		"test": "npm run build && jest --coverage"
 	},
   	"jest": {
 		"verbose": true,
@@ -20,8 +20,7 @@
 			"^/opt/functionsLayer": "<rootDir>/.aws-sam/build/FunctionsLayer/functionsLayer",
 			"^/opt/keycloakLayer": "<rootDir>/.aws-sam/build/KeycloakLayer/keycloakLayer",
 			"^/opt/permissionLayer": "<rootDir>/.aws-sam/build/PermissionLayer/permissionLayer",
-			"^/opt/subAreaLayer": "<rootDir>/.aws-sam/build/SubAreaLayer/subAreaLayer",
-			"^/opt/varianceLayer": "<rootDir>/.aws-sam/build/VarianceLayer/varianceLayer"
+			"^/opt/subAreaLayer": "<rootDir>/.aws-sam/build/SubAreaLayer/subAreaLayer"
 		}
 	},
 	"devDependencies": {

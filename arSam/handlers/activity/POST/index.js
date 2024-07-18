@@ -1,7 +1,16 @@
 const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 const { DateTime } = require('luxon');
-const { dynamodb, runQuery, TABLE_NAME, getOne, FISCAL_YEAR_FINAL_MONTH, TIMEZONE, sendResponse, logger } = require('/opt/baseLayer');
-const { calculateVariance } = require('/opt/varianceLayer');
+const { 
+  dynamodb,
+  runQuery,
+  TABLE_NAME,
+  getOne,
+  FISCAL_YEAR_FINAL_MONTH,
+  TIMEZONE,
+  sendResponse,
+  logger,
+  calculateVariance
+} = require('/opt/baseLayer');
 const { EXPORT_VARIANCE_CONFIG } = require('/opt/constantsLayer');
 
 exports.handlePost = async (event, context) => {

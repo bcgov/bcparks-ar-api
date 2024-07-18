@@ -140,7 +140,7 @@ The `/opt` directory is only available at runtime within the SAM docker containe
     "^/opt/baseLayer": "<rootDir>/.aws-sam/build/BaseLayer/baseLayer",
     "^/opt/constantsLayer": "<rootDir>/.aws-sam/build/ConstantsLayer/constantsLayer",
     ...,
-    "^/opt/varianceLayer": "<rootDir>/.aws-sam/build/VarianceLayer/varianceLayer"
+    "^/opt/subAreaLayer": "<rootDir>/.aws-sam/build/subAreaLayer/subAreaLayer"
   ]
 }
 ```
