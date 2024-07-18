@@ -30,7 +30,7 @@ const sendResponse = function (code, data, context) {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT'
+      'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
     },
     body: JSON.stringify(data)
   };

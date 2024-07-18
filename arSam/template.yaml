@@ -663,13 +663,19 @@ Resources:
             Path: /config
             Method: GET
             RestApiId: !Ref ApiDeployment
+            Auth:
+              Authorizer: NONE
+              OverrideApiAuth: true
         readConfigOptions:
           Type: Api
           Properties:
             Path: /config
             Method: OPTIONS
             RestApiId: !Ref ApiDeployment
-
+            Auth:
+              Authorizer: NONE
+              OverrideApiAuth: true
+            
   SubAreaGetFunction:
     Type: AWS::Serverless::Function
     Properties:
