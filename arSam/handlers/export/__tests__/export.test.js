@@ -21,7 +21,7 @@ async function setupDb(tableName) {
         TableName: tableName,
         Item: marshall(park),
       }
-    dynamoClient.send(new PutItemCommand(params))
+    await dynamoClient.send(new PutItemCommand(params))
   }
 
   for (const subarea of SUBAREAS) {
@@ -29,7 +29,7 @@ async function setupDb(tableName) {
         TableName: tableName,
         Item: marshall(subarea),
       }  
-    dynamoClient.send(new PutItemCommand(params))
+    await dynamoClient.send(new PutItemCommand(params))
     }
 
   for (const job of JOBSLIST) {
@@ -37,7 +37,7 @@ async function setupDb(tableName) {
         TableName: tableName,
         Item: marshall(job),
     }
-    dynamoClient.send(new PutItemCommand(params))
+    await dynamoClient.send(new PutItemCommand(params))
   }
 }
 

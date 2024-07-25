@@ -24,7 +24,7 @@ async function genericPutDocument(item, TABLE_NAME) {
       TableName: TABLE_NAME,
       Item: marshall(item)
     }
-  dynamoClient.send(new PutItemCommand(params));
+  await dynamoClient.send(new PutItemCommand(params));
 
 }
 

@@ -20,7 +20,7 @@ async function setupDb(TABLE_NAME) {
         TableName: TABLE_NAME,
         Item: marshall(park),
       }
-    dynamoClient.send(new PutItemCommand(params));
+    await dynamoClient.send(new PutItemCommand(params));
   }
 
   for (const subarea of SUBAREAS) {
@@ -28,7 +28,7 @@ async function setupDb(TABLE_NAME) {
         TableName: TABLE_NAME,
         Item: marshall(subarea),
       }
-    dynamoClient.send(new PutItemCommand(params));
+    await dynamoClient.send(new PutItemCommand(params));
   }
 
   for (const job of VARIANCE_JOBSLIST) {
@@ -36,7 +36,7 @@ async function setupDb(TABLE_NAME) {
         TableName: TABLE_NAME,
         Item: marshall(job),
       }
-    dynamoClient.send(new PutItemCommand(params));
+    await dynamoClient.send(new PutItemCommand(params));
   }
 }
 

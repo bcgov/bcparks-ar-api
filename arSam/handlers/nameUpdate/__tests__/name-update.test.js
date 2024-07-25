@@ -29,7 +29,7 @@ async function setupDb(TABLE_NAME) {
         "subAreaId": "0673"
       })
     }
-    dynamoClient.send(new PutItemCommand(params));
+    await dynamoClient.send(new PutItemCommand(params));
 }
 
 describe("Name Update Tests", () => {
