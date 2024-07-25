@@ -7,7 +7,7 @@ describe("Constants Test", () => {
   
     test("Handler - Constants has items", async () => {
   
-      const constants = require("../constantsLayer/constantsLayer");
+      const constants = require("../constantsLayer");
       // Checks to ensure the value functions returns the data we pass through to it based on the attribute.
       expect(constants.CSV_SYSADMIN_SCHEMA.length).toEqual(96);
       for(const row of constants.CSV_SYSADMIN_SCHEMA) {

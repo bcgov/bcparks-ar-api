@@ -1,6 +1,6 @@
 const { DynamoDBClient, PutItemCommand, GetItemCommand } = require('@aws-sdk/client-dynamodb');
 const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
-const { REGION, ENDPOINT, TABLE_NAME } = require("../../../__tests__/settings");
+const { REGION, ENDPOINT } = require("../../../__tests__/settings");
 const {
   PARKSLIST,
   SUBAREAS,
@@ -9,6 +9,7 @@ const {
   FISCAL_YEAR_LOCKS,
 } = require("../../../__tests__/mock_data.json");
 
+const { getHashedText, deleteDB, createDB } = require("../../../__tests__/setup");
 const jwt = require("jsonwebtoken");
 const token = jwt.sign(
   { resource_access: { "attendance-and-revenue": { roles: ["sysadmin"] } } },
@@ -18,52 +19,63 @@ const emptyRole = {
   resource_access: { "attendance-and-revenue": { roles: [""] } },
 };
 
-async function setupDb() {
-  docClient = new DynamoDBClient({
-    region: REGION,
-    endpoint: ENDPOINT,
-    convertEmptyValues: true,
-  });
+async function setupDb(tableName) {
 
   for (const item of PARKSLIST) {
-    await genericPutDocument(item);
+    await genericPutDocument(item, tableName);
   }
   for (const item of SUBAREAS) {
-    await genericPutDocument(item);
+    await genericPutDocument(item, tableName);
   }
   for (const item of SUBAREA_ENTRIES) {
-    await genericPutDocument(item);
+    await genericPutDocument(item, tableName);
   }
   for (const item of CONFIG_ENTRIES) {
-    await genericPutDocument(item);
+    await genericPutDocument(item, tableName);
   }
   for (const item of FISCAL_YEAR_LOCKS) {
-    await genericPutDocument(item);
+    await genericPutDocument(item, tableName);
   }
 }
 
-async function genericPutDocument(item) {
+async function genericPutDocument(item, TABLE_NAME) {
+
+  const dynamoClient = new DynamoDBClient({
+    region: REGION,
+    endpoint: ENDPOINT
+  });
+
   const input = {
-    Item: marshall(item, { convertEmptyValues: true }),
+    Item: marshall(item),
     TableName: TABLE_NAME,
   };
   const command = new PutItemCommand(input);
-  return await docClient.send(command);
+  return await dynamoClient.send(command);
 }
 
 describe("Activity Test", () => {
   const OLD_ENV = process.env;
+  let hash
+  let TABLE_NAME
+  let NAME_CACHE_TABLE_NAME
+  let CONFIG_TABLE_NAME
+  
   beforeEach(async () => {
     jest.resetModules();
     process.env = { ...OLD_ENV }; // Make a copy of environment
+    hash = getHashedText(expect.getState().currentTestName);
+    process.env.TABLE_NAME = hash
+    TABLE_NAME = process.env.TABLE_NAME;
+    NAME_CACHE_TABLE_NAME = TABLE_NAME.concat("-nameCache");
+    CONFIG_TABLE_NAME = TABLE_NAME.concat("-config");
+    await createDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
+    await setupDb(TABLE_NAME);
   });
 
   afterEach(() => {
+    deleteDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
     process.env = OLD_ENV; // Restore old environment
-  });
-
-  beforeAll(async () => {
-    return await setupDb();
+    
   });
 
   test("Handler - 200 GET specific activity entry", async () => {
@@ -172,6 +184,10 @@ describe("Activity Test", () => {
   });
 
   test("HandlePost - 200 POST handle Activity/Variances", async () => {
+    const dynamoClient = new DynamoDBClient({
+      region: REGION,
+      endpoint: ENDPOINT
+    });
     const activityPOST = require("../POST/index");
     // Setup the first record
     const response = await activityPOST.handlePost(
@@ -216,7 +232,7 @@ describe("Activity Test", () => {
       TableName: TABLE_NAME,
     };
     const command = new GetItemCommand(input);
-    const doc = await docClient.send(command);
+    const doc = await dynamoClient.send(command);
     expect(doc?.Item).toBe(undefined);
 
 
@@ -264,7 +280,7 @@ describe("Activity Test", () => {
       TableName: TABLE_NAME,
     };
     const command2 = new GetItemCommand(input2);
-    const doc2 = await docClient.send(command2);
+    const doc2 = await dynamoClient.send(command2);
     expect(unmarshall(doc2?.Item)).toEqual({
       parkName: 'Cultus Lake Park',
       orcs: '0041',
@@ -433,11 +449,10 @@ describe("Activity Test", () => {
       },
       null
     );
-
     expect(response.statusCode).toBe(400);
   });
 
-  test("HandleLock - 200 POST lock record", async () => {
+  test("HandleLock/PostToLocked/Unlock - 200-409-200", async () => {
     const activityPOST = require("../POST/index");
     const response = await activityPOST.handleLock(
       {
@@ -461,11 +476,8 @@ describe("Activity Test", () => {
       null
     );
     expect(response.statusCode).toBe(200);
-  });
 
-  test("HandlePost - 409 POST to locked record", async () => {
-    const activityPOST = require("../POST/index");
-    const response = await activityPOST.handlePost(
+    const response2 = await activityPOST.handlePost(
       {
         headers: {
           Authorization: "Bearer " + token,
@@ -486,12 +498,10 @@ describe("Activity Test", () => {
       },
       null
     );
-    expect(response.statusCode).toBe(409);
-  });
+    expect(response2.statusCode).toBe(409);
 
-  test("HandleUnlock - 200 POST unlock record", async () => {
-    const activityPOST = require("../POST/index");
-    const response = await activityPOST.handleUnlock(
+
+    const response3 = await activityPOST.handleUnlock(
       {
         headers: {
           Authorization: "Bearer " + token,
@@ -512,7 +522,7 @@ describe("Activity Test", () => {
       },
       null
     );
-    expect(response.statusCode).toBe(200);
+    expect(response3.statusCode).toBe(200);
   });
 
   test("Handler - 403 POST to locked fiscal year", async () => {

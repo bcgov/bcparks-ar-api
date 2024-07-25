@@ -13,7 +13,6 @@ exports.handler = async (event, context) => {
   ) {
     return sendResponse(400, { msg: "Bad Request." }, context);
   }
-
   // Check if the user is authenticated and has admin permissions.
   try {
     await requirePermissions(event, { "isAuthenticated": true, "isAdmin": true });
@@ -21,7 +20,6 @@ exports.handler = async (event, context) => {
     logger.error(e);
     return sendResponse(e.statusCode || 400, e.msg, context);
   }
-
   // Check if query string has archive flag set to true
   try {
     if (event.queryStringParameters.archive === "true") {
@@ -41,13 +39,12 @@ exports.handler = async (event, context) => {
 async function deleteSubArea(subAreaId, orcs, context) {
   // Update the park object.
   await deleteSubAreaFromPark(subAreaId, orcs, context);
-
   // Remove subarea records.
   const activitiesSet = await deleteSubAreaRecords(subAreaId, orcs, context);
+    // Remove activity records.
   let activities = [...activitiesSet];
   logger.info("activities:", activities);
-
-  // Remove activity records.
+  
   if (activities.length > 0) {
     await deleteActivityRecords(subAreaId, activities, context);
   }
@@ -183,7 +180,6 @@ async function archiveSubArea(subAreaId, orcs, context) {
   logger.info("Removing subarea from park");
   await deleteSubAreaFromPark(subAreaId, orcs, context);
   logger.info("Removed.  Archiving Subarea.");
-
   // Go throught the subarea records and flag them as archived.
   await archiveSubAreaRecord(subAreaId, orcs, context);
   logger.info("Archived.");

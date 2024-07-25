@@ -1,12 +1,8 @@
-const AWS = require("aws-sdk");
-const { DocumentClient } = require("aws-sdk/clients/dynamodb");
-const {
-  REGION,
-  ENDPOINT,
-  TABLE_NAME,
-  CONFIG_TABLE_NAME,
-} = require("../../../__tests__/settings");
+const { DynamoDBClient, PutItemCommand, GetItemCommand } = require('@aws-sdk/client-dynamodb');
+const { REGION, ENDPOINT } = require("../../../__tests__/settings");
 const { PARKSLIST } = require("../../../__tests__/mock_data.json");
+const { getHashedText, deleteDB, createDB } = require("../../../__tests__/setup");
+const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 
 const jwt = require("jsonwebtoken");
 const tokenContent = {
@@ -14,93 +10,80 @@ const tokenContent = {
 };
 const token = jwt.sign(tokenContent, "defaultSecret");
 
-const suffix = "-subAreaTest";
+
 const testParkList = [];
 
-async function setupDb() {
-  new AWS.DynamoDB({
+async function setupDb(TABLE_NAME) {
+  const dynamoClient = new DynamoDBClient({
     region: REGION,
-    endpoint: ENDPOINT,
-  });
-  docClient = new DocumentClient({
-    region: REGION,
-    endpoint: ENDPOINT,
-    convertEmptyValues: true,
+    endpoint: ENDPOINT
   });
 
   for await (let park of PARKSLIST) {
-    park.sk = park.sk + suffix;
-    park.orcs = park.orcs + suffix;
+    park.sk = park.sk;
+    park.orcs = park.orcs;
     subAreaParkIdToDelete = park;
 
     let modifiedSubAreas = [];
     for await (let subArea of park.subAreas) {
-      subArea.id = subArea.id + suffix;
+      subArea.id = subArea.id;
       subAreaToDelete = subArea;
       modifiedSubAreas.push(subArea);
 
       // Add the sub area record
-      console.log("subarea record:", {
-        pk: `park::${park.orcs}`,
-        sk: `${subArea.id}`,
-        activities: docClient.createSet([
-          'Day Use'
-        ])
-      });
-      await docClient
-        .put({
-          TableName: TABLE_NAME,
-          Item: {
-            pk: `park::${park.orcs}`,
-            sk: `${subArea.id}`,
-            activities: docClient.createSet([
-              'Day Use'
-            ])
-          }
-        })
-        .promise();
+      // console.log("subarea record:", {
+      //   pk: `park::${park.orcs}`,
+      //   sk: `${subArea.id}`,
+      //   activities: { SS : ['Day Use'] }
+      // });
+      let params1 = {
+        TableName: TABLE_NAME,
+        Item: {
+          pk: {S: `park::${park.orcs}`},
+          sk: {S: `${subArea.id}`},
+          activities: { SS : ['Day Use'] }
+        }
+      };
+      await dynamoClient.send(new PutItemCommand(params1))
       
       // Add the activity config
-      await docClient
-        .put({
-          TableName: TABLE_NAME,
-          Item: {
-            pk: `config::${subArea.id}`,
-            sk: `Day Use`
-          }
+      let params2 = {
+        TableName: TABLE_NAME,
+        Item: marshall({
+          pk: `config::${subArea.id}`,
+          sk: `Day Use`
         })
-        .promise();
+      };
+      await dynamoClient.send(new PutItemCommand(params2))
 
-      console.log("activity config", {
-        pk: `config::${subArea.id}`,
-        sk: `Day Use`
-      })
+      // console.log("activity config", {
+      //   pk: `config::${subArea.id}`,
+      //   sk: `Day Use`
+      // })
 
       // Add the activity record
-      await docClient
-        .put({
-          TableName: TABLE_NAME,
-          Item: {
-            pk: `${subArea.id}::Day Use`,
-            sk: `202201`
-          }
+      let params3 = {
+        TableName: TABLE_NAME,
+        Item: marshall({
+          pk: `${subArea.id}::Day Use`,
+          sk: `202201`
         })
-        .promise();
+      };
+      await dynamoClient.send(new PutItemCommand(params3))
 
-      console.log("activity record", {
-        pk: `${subArea.id}::Day Use`,
-        sk: `202201`
-      })
+      // console.log("activity record", {
+      //   pk: `${subArea.id}::Day Use`,
+      //   sk: `202201`
+      // })
     }
     park.subAreas = modifiedSubAreas;
 
     // Add the park record
-    await docClient
-      .put({
-        TableName: TABLE_NAME,
-        Item: park,
-      })
-      .promise();
+    let params4 = {
+      TableName: TABLE_NAME,
+      Item: marshall(park),
+    }
+    await dynamoClient.send(new PutItemCommand(params4))
 
     testParkList.push(park);
   }
@@ -115,18 +98,31 @@ describe("Sub Area Test", () => {
       })
     )
   };
+
   const OLD_ENV = process.env;
+  let hash
+  let TABLE_NAME
+  let NAME_CACHE_TABLE_NAME
+  let CONFIG_TABLE_NAME
+  
   beforeEach(async () => {
     jest.resetModules();
     process.env = { ...OLD_ENV }; // Make a copy of environment
-  });
+    hash = getHashedText(expect.getState().currentTestName);
+    process.env.TABLE_NAME = hash
+    TABLE_NAME = process.env.TABLE_NAME;
+    NAME_CACHE_TABLE_NAME = TABLE_NAME.concat("-nameCache");
+    CONFIG_TABLE_NAME = TABLE_NAME.concat("-config");
+    process.env.NAME_CACHE_TABLE_NAME = NAME_CACHE_TABLE_NAME
+    process.env.CONFIG_TABLE_NAME= CONFIG_TABLE_NAME
+    process.env.TABLE_NAME = TABLE_NAME
+    await createDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
+    await setupDb(TABLE_NAME);
+  }, 20000);
 
   afterEach(() => {
+    deleteDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
     process.env = OLD_ENV; // Restore old environment
-  });
-
-  beforeAll(async () => {
-    return await setupDb();
   });
 
   test("Handler - 200 Sub Area POST Success", async () => {
@@ -134,15 +130,22 @@ describe("Sub Area Test", () => {
       return mockKeycloakRoles
     });
 
-    let config = await docClient
-      .get({
+    const dynamoClient = new DynamoDBClient({
+      region: REGION,
+      endpoint: ENDPOINT
+    });
+
+    let params = {
         TableName: CONFIG_TABLE_NAME,
-        Key: {
+        Key: marshall({
           pk: "subAreaID",
-        },
-      })
-      .promise();
-    const lastID = Object.keys(config).length === 0 ? 0 : config.Item.lastID;
+        }),
+      }
+    const config = await dynamoClient.send(new GetItemCommand(params));
+
+    const lastID = config.Item === undefined ? 0 : config.Item.lastID;
+
+    // TODO: need to unmarshall?
 
     const subAreaPOST = require("../POST/index");
     const response = await subAreaPOST.handler(
@@ -159,7 +162,7 @@ describe("Sub Area Test", () => {
         },
         body: JSON.stringify({
           activities: ["Day Use"],
-          orcs: "0041" + suffix,
+          orcs: "0041",
           managementArea: "South Fraser",
           section: "South Coast",
           region: "South Coast",
@@ -171,17 +174,16 @@ describe("Sub Area Test", () => {
     );
     expect(response.statusCode).toBe(200);
 
-    config = await docClient
-      .get({
-        TableName: CONFIG_TABLE_NAME,
-        Key: {
-          pk: "subAreaID",
-        },
-      })
-      .promise();
-
+    let configParams2 = {
+      TableName: CONFIG_TABLE_NAME,
+      Key: marshall({
+        pk: "subAreaID",
+      }),
+    };
+    const config2Res = await dynamoClient.send(new GetItemCommand(configParams2))
+    const config2 = unmarshall(config2Res.Item);
     // check for incremented subAreaID
-    expect(config.Item.lastID).toBeGreaterThan(lastID);
+    expect(config2.lastID).toBeGreaterThan(lastID);
   });
 
   test("Handler - 403 Sub Area POST Unauthenticated", async () => {
@@ -206,7 +208,7 @@ describe("Sub Area Test", () => {
         },
         body: JSON.stringify({
           activities: ["Day Use"],
-          orcs: "0041" + suffix,
+          orcs: "0041",
           managementArea: "South Fraser",
           section: "South Coast",
           region: "South Coast",
@@ -241,7 +243,7 @@ describe("Sub Area Test", () => {
         },
         body: JSON.stringify({
           activities: ["Day Use"],
-          orcs: "0041" + suffix,
+          orcs: "0041",
           managementArea: "South Fraser",
           section: "South Coast",
           region: "South Coast",
@@ -276,7 +278,7 @@ describe("Sub Area Test", () => {
         },
         body: JSON.stringify({
           activities: ["Day Use"],
-          orcs: "0041" + suffix,
+          orcs: "0041",
           managementArea: "South Fraser",
           section: "South Coast",
           region: "South Coast",
@@ -312,7 +314,7 @@ describe("Sub Area Test", () => {
         },
         body: JSON.stringify({
           activities: ["Day Use"],
-          orcs: "0041" + suffix,
+          orcs: "0041",
           managementArea: "South Fraser",
           section: "South Coast",
           region: "South Coast",
@@ -438,7 +440,7 @@ describe("Sub Area Test", () => {
           Authorization: "Bearer " + token,
         },
         queryStringParameters: {
-          orcs: "0041" + suffix,
+          orcs: "0041",
           archive: "false",
           subAreaId: "fakeSubAreaId"
         },
@@ -473,7 +475,7 @@ describe("Sub Area Test", () => {
           Authorization: "Bearer " + token,
         },
         queryStringParameters: {
-          orcs: "0041" + suffix,
+          orcs: "0041",
           archive: "false",
           subAreaId: "fakeSubAreaId"
         },
@@ -508,7 +510,7 @@ describe("Sub Area Test", () => {
           Authorization: "Bearer " + token,
         },
         queryStringParameters: {
-          orcs: "0041" + suffix,
+          orcs: "0041",
           archive: "true",
           subAreaId: "fakeSubAreaId"
         },
@@ -576,7 +578,7 @@ describe("Sub Area Test", () => {
     const subAreaDELETE = require("../DELETE/index");
 
     // Delete the first subarea from PARKSLIST
-    const parkObject = PARKSLIST[0];
+    const parkObject = PARKSLIST[0]; //add activities 
     const qsp = {
       orcs: parkObject.orcs,
       archive: "false",
