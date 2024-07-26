@@ -360,7 +360,7 @@ describe("Activity Test", () => {
 
   // note: CONFIG POST disabled 2022-09-27
 
-  test("HandlePost - 400 POST handle Activity", async () => {
+  test("HandlePost - 400 POST handle Activity with Body", async () => {
     const activityPOST = require("../POST/index");
     const response = await activityPOST.handlePost(
       {
