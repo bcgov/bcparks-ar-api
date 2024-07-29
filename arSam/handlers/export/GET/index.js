@@ -25,8 +25,7 @@ const { runQuery,
 } = require("/opt/baseLayer");
 const { convertRolesToMD5 } = require("/opt/functionsLayer");
 
-const EXPORT_FUNCTION_NAME =
-  process.env.EXPORT_FUNCTION_NAME || "ar-api-ExportInvokableFunction";
+const EXPORT_FUNCTION_NAME = process.env.EXPORT_FUNCTION_NAME || "ar-api-ExportInvokableFunction";
 
 const EXPIRY_TIME = process.env.EXPORT_EXPIRY_TIME
   ? Number(process.env.EXPORT_EXPIRY_TIME)

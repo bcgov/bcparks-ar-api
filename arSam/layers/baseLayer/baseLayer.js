@@ -143,8 +143,8 @@ const RECORD_ACTIVITY_LIST = [
 ];
 
 const dynamoClient = new DynamoDBClient(options);
-const s3Client = new S3Client(options);
-const lambda = new Lambda(options);
+const s3Client = new S3Client({region: AWS_REGION});
+const lambda = new Lambda({region: AWS_REGION});
 
 // simple way to return a single Item by primary key.
 async function getOne(pk, sk) {
