@@ -1,11 +1,12 @@
-const { marshall } = require('@aws-sdk/util-dynamodb');
 const {
   TABLE_NAME,
-  dynamodb,
+  dynamoClient,
+  PutItemCommand,
   TIMEZONE,
   FISCAL_YEAR_FINAL_MONTH,
   sendResponse,
-  logger
+  logger,
+  marshall
 } = require("/opt/baseLayer");
 const { DateTime } = require("luxon");
 
@@ -93,7 +94,7 @@ async function putFiscalYear(isLocked, params) {
       TableName: TABLE_NAME,
       Item: marshall(newObject),
     };
-    await dynamodb.putItem(putObj);
+    await dynamoClient.send(new PutItemCommand(putObj));
     logger.debug("Updated fiscalYearEnd Object:", newObject);
     return newObject;
   } catch (err) {

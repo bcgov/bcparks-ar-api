@@ -186,41 +186,6 @@ describe("Sub Area Test", () => {
     expect(config2.lastID).toBeGreaterThan(lastID);
   });
 
-  test("Handler - 403 Sub Area POST Unauthenticated", async () => {
-    const axios = require("axios");
-    jest.mock("axios");
-    axios.post.mockImplementation(() =>
-      Promise.resolve({ statusCode: 200, data: {} })
-    );
-
-    const subAreaPOST = require("../POST/index");
-    const response = await subAreaPOST.handler(
-      {
-        headers: {
-          Authorization: "Bearer " + token,
-        },
-        requestContext: {
-          authorizer: {
-            roles: "[\"public\"]",
-            isAdmin: false,
-            isAuthenticated: false,
-          },
-        },
-        body: JSON.stringify({
-          activities: ["Day Use"],
-          orcs: "0041",
-          managementArea: "South Fraser",
-          section: "South Coast",
-          region: "South Coast",
-          bundle: "South Fraser",
-          subAreaName: "Clear Creek",
-        }),
-      },
-      null
-    );
-    expect(response.statusCode).toBe(403);
-  });
-
   test("Handler - 403 Sub Area POST Unauthenticated Invalid User", async () => {
     const axios = require("axios");
     jest.mock("axios");
@@ -256,7 +221,7 @@ describe("Sub Area Test", () => {
     expect(response.statusCode).toBe(403);
   });
 
-  test("Handler - 403 Sub Area POST Unauthenticated", async () => {
+  test("Handler - 403 Sub Area POST Unauthenticated ", async () => {
     const axios = require("axios");
     jest.mock("axios");
     axios.post.mockImplementation(() =>

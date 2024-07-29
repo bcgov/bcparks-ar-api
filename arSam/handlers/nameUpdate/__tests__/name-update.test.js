@@ -158,7 +158,7 @@ describe("Name Update Tests", () => {
     // Run the update
     await nameUpdateHandler.handler({}, null);
 
-    // Fetch the updated cache and check that it has been udpated
+    // Fetch the updated cache and check that it has been updated
     const cachedDocumentRes = await dynamoClient.send(new GetItemCommand(CACHED_DOCUMENT));
     const cachedDocument = unmarshall(cachedDocumentRes.Item);
     expect(cachedDocument.displayName).toBe('Strathcona Park');

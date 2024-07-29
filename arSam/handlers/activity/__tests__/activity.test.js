@@ -235,8 +235,6 @@ describe("Activity Test", () => {
     const doc = await dynamoClient.send(command);
     expect(doc?.Item).toBe(undefined);
 
-
-
     // Change year and create a new record
     const secondResponse = await activityPOST.handlePost(
       {

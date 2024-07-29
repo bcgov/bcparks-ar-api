@@ -1,6 +1,14 @@
-const { marshall } = require('@aws-sdk/util-dynamodb');
 const { requirePermissions } = require("/opt/permissionLayer");
-const { getOne, TABLE_NAME, dynamodb, runQuery, sendResponse, logger } = require("/opt/baseLayer");
+const { getOne,
+  TABLE_NAME,
+  dynamoClient,
+  UpdateItemCommand,
+  DeleteItemCommand,
+  marshall,
+  runQuery,
+  sendResponse,
+  logger
+} = require("/opt/baseLayer");
 
 exports.handler = async (event, context) => {
   logger.info("SubArea delete");
@@ -64,7 +72,7 @@ async function deleteActivityRecords(subAreaId, activities, context) {
       }
     };
     logger.info("Deleting activity config:", params);
-    const response = await dynamodb.deleteItem(params);
+    const response = await dynamoClient.send(new DeleteItemCommand(params));
     logger.info("Response:", response);
   }
 
@@ -99,7 +107,7 @@ async function deleteActivityRecord(pk, sk) {
 
   logger.info("Deleting activity record:", params);
 
-  const response = await dynamodb.deleteItem(params);
+  const response = await dynamoClient.send(new DeleteItemCommand(params));
 
   logger.info("Response:", response);
   return response;
@@ -116,7 +124,7 @@ async function deleteSubAreaRecords(subAreaId, orcs, context) {
     ReturnValues: 'ALL_OLD'
   };
   logger.info("Deleting subArea records:", params);
-  const response = await dynamodb.deleteItem(params);
+  const response = await dynamoClient.send(new DeleteItemCommand(params));
   logger.info("Activities deleted:", response.Attributes?.activities.SS);
   return response.Attributes?.activities.SS;
 }
@@ -137,7 +145,7 @@ async function archiveSubAreaRecord(subAreaId, orcs, context) {
     ReturnValues: 'ALL_NEW'
   };
   logger.info("Archiving subArea records:", params);
-  const response = await dynamodb.updateItem(params);
+  const response = await dynamoClient.send(new UpdateItemCommand(params));
   logger.info("response:", response);
   return response;
 }
@@ -170,7 +178,7 @@ async function deleteSubAreaFromPark(subAreaId, orcs, context) {
     ReturnValues: 'ALL_NEW'
   };
 
-  const response = await dynamodb.updateItem(updateParkObject);
+  const response = await dynamoClient.send(new UpdateItemCommand(updateParkObject));
   logger.info("Park Object after update:", response.Attributes);
   return response.Attributes;
 }

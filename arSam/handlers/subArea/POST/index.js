@@ -1,5 +1,6 @@
 const {
-  dynamodb,
+  dynamoClient,
+  TransactWriteItemsCommand,
   incrementAndGetNextSubAreaID,
   getOne,
   logger,
@@ -92,7 +93,7 @@ exports.handler = async (event, context) => {
       });
     }
 
-    const res = await dynamodb.transactWriteItems(transactionObj);
+    const res = await dynamoClient.send(new TransactWriteItemsCommand(transactionObj));
     logger.debug('res:', res);
 
     // Add Keycloak role

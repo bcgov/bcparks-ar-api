@@ -1,6 +1,16 @@
 const axios = require('axios');
-const { marshall } = require('@aws-sdk/util-dynamodb');
-const { runQuery, runScan, NAME_CACHE_TABLE_NAME, TABLE_NAME, ORCS_INDEX, dynamodb, logger } = require("/opt/baseLayer");
+const { runQuery,
+  runScan,
+  NAME_CACHE_TABLE_NAME,
+  TABLE_NAME,
+  ORCS_INDEX,
+  dynamoClient,
+  PutItemCommand,
+  BatchWriteItemCommand,
+  UpdateItemCommand,
+  marshall,
+  logger
+} = require("/opt/baseLayer");
 const DATA_REGISTER_NAME_ENDPOINT = process.env.DATA_REGISTER_NAME_ENDPOINT || 'https://zloys5cfvf.execute-api.ca-central-1.amazonaws.com/api/parks/names?status=established';
 const DATA_REGISTER_NAME_API_KEY = process.env.DATA_REGISTER_NAME_API_KEY;
 const ESTABLISHED_STATE = 'established';
@@ -82,7 +92,7 @@ async function updateLocalCache(item) {
     TableName: NAME_CACHE_TABLE_NAME,
     Item: marshall(item, { removeUndefinedValues: true })
   };
-  await dynamodb.putItem(putItem);
+  await dynamoClient.send(new PutItemCommand(putItem));
   logger.info("Update complete")
 }
 
@@ -104,7 +114,7 @@ async function batchWriteCache(records) {
     if (batch.RequestItems[NAME_CACHE_TABLE_NAME].length === 25) {
       batchCount++;
       // Write the current batch and reset the batch
-      await dynamodb.batchWriteItem(batch);
+      await dynamoClient.send(new BatchWriteItemCommand(batch));
       process.stdout.write(`.`);
       batch.RequestItems[NAME_CACHE_TABLE_NAME] = [];
     }
@@ -114,7 +124,7 @@ async function batchWriteCache(records) {
   if (batch.RequestItems[NAME_CACHE_TABLE_NAME].length > 0) {
     batchCount++;
     logger.info(`writing final batch #${batchCount}`);
-    await dynamodb.batchWriteItem(batch);
+    await dynamoClient.send(new BatchWriteItemCommand(batch));
     logger.info(`Complete.`);
   }
 }
@@ -161,7 +171,7 @@ async function updateRecords(recordsToUpdate, updateObj) {
 
     try {
       process.stdout.write(`.`);
-      await dynamodb.updateItem(params);
+      await dynamoClient.send(new UpdateItemCommand(params));
     } catch (e) {
       logger.info(e);
       // TODO: Fall through, but record error somehow?
