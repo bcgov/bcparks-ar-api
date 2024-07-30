@@ -16,7 +16,7 @@ describe('keycloak utility tests', () => {
     };
   
     test('Creates Update Park with New Sub Area Object', async () => {
-      const utils = require('../subAreaLayer/subAreaLayer');
+      const utils = require('../subAreaLayer');
       const response = await utils.createUpdateParkWithNewSubAreaObj('test-name', 'test-id', false, 'test-orcs');
   
       expect(response).toEqual({
@@ -46,7 +46,7 @@ describe('keycloak utility tests', () => {
     });
   
     test('Creates Put Sub Area Obj', async () => {
-      const utils = require('../subAreaLayer/subAreaLayer');
+      const utils = require('../subAreaLayer');
       const response = await utils.createPutSubAreaObj(testSubAreaObj, 'test-id', 'test-name');
   
       expect(response).toEqual({
@@ -69,7 +69,7 @@ describe('keycloak utility tests', () => {
     });
   
     test('Creates Valid Sub Area Object', async () => {
-      const utils = require('../subAreaLayer/subAreaLayer');
+      const utils = require('../subAreaLayer');
       const garbage = { test: 'fake', whatever: [] };
       const testSubAreaObjWithGarbage = { ...testSubAreaObj, ...garbage };
   

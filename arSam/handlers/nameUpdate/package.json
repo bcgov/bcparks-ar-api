@@ -3,8 +3,7 @@
     "version": "1.0.0",
     "author": "Digitalspace <contact@digitalspace.ca>",
     "dependencies": {
-        "axios": "^0.21.1",
-        "@aws-sdk/util-dynamodb": "^3.614.0"
+        "axios": "^0.21.1"
     }
 }
   

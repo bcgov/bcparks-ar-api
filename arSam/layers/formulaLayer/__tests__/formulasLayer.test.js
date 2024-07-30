@@ -4,7 +4,7 @@ describe("keycloak utility tests", () => {
     });
   
     test("Creates Update Park with New Sub Area Object", async () => {
-      const utils = require("../formulaLayer/formulaLayer");
+      const utils = require("../formulaLayer");
       const response = await utils.createPutFormulaConfigObj(
         ["Day Use", "Backcountry Cabins", "Fake Garbage"],
         "test-id",

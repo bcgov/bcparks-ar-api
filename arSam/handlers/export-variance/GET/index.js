@@ -1,10 +1,3 @@
-const { Lambda } = require("@aws-sdk/client-lambda");
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
-const { marshall } = require('@aws-sdk/util-dynamodb');
-
-const defaultRegion = process.env.AWS_REGION || "ca-central-1";
-const s3Client = new S3Client({ region: defaultRegion });
 const bucket = process.env.S3_BUCKET_DATA || "parks-ar-assets-tools";
 
 const IS_OFFLINE =
@@ -17,9 +10,18 @@ if (IS_OFFLINE) {
   options.endpoint = "http://localhost:3002";
 }
 
-const lambda = new Lambda(options);
-
-const { runQuery, TABLE_NAME, dynamodb, sendResponse, logger } = require("/opt/baseLayer");
+const { runQuery,
+  TABLE_NAME,
+  dynamoClient,
+  PutItemCommand,
+  marshall,
+  lambda,
+  s3Client,
+  GetObjectCommand,
+  getSignedUrl,
+  sendResponse,
+  logger
+} = require("/opt/baseLayer");
 const { createHash } = require('node:crypto');
 
 const VARIANCE_EXPORT_FUNCTION_NAME =
@@ -151,7 +153,7 @@ exports.handler = async (event, context) => {
       logger.debug('Creating new job:', varianceExportPutObj);
       let newJob;
       try {
-        newJob = await dynamodb.putItem(varianceExportPutObj);
+        newJob = await dynamoClient.send(new PutItemCommand(varianceExportPutObj));
         // Check if there's already a report being generated.
         // If there are is no instance of a job or the job is 100% complete, generate a report.
         logger.debug('New job created:', newJob);

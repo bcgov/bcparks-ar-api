@@ -1,5 +1,3 @@
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
-const s3Client = new S3Client({});
 const fs = require("fs");
 const writeXlsxFile = require("write-excel-file/node");
 const {
@@ -8,6 +6,8 @@ const {
   getSubAreas,
   getRecords,
   logger,
+  s3Client,
+  PutObjectCommand
 } = require("/opt/baseLayer");
 const {
   EXPORT_NOTE_KEYS,

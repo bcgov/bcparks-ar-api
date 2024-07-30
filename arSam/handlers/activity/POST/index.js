@@ -1,7 +1,9 @@
-const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 const { DateTime } = require('luxon');
 const { 
-  dynamodb,
+  dynamoClient,
+  PutItemCommand,
+  DeleteItemCommand,
+  UpdateItemCommand,
   runQuery,
   TABLE_NAME,
   getOne,
@@ -9,7 +11,9 @@ const {
   TIMEZONE,
   sendResponse,
   logger,
-  calculateVariance
+  calculateVariance,
+  marshall,
+  unmarshall,
 } = require('/opt/baseLayer');
 const { EXPORT_VARIANCE_CONFIG } = require('/opt/constantsLayer');
 
@@ -132,7 +136,7 @@ async function deleteVariance(body) {
 
   logger.info('Deleting variance record:', params);
 
-  await dynamodb.deleteItem(params);
+  await dynamoClient.send(new DeleteItemCommand(params));
 }
 
 async function checkVarianceTrigger(body) {
@@ -228,7 +232,7 @@ async function createVariance(body, fields) {
       TableName: TABLE_NAME,
       Item: newObject,
     };
-    await dynamodb.putItem(putObj);
+    await dynamoClient.send(new PutItemCommand(putObj));
   } catch (e) {
     logger.error(e);
   }
@@ -318,7 +322,7 @@ async function handleLockUnlock(record, lock, context) {
     ReturnValues: 'ALL_NEW',
   };
   try {
-    const res = await dynamodb.updateItem(updateObj);
+    const res = await dynamoClient.send(new UpdateItemCommand(updateObj));
     logger.info(`Updated record pk: ${record.pk}, sk: ${record.sk} `);
     const s = lock ? 'locked' : 'unlocked';
     return sendResponse(200, {
@@ -380,7 +384,7 @@ async function handleActivity(body, lock = false, context) {
       Item: newObject,
     };
 
-    await dynamodb.putItem(putObject);
+    await dynamoClient.send(new PutItemCommand(putObject));
     logger.info('Activity Updated.');
     return sendResponse(200, body, context);
   } catch (err) {

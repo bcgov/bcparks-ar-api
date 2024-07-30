@@ -86,8 +86,20 @@ function calculateVariance(
 }
 
 // DynamoUtils
-const { DynamoDB } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBClient,
+  GetItemCommand,
+  QueryCommand,
+  PutItemCommand,
+  UpdateItemCommand,
+  BatchWriteItemCommand,
+  TransactWriteItemsCommand,
+  ScanCommand,
+  DeleteItemCommand
+} = require('@aws-sdk/client-dynamodb');
 const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
+const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { Lambda } = require("@aws-sdk/client-lambda");
 
 const TABLE_NAME = process.env.TABLE_NAME || "ParksAr-tests";
 const ORCS_INDEX = process.env.ORCS_INDEX || "orcs-index";
@@ -130,9 +142,9 @@ const RECORD_ACTIVITY_LIST = [
   "Boating",
 ];
 
-const dynamodb = new DynamoDB(options);
-
-exports.dynamodb = new DynamoDB();
+const dynamoClient = new DynamoDBClient(options);
+const s3Client = new S3Client({region: AWS_REGION});
+const lambda = new Lambda({region: AWS_REGION});
 
 // simple way to return a single Item by primary key.
 async function getOne(pk, sk) {
@@ -141,7 +153,7 @@ async function getOne(pk, sk) {
     TableName: TABLE_NAME,
     Key: marshall({ pk, sk }),
   };
-  let item = await dynamodb.getItem(params);
+  let item = await dynamoClient.send(new GetItemCommand(params));
   if (item?.Item) {
     return unmarshall(item.Item);
   }
@@ -151,17 +163,18 @@ async function getOne(pk, sk) {
 // (1MB) unless they are explicitly specified to retrieve more.
 // TODO: Ensure the returned object has the same structure whether results are paginated or not.
 async function runQuery(query, paginated = false) {
-  logger.debug("query:", query);
+  logger.info('query:', query);
   let data = [];
   let pageData = [];
   let page = 0;
-
+  const command = new QueryCommand(query);
+ 
   do {
     page++;
     if (pageData?.LastEvaluatedKey) {
-      query.ExclusiveStartKey = pageData.LastEvaluatedKey;
+      command.input.ExclusiveStartKey = pageData.LastEvaluatedKey;
     }
-    pageData = await dynamodb.query(query);
+    pageData = await dynamoClient.send(command);
     data = data.concat(
       pageData.Items.map((item) => {
         return unmarshall(item);
@@ -203,7 +216,7 @@ async function runScan(query, paginated = false) {
     if (pageData?.LastEvaluatedKey) {
       query.ExclusiveStartKey = pageData.LastEvaluatedKey;
     }
-    pageData = await dynamodb.scan(query);
+    pageData = await dynamoClient.send(new ScanCommand(query));
     data = data.concat(
       pageData.Items.map((item) => {
         return unmarshall(item);
@@ -276,7 +289,7 @@ async function batchWrite(items, action = 'put') {
       }
     } try {
 
-      await dynamodb.batchWriteItem(batchChunk);
+      await dynamoClient.send(new BatchWriteItemCommand(batchChunk));
     } catch (err) {
       for (const item of items) {
         logger.info('item.fields:', item.fields);
@@ -350,7 +363,7 @@ async function incrementAndGetNextSubAreaID() {
     },
     ReturnValues: "UPDATED_NEW",
   };
-  const response = await dynamodb.updateItem(configUpdateObj);
+  const response = await dynamoClient.send(new UpdateItemCommand(configUpdateObj));
   return response?.Attributes?.lastID?.N;
 }
 
@@ -371,7 +384,19 @@ module.exports = {
   TABLE_NAME,
   ORCS_INDEX,
   NAME_CACHE_TABLE_NAME,
-  dynamodb,
+  dynamoClient,
+  PutItemCommand,
+  UpdateItemCommand,
+  DeleteItemCommand,
+  BatchWriteItemCommand,
+  TransactWriteItemsCommand,
+  s3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  marshall,
+  unmarshall,
+  getSignedUrl,
+  lambda,
   runQuery,
   runScan,
   getOne,

@@ -1,9 +1,0 @@
-{
-  "name": "subAreaDeleteFunction",
-  "version": "1.0.0",
-  "author": "Digitalspace <contact@digitalspace.ca>",
-  "dependencies": {
-    "@aws-sdk/util-dynamodb": "^3.614.0"
-  }
-}
-  

@@ -1,4 +1,9 @@
-const { dynamodb, TABLE_NAME, logger, sendResponse } = require("/opt/baseLayer");
+const { dynamoClient,
+  PutItemCommand,
+  TABLE_NAME,
+  logger,
+  sendResponse
+} = require("/opt/baseLayer");
 
 exports.handler = async (event, context) => {
   logger.debug("Park POST:", event);
@@ -38,7 +43,7 @@ exports.handler = async (event, context) => {
     };
 
     logger.debug("Creating park:", postObj);
-    const res = await dynamodb.putItem(postObj);
+    const res = await dynamoClient.send(new PutItemCommand(postObj));
     logger.info("Park Created");
     logger.debug("Result:", res);
     return sendResponse(200, res);

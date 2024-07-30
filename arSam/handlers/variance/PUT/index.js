@@ -1,4 +1,4 @@
-const { dynamodb, TABLE_NAME, logger, sendResponse } = require("/opt/baseLayer");
+const { dynamoClient, UpdateItemCommand, TABLE_NAME, logger, sendResponse } = require("/opt/baseLayer");
 
 exports.handler = async (event, context) => {
   logger.debug("Variance PUT:", event);
@@ -66,7 +66,7 @@ exports.handler = async (event, context) => {
       params.UpdateExpression = `SET ${updateExpressions.join(', ')}`;
     }
 
-    const res = await dynamodb.updateItem(params);
+    const res = await dynamoClient.send(new UpdateItemCommand(params));
     logger.info("Variance updated");
     logger.debug("Result:", res);
     return sendResponse(200, res);

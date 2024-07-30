@@ -8,7 +8,7 @@ describe("keycloak utility tests", () => {
       const axios = require('axios');
       jest.mock("axios");
       axios.post.mockImplementation(() => Promise.resolve({ statusCode: 200, data: {} }));
-      const utils = require("../keycloakLayer/keycloakLayer");
+      const utils = require("../keycloakLayer");
       const response = await utils.createKeycloakRole('http://localhost/', 'client-id', 'sometoken', '0001:0001', 'Some description');
       expect(response).toEqual({});
     });
@@ -17,7 +17,7 @@ describe("keycloak utility tests", () => {
       const axios = require('axios');
       jest.mock("axios");
       axios.post.mockImplementation(() => Promise.reject({ statusCode: 400, data: {} }));
-      const utils = require("../keycloakLayer/keycloakLayer");
+      const utils = require("../keycloakLayer");
       try {
         await utils.createKeycloakRole('http://localhost/', 'client-id', 'sometoken', '0001:0001', 'Some description');
       } catch (error) {
@@ -29,7 +29,7 @@ describe("keycloak utility tests", () => {
       const axios = require('axios');
       jest.mock("axios");
       axios.delete.mockImplementation(() => Promise.resolve({ statusCode: 200, data: { } }));
-      const utils = require("../keycloakLayer/keycloakLayer");
+      const utils = require("../keycloakLayer");
       const response = await utils.deleteKeycloakRole('http://localhost/', 'client-id', 'sometoken', '0001:0001');
       expect(response).toEqual({});
     });
@@ -38,7 +38,7 @@ describe("keycloak utility tests", () => {
       const axios = require('axios');
       jest.mock("axios");
       axios.delete.mockImplementation(() => Promise.reject({ statusCode: 400, data: {} }));
-      const utils = require("../keycloakLayer/keycloakLayer");
+      const utils = require("../keycloakLayer");
       try {
         await utils.deleteKeycloakRole('http://localhost/', 'client-id', 'sometoken', '0001:0001', 'Some description');
       } catch (error) {
@@ -53,7 +53,7 @@ describe("keycloak utility tests", () => {
       const axios = require('axios');
       jest.mock("axios");
       axios.get.mockImplementation(() => Promise.resolve({ statusCode: 200, data: theRole }));
-      const utils = require("../keycloakLayer/keycloakLayer");
+      const utils = require("../keycloakLayer");
       const response = await utils.getKeycloakRole('http://localhost/', 'client-id', 'sometoken', '0001:0001');
       expect(response).toEqual(theRole);
     });
@@ -62,7 +62,7 @@ describe("keycloak utility tests", () => {
       const axios = require('axios');
       jest.mock("axios");
       axios.get.mockImplementation(() => Promise.reject({ statusCode: 400, data: {} }));
-      const utils = require("../keycloakLayer/keycloakLayer");
+      const utils = require("../keycloakLayer");
       try {
         await utils.getKeycloakRole('http://localhost/', 'client-id', 'sometoken', '0001:0001');
       } catch (error) {
