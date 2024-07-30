@@ -1,10 +1,15 @@
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-const s3Client = new S3Client({});
-const { marshall } = require('@aws-sdk/util-dynamodb');
 const fs = require('fs');
-
 const { VARIANCE_CSV_SCHEMA, VARIANCE_STATE_DICTIONARY } = require("/opt/constantsLayer");
-const { getParks, TABLE_NAME, dynamodb, runQuery, logger } = require("/opt/baseLayer");
+const { getParks,
+  TABLE_NAME,
+  dynamoClient,
+  PutItemCommand,
+  marshall,
+  s3Client,
+  PutObjectCommand,
+  runQuery,
+  logger
+} = require("/opt/baseLayer");
 
 const FILE_PATH = process.env.FILE_PATH || "/tmp/";
 const FILE_NAME = process.env.FILE_NAME || "A&R_Variance_Report";
@@ -139,7 +144,7 @@ async function updateJobEntry(jobObj) {
     TableName: TABLE_NAME,
     Item: marshall(jobObj)
   }
-  await dynamodb.putItem(putObj);
+  await dynamoClient.send(new PutItemCommand(putObj));
 }
 
 async function getVarianceRecords(fiscalYearEnd, roles) {

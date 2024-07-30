@@ -1,6 +1,14 @@
-const { marshall } = require('@aws-sdk/util-dynamodb');
 const { requirePermissions } = require("/opt/permissionLayer");
-const { getOne, TABLE_NAME, dynamodb, runQuery, sendResponse, logger } = require("/opt/baseLayer");
+const { getOne,
+  TABLE_NAME,
+  dynamoClient,
+  UpdateItemCommand,
+  DeleteItemCommand,
+  marshall,
+  runQuery,
+  sendResponse,
+  logger
+} = require("/opt/baseLayer");
 
 exports.handler = async (event, context) => {
   logger.info("SubArea delete");
@@ -13,7 +21,6 @@ exports.handler = async (event, context) => {
   ) {
     return sendResponse(400, { msg: "Bad Request." }, context);
   }
-
   // Check if the user is authenticated and has admin permissions.
   try {
     await requirePermissions(event, { "isAuthenticated": true, "isAdmin": true });
@@ -21,7 +28,6 @@ exports.handler = async (event, context) => {
     logger.error(e);
     return sendResponse(e.statusCode || 400, e.msg, context);
   }
-
   // Check if query string has archive flag set to true
   try {
     if (event.queryStringParameters.archive === "true") {
@@ -41,13 +47,12 @@ exports.handler = async (event, context) => {
 async function deleteSubArea(subAreaId, orcs, context) {
   // Update the park object.
   await deleteSubAreaFromPark(subAreaId, orcs, context);
-
   // Remove subarea records.
   const activitiesSet = await deleteSubAreaRecords(subAreaId, orcs, context);
+    // Remove activity records.
   let activities = [...activitiesSet];
   logger.info("activities:", activities);
-
-  // Remove activity records.
+  
   if (activities.length > 0) {
     await deleteActivityRecords(subAreaId, activities, context);
   }
@@ -67,7 +72,7 @@ async function deleteActivityRecords(subAreaId, activities, context) {
       }
     };
     logger.info("Deleting activity config:", params);
-    const response = await dynamodb.deleteItem(params);
+    const response = await dynamoClient.send(new DeleteItemCommand(params));
     logger.info("Response:", response);
   }
 
@@ -102,7 +107,7 @@ async function deleteActivityRecord(pk, sk) {
 
   logger.info("Deleting activity record:", params);
 
-  const response = await dynamodb.deleteItem(params);
+  const response = await dynamoClient.send(new DeleteItemCommand(params));
 
   logger.info("Response:", response);
   return response;
@@ -119,7 +124,7 @@ async function deleteSubAreaRecords(subAreaId, orcs, context) {
     ReturnValues: 'ALL_OLD'
   };
   logger.info("Deleting subArea records:", params);
-  const response = await dynamodb.deleteItem(params);
+  const response = await dynamoClient.send(new DeleteItemCommand(params));
   logger.info("Activities deleted:", response.Attributes?.activities.SS);
   return response.Attributes?.activities.SS;
 }
@@ -140,7 +145,7 @@ async function archiveSubAreaRecord(subAreaId, orcs, context) {
     ReturnValues: 'ALL_NEW'
   };
   logger.info("Archiving subArea records:", params);
-  const response = await dynamodb.updateItem(params);
+  const response = await dynamoClient.send(new UpdateItemCommand(params));
   logger.info("response:", response);
   return response;
 }
@@ -173,7 +178,7 @@ async function deleteSubAreaFromPark(subAreaId, orcs, context) {
     ReturnValues: 'ALL_NEW'
   };
 
-  const response = await dynamodb.updateItem(updateParkObject);
+  const response = await dynamoClient.send(new UpdateItemCommand(updateParkObject));
   logger.info("Park Object after update:", response.Attributes);
   return response.Attributes;
 }
@@ -183,7 +188,6 @@ async function archiveSubArea(subAreaId, orcs, context) {
   logger.info("Removing subarea from park");
   await deleteSubAreaFromPark(subAreaId, orcs, context);
   logger.info("Removed.  Archiving Subarea.");
-
   // Go throught the subarea records and flag them as archived.
   await archiveSubAreaRecord(subAreaId, orcs, context);
   logger.info("Archived.");

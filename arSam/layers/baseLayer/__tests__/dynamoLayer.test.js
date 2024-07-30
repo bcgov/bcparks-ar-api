@@ -1,102 +1,67 @@
-const AWS = require("aws-sdk");
-const { DocumentClient } = require("aws-sdk/clients/dynamodb");
-const { REGION, ENDPOINT, TABLE_NAME } = require("../../__tests__/settings");
-const { PARKSLIST, SUBAREAS, SUBAREA_ENTRIES } = require("../../__tests__/mock_data.json");
+const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
+const { REGION, ENDPOINT } = require("../../../__tests__/settings");
+const { PARKSLIST, SUBAREAS, SUBAREA_ENTRIES } = require("../../../__tests__/mock_data.json");
+const { getHashedText, deleteDB, createDB } = require("../../../__tests__/setup");
+const { marshall } = require('@aws-sdk/util-dynamodb');
 
-const CONFIG_TABLE_NAME = "ConfigsAr-tests-dynamo";
-
-async function setupDb() {
-  const dynamoDb = new AWS.DynamoDB({
+async function setupDb(TABLE_NAME) {
+  const dynamoClient = new DynamoDBClient({
     region: REGION,
-    endpoint: ENDPOINT,
+    endpoint: ENDPOINT
   });
-  docClient = new DocumentClient({
-    region: REGION,
-    endpoint: ENDPOINT,
-    convertEmptyValues: true,
-  });
-
-  await dynamoDb
-    .createTable({
-      TableName: CONFIG_TABLE_NAME,
-      KeySchema: [
-        {
-          AttributeName: "pk",
-          KeyType: "HASH",
-        },
-      ],
-      AttributeDefinitions: [
-        {
-          AttributeName: "pk",
-          AttributeType: "S",
-        },
-      ],
-      ProvisionedThroughput: {
-        ReadCapacityUnits: 1,
-        WriteCapacityUnits: 1,
-      },
-    })
-    .promise();
 
   for (const park of PARKSLIST) {
-    await docClient
-      .put({
-        TableName: TABLE_NAME,
-        Item: park,
-      })
-      .promise();
+    let params = {
+      TableName: TABLE_NAME,
+      Item: marshall(park),
+    }  
+    await dynamoClient.send(new PutItemCommand(params))
   }
 
   for (const subarea of SUBAREAS) {
-    await docClient
-      .put({
-        TableName: TABLE_NAME,
-        Item: subarea,
-      })
-      .promise();
+    let params = {
+      TableName: TABLE_NAME,
+      Item: marshall(subarea),
+    }  
+    await dynamoClient.send(new PutItemCommand(params))
   }
 
   for (const subEntry of SUBAREA_ENTRIES) {
-    await docClient
-      .put({
-        TableName: TABLE_NAME,
-        Item: subEntry,
-      })
-      .promise();
+    let params = {
+      TableName: TABLE_NAME,
+      Item: marshall(subEntry),
+    }  
+    await dynamoClient.send(new PutItemCommand(params))
   }
 }
 
 describe("Pass Succeeds", () => {
   const OLD_ENV = process.env;
+  let hash
+  let TABLE_NAME
+  let NAME_CACHE_TABLE_NAME
+  let CONFIG_TABLE_NAME
+  
   beforeEach(async () => {
     jest.resetModules();
     process.env = { ...OLD_ENV }; // Make a copy of environment
+    hash = getHashedText(expect.getState().currentTestName);
+    process.env.TABLE_NAME = hash
+    TABLE_NAME = process.env.TABLE_NAME;
+    NAME_CACHE_TABLE_NAME = TABLE_NAME.concat("-nameCache");
+    CONFIG_TABLE_NAME = TABLE_NAME.concat("-config");
     process.env.CONFIG_TABLE_NAME = CONFIG_TABLE_NAME;
+    await createDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
+    await setupDb(TABLE_NAME);
   });
 
   afterEach(() => {
+    deleteDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
     process.env = OLD_ENV; // Restore old environment
   });
 
-  beforeAll(async () => {
-    return await setupDb();
-  });
-
-  afterAll(async () => {
-    const dynamoDb = new AWS.DynamoDB({
-      region: REGION,
-      endpoint: ENDPOINT,
-    });
-
-    await dynamoDb
-      .deleteTable({
-        TableName: CONFIG_TABLE_NAME,
-      })
-      .promise();
-  });
-
   test("dynamoUtil - runScan", async () => {
-    const utils = require("../baseLayer/baseLayer");
+    const utils = require("../baseLayer");
 
     let queryObj = {
       TableName: TABLE_NAME,
@@ -120,7 +85,7 @@ describe("Pass Succeeds", () => {
   });
 
   test("dynamoUtil - getParks", async () => {
-    const utils = require("../baseLayer/baseLayer");
+    const utils = require("../baseLayer");
 
     const result = await utils.getParks();
 
@@ -137,7 +102,7 @@ describe("Pass Succeeds", () => {
   });
 
   test("dynamoUtil - getSubAreas", async () => {
-    const utils = require("../baseLayer/baseLayer");
+    const utils = require("../baseLayer");
 
     let orc = "0041";
     let specificSubAreas = [];
@@ -161,7 +126,7 @@ describe("Pass Succeeds", () => {
   });
 
   test("dynamoUtil - getRecords", async () => {
-    const utils = require("../baseLayer/baseLayer");
+    const utils = require("../baseLayer");
 
     const result = await utils.getRecords(SUBAREAS[0]);
 
@@ -175,7 +140,7 @@ describe("Pass Succeeds", () => {
   });
 
   test("dynamoUtil - incrementAndGetNextSubAreaID works with and without an entry in the DB", async () => {
-    const utils = require("../baseLayer/baseLayer");
+    const utils = require("../baseLayer");
 
     const result = await utils.incrementAndGetNextSubAreaID();
     expect(result).toEqual("1");

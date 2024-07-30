@@ -1,49 +1,55 @@
-const AWS = require('aws-sdk');
-const { DocumentClient } = require('aws-sdk/clients/dynamodb');
-const { REGION, ENDPOINT, TABLE_NAME } = require('../../../__tests__/settings');
+const { DynamoDBClient, PutItemCommand } = require('@aws-sdk/client-dynamodb');
+const { marshall } = require('@aws-sdk/util-dynamodb');
+const { getHashedText, deleteDB, createDB } = require("../../../__tests__/setup");
+const { REGION, ENDPOINT } = require('../../../__tests__/settings');
 const { FISCAL_YEAR_LOCKS2 } = require('../../../__tests__/mock_data.json');
 
 const jwt = require('jsonwebtoken');
 const token = jwt.sign({ resource_access: { 'attendance-and-revenue': { roles: ['sysadmin'] } } }, 'defaultSecret');
 
-async function setupDb() {
-  new AWS.DynamoDB({
-    region: REGION,
-    endpoint: ENDPOINT
-  });
-  docClient = new DocumentClient({
-    region: REGION,
-    endpoint: ENDPOINT,
-    convertEmptyValues: true
-  });
-
+async function setupDb(TABLE_NAME) {
+  
   for (const item of FISCAL_YEAR_LOCKS2) {
-    await (genericPutDocument(item));
+    await (genericPutDocument(item, TABLE_NAME));
   }
 }
 
-async function genericPutDocument(item) {
-  return await docClient
-    .put({
+async function genericPutDocument(item, TABLE_NAME) {
+  const dynamoClient = new DynamoDBClient({
+    region: REGION,
+    endpoint: ENDPOINT
+  });
+
+  const params = {
       TableName: TABLE_NAME,
-      Item: item
-    })
-    .promise();
+      Item: marshall(item)
+    }
+  await dynamoClient.send(new PutItemCommand(params));
+
 }
 
 describe('Fiscal Year End Test', () => {
   const OLD_ENV = process.env;
+  let hash
+  let TABLE_NAME
+  let NAME_CACHE_TABLE_NAME
+  let CONFIG_TABLE_NAME
+  
   beforeEach(async () => {
     jest.resetModules();
     process.env = { ...OLD_ENV }; // Make a copy of environment
+    hash = getHashedText(expect.getState().currentTestName);
+    process.env.TABLE_NAME = hash
+    TABLE_NAME = process.env.TABLE_NAME;
+    NAME_CACHE_TABLE_NAME = TABLE_NAME.concat("-nameCache");
+    CONFIG_TABLE_NAME = TABLE_NAME.concat("-config");
+    await createDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
+    await setupDb(TABLE_NAME);
   });
 
   afterEach(() => {
+    deleteDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
     process.env = OLD_ENV; // Restore old environment
-  });
-
-  beforeAll(async () => {
-    return await setupDb();
   });
 
   test('Handler - 200 GET fiscal year end', async () => {

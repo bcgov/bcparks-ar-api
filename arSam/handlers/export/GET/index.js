@@ -1,10 +1,4 @@
-const { Lambda } = require("@aws-sdk/client-lambda");
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
-const { marshall } = require('@aws-sdk/util-dynamodb');
 
-const defaultRegion = process.env.AWS_REGION || "ca-central-1";
-const s3Client = new S3Client({ region: defaultRegion });
 const bucket = process.env.S3_BUCKET_DATA || "parks-ar-assets-tools";
 
 const IS_OFFLINE =
@@ -16,13 +10,22 @@ if (IS_OFFLINE) {
   // For local we use port 3002 because we're hitting an invokable
   options.endpoint = "http://localhost:3002";
 }
-const lambda = new Lambda(options);
 
-const { runQuery, dynamodb, TABLE_NAME, sendResponse, logger } = require("/opt/baseLayer");
+const { runQuery,
+  dynamoClient,
+  PutItemCommand,
+  GetObjectCommand,
+  getSignedUrl,
+  s3Client,
+  marshall,
+  lambda,
+  TABLE_NAME,
+  sendResponse,
+  logger
+} = require("/opt/baseLayer");
 const { convertRolesToMD5 } = require("/opt/functionsLayer");
 
-const EXPORT_FUNCTION_NAME =
-  process.env.EXPORT_FUNCTION_NAME || "ar-api-ExportInvokableFunction";
+const EXPORT_FUNCTION_NAME = process.env.EXPORT_FUNCTION_NAME || "ar-api-ExportInvokableFunction";
 
 const EXPIRY_TIME = process.env.EXPORT_EXPIRY_TIME
   ? Number(process.env.EXPORT_EXPIRY_TIME)
@@ -134,7 +137,7 @@ exports.handler = async (event, context) => {
       logger.debug(putObject);
       let newJob;
       try {
-        newJob = await dynamodb.putItem(putObject);
+        newJob = await dynamoClient.send(new PutItemCommand(putObject));
         // Check if there's already a report being generated.
         // If there are is no instance of a job or the job is 100% complete, generate a report.
         logger.debug("Creating a new export job.", newJob);
