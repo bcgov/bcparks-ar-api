@@ -41,7 +41,9 @@ exports.handler = async (event, context) => {
   
   try {
     let permissionObject = event.requestContext.authorizer;
-    permissionObject.roles = JSON.parse(permissionObject.roles);
+    permissionObject.roles = JSON.parse(permissionObject?.roles);
+    permissionObject.isAdmin = JSON.parse(permissionObject?.isAdmin || false);
+    permissionObject.isAuthenticated = JSON.parse(permissionObject?.isAuthenticated || false);
 
     if (!permissionObject.isAuthenticated) {
       return sendResponse(403, { msg: "Error: UnAuthenticated." }, context);

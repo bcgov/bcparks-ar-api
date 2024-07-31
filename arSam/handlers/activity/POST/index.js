@@ -37,7 +37,9 @@ async function main(event, context, lock = null) {
 
     const warnIfVariance = event.queryStringParameters?.hasOwnProperty('warn') || false;
     let permissionObject = event.requestContext.authorizer;
-    permissionObject.roles = JSON.parse(permissionObject.roles);
+    permissionObject.roles = JSON.parse(permissionObject?.roles);
+    permissionObject.isAdmin = JSON.parse(permissionObject?.isAdmin || false);
+    permissionObject.isAuthenticated = JSON.parse(permissionObject?.isAuthenticated || false);
        
     if (!permissionObject.isAuthenticated) {
       logger.info("**NOT AUTHENTICATED, PUBLIC**");

@@ -37,8 +37,10 @@ async function handleLockUnlock(isLocked, event, context) {
 
 async function checkPermissions(event) {
 
-  const permissionObject = event.requestContext.authorizer
-  permissionObject.roles = JSON.parse(permissionObject.roles)
+  let permissionObject = event.requestContext.authorizer
+  permissionObject.roles = JSON.parse(permissionObject?.roles);
+  permissionObject.isAdmin = JSON.parse(permissionObject?.isAdmin || false);
+  permissionObject.isAuthenticated = JSON.parse(permissionObject?.isAuthenticated || false)
 
   if (!permissionObject.isAdmin) {
     throw {
