@@ -557,6 +557,7 @@ Resources:
       CodeUri: handlers/nameUpdate/
       Handler: index.handler
       Runtime: nodejs20.x
+      Timeout: 300
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR

@@ -1,7 +1,7 @@
 {
   "name": "subAreaLayer",
   "version": "0.0.1",
-  "author": "Digitalspace <contact@digitalspace.ca>",
+  "author": "Team Osprey",
   "license": "MIT",
   "dependencies": {
     "@aws-sdk/util-dynamodb": "^3.614.0"
