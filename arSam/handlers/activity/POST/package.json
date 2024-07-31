@@ -1,7 +1,7 @@
 {
   "name": "activityPostFunction",
   "version": "1.0.0",
-  "author": "Digitalspace <contact@digitalspace.ca>",
+  "author": "Team Osprey",
   "dependencies": {
     "@aws-sdk/util-dynamodb": "^3.614.0",
     "luxon": "^3.2.1"

@@ -1,7 +1,7 @@
 {
   "name": "permissionLayer",
   "version": "0.0.1",
-  "author": "Digitalspace <contact@digitalspace.ca>",
+  "author": "Team Osprey",
   "license": "MIT",
   "dependencies": {
     "jsonwebtoken": "^9.0.0",
