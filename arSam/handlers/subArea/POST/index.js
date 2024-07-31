@@ -20,8 +20,10 @@ const SSO_CLIENT_ID = process.env.SSO_CLIENT_ID || 'default-client';
 exports.handler = async (event, context) => {
   logger.debug('Subarea POST:', event);
   try {
-    const permissionObject = event.requestContext.authorizer;
-    permissionObject.roles = JSON.parse(permissionObject.roles);
+    let permissionObject = event.requestContext.authorizer;
+    permissionObject.roles = JSON.parse(permissionObject?.roles);
+    permissionObject.isAdmin = JSON.parse(permissionObject?.isAdmin || false);
+    permissionObject.isAuthenticated = JSON.parse(permissionObject?.isAuthenticated || false);
 
     if (!permissionObject.isAuthenticated) {
       logger.info('**NOT AUTHENTICATED, PUBLIC**');
