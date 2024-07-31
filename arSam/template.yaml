@@ -78,6 +78,9 @@ Parameters:
   SSOClientId:
     Type: String
     Default: "defaultClientId"
+  LogLevel:
+    Type: String
+    Default: "info"
   WebhookUrl:
     Type: String
     Default: "defaultWebhookUrl"
@@ -186,7 +189,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
       Layers:
           - !Ref BaseLayer
       Policies:
@@ -215,7 +218,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
       Layers:
           - !Ref BaseLayer
           - !Ref ConstantsLayer
@@ -239,7 +242,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
       Layers:
           - !Ref BaseLayer
           - !Ref ConstantsLayer
@@ -263,7 +266,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
       Layers:
           - !Ref BaseLayer
           - !Ref ConstantsLayer
@@ -286,7 +289,7 @@ Resources:
       Runtime: nodejs20.x
       Environment:
         Variables:
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
       Layers:
           - !Ref BaseLayer
       Events:
@@ -305,7 +308,7 @@ Resources:
       Runtime: nodejs20.x
       Environment:
         Variables:
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
       Layers:
           - !Ref BaseLayer
       Events:
@@ -326,7 +329,7 @@ Resources:
         Variables:
           TABLE_NAME: !Ref TableNameAR
           AWS_ACCOUNT_LIST: !Ref AWSAccountList
-          LOG_LEVEL: debug
+          LOG_LEVEL: !Ref LogLevel
           WEBHOOK_URL: !Ref WebhookUrl
       Layers:
           - !Ref BaseLayer
@@ -353,7 +356,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
           EXPORT_FUNCTION_NAME: !Ref ExportFunctionName
           EXPORT_EXPIRY_TIME: !Ref ExportExpiryTime
           S3_BUCKET_DATA: !Ref S3BucketData
@@ -399,7 +402,7 @@ Resources:
           DISABLE_HIGH_ACCURACY_PROGRESS_PERCENTAGE: !Ref DisableHighAccuracyProgressPercentage
           S3_BUCKET_DATA: !Ref S3BucketData
           TABLE_NAME: !Ref TableNameAR
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
       Layers:
           - !Ref ConstantsLayer
           - !Ref FunctionsLayer
@@ -421,7 +424,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
           VARIANCE_EXPORT_FUNCTION_NAME: !Ref VarianceExportFunctionName
           S3_BUCKET_DATA: !Ref S3BucketData
           EXPORT_EXPIRY_TIME: !Ref ExportExpiryTime
@@ -463,7 +466,7 @@ Resources:
           FILE_NAME_VARIANCE: !Ref FileNameVarianceExport
           S3_BUCKET_DATA: !Ref S3BucketData
           TABLE_NAME: !Ref TableNameAR
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
       Layers:
           - !Ref BaseLayer
           - !Ref ConstantsLayer
@@ -482,7 +485,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
       Layers:
           - !Ref BaseLayer
       Policies:
@@ -511,7 +514,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
       Layers:
           - !Ref BaseLayer
       Policies:
@@ -534,7 +537,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
       Layers:
           - !Ref BaseLayer
       Policies:
@@ -558,7 +561,7 @@ Resources:
         Variables:
           TABLE_NAME: !Ref TableNameAR
           NAME_CACHE_TABLE_NAME: !Ref TableNameCacheAR
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
           DATA_REGISTER_NAME_API_ENDPOINT: !Ref DataRegisterNameEndpoint
           DATA_REGISTER_NAME_API_KEY: !Ref DataRegisterNameApiKey
       Layers:
@@ -568,6 +571,13 @@ Resources:
             TableName: !Ref TableNameAR
         - DynamoDBCrudPolicy:
             TableName: !Ref TableNameCacheAR
+      Events:
+        UpdateNames:
+            Type: Schedule
+            Properties:
+              Name: "NameUpdate"
+              Schedule: cron(0 8 * * ? *)
+              Description: "Every day at 08:00 UTC (00:00 PDT) = cron(0 8 * * ? *)"
 
   ParkGetFunction:
     Type: AWS::Serverless::Function
@@ -578,7 +588,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
       Layers:
           - !Ref BaseLayer
           - !Ref PermissionLayer
@@ -608,7 +618,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
       Layers:
           - !Ref BaseLayer
       Policies:
@@ -630,7 +640,7 @@ Resources:
       Runtime: nodejs20.x
       Environment:
         Variables:
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
       Layers:
           - !Ref BaseLayer
       Events:
@@ -684,7 +694,7 @@ Resources:
       Runtime: nodejs20.x
       Environment:
         Variables:
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
       Layers:
           - !Ref BaseLayer
       Events:
@@ -709,7 +719,7 @@ Resources:
       Runtime: nodejs20.x
       Environment:
         Variables:
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
           TABLE_NAME: !Ref TableNameAR
       Layers:
           - !Ref BaseLayer
@@ -733,7 +743,7 @@ Resources:
       Runtime: nodejs20.x
       Environment:
         Variables:
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
           TABLE_NAME: !Ref TableNameAR
           CONFIG_TABLE_NAME: !Ref TableNameConfigAR
           SSO_ORIGIN: !Ref SSOOrigin
@@ -764,7 +774,7 @@ Resources:
       Runtime: nodejs20.x
       Environment:
         Variables:
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
       Layers:
           - !Ref BaseLayer
       Events:
@@ -783,7 +793,7 @@ Resources:
       Runtime: nodejs20.x
       Environment:
         Variables:
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
           TABLE_NAME: !Ref TableNameAR
       Layers:
           - !Ref BaseLayer
@@ -813,7 +823,7 @@ Resources:
       Runtime: nodejs20.x
       Environment:
         Variables:
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
       Layers:
           - !Ref BaseLayer
       Events:
@@ -832,7 +842,7 @@ Resources:
       Runtime: nodejs20.x
       Environment:
         Variables:
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
           TABLE_NAME: !Ref TableNameAR
       Layers:
           - !Ref BaseLayer
@@ -941,7 +951,7 @@ Resources:
       Handler: index.handler
       Environment:
         Variables:
-          LOG_LEVEL: info
+          LOG_LEVEL: !Ref LogLevel
           SSO_ISSUER: !Ref SSOIssuerUrl
           SSO_JWKSURI: !Ref SSOJWKSUri
       Layers:
