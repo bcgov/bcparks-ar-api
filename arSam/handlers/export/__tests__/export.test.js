@@ -153,7 +153,7 @@ describe("Export Report", () => {
 
     // Returns value below even with no job
     // Update when invokable can be called
-    expect(result.body).toBe("{\"status\":\"Job is already running\"}")
+    expect(result.body).toBe("{\"status\":\"Export job created\"}")
   });
 
   test("Functions - updateJobEntry", async () => {

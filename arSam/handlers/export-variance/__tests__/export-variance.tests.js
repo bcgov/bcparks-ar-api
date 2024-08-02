@@ -193,6 +193,6 @@ describe("Export Variance Report", () => {
 
     // Returns value below even with no job
     // Update when invokable can be called
-    expect(result.body).toBe("{\"msg\":\"Variance report export job already running\"}")
+    expect(result.body).toBe("{\"msg\":\"Variance report export job created\"}")
   });
 });
