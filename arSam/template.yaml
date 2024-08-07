@@ -563,7 +563,7 @@ Resources:
           TABLE_NAME: !Ref TableNameAR
           NAME_CACHE_TABLE_NAME: !Ref TableNameCacheAR
           LOG_LEVEL: !Ref LogLevel
-          DATA_REGISTER_NAME_API_ENDPOINT: !Ref DataRegisterNameEndpoint
+          DATA_REGISTER_NAME_ENDPOINT: !Ref DataRegisterNameEndpoint
           DATA_REGISTER_NAME_API_KEY: !Ref DataRegisterNameApiKey
       Layers:
           - !Ref BaseLayer
