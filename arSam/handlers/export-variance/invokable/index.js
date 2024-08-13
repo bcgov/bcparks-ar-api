@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { VARIANCE_CSV_SCHEMA, VARIANCE_STATE_DICTIONARY } = require("/opt/constantsLayer");
+const { VARIANCE_CSV_SCHEMA, VARIANCE_STATE_DICTIONARY, EXPORT_VARIANCE_CONFIG } = require("/opt/constantsLayer");
 const { getParks,
   TABLE_NAME,
   dynamoClient,
@@ -234,16 +234,29 @@ function updateHighAccuracyJobState(state, index, total, size){
   }
 }
 
+// used to flatten EXPORT_VARIANCE_CONFIG keys into an array
+function flattenConfig(config) {
+  let flattenedKeys = [];
+  Object.values(config).forEach(category => {
+    Object.keys(category).forEach(key => {
+      flattenedKeys.push(key);
+    });
+  });
+  return flattenedKeys;
+}
+
 function formatRecords(records) {
   for (const record of records) {
-    // list all variances as semicolon separated string so it can be parsed later
-    if (record.fields.length > 0) {
-      let fields = [];
+    // add each existing variance field to the record
+    if (record.fields && record.fields.length > 0) {
       for (const field of record.fields) {
-        const percent = (parseFloat(field.percentageChange) * 100).toFixed(2);
-        fields.push(String(field.key + " " + percent + "%"));
+        // if the key matches an item in the array of EXPORT_VARIANCE_CONFIG, push it to the record
+        const flattenedConfig = flattenConfig(EXPORT_VARIANCE_CONFIG);
+        if (flattenedSchema.includes(field.key)) {
+          const percent = (parseFloat(field.percentageChange) * 100).toFixed(2);
+          record[field.key] = String(percent + "%");
+        }
       }
-      record['fields'] = fields.join("; ");
     }
     const date = record.pk.split('::')[2];
     record['year'] = date.slice(0, 4);
@@ -268,8 +281,39 @@ function createCSV(records) {
       record.year || 'N/A',
       record.month || 'N/A',
       `"${record.notes || ''}"`,
-      record.fields || '',
-      record.resolved || ''
+      record.resolved || '',
+      record['peopleAdult'] || '',
+      record['peopleChild'] || '',
+      record['peopleFamily'] || '',
+      record['revenueFamily'] || '',
+      record['people'] || '',
+      record['grossCampingRevenue'] || '',
+      record['boatAttendanceNightsOnDock'] || '',
+      record['boatAttendanceNightsOnBouys'] || '',
+      record['boatAttendanceMiscellaneous'] || '',
+      record['boatRevenueGross'] || '',
+      record['peopleAndVehiclesTrail'] || '',
+      record['peopleAndVehiclesVehicle'] || '',
+      record['peopleAndVehiclesBus'] || '',
+      record['picnicRevenueShelter'] || '',
+      record['picnicShelterPeople'] || '',
+      record['picnicRevenueGross'] || '',
+      record['otherDayUsePeopleHotSprings'] || '',
+      record['otherDayUseRevenueHotSprings'] || '',
+      record['totalAttendanceParties'] || '',
+      record['revenueGrossCamping'] || '',
+      record['campingPartyNightsAttendanceStandard'] || '',
+      record['campingPartyNightsAttendanceSenior'] || '',
+      record['campingPartyNightsAttendanceSocial'] || '',
+      record['campingPartyNightsAttendanceLongStay'] || '',
+      record['campingPartyNightsRevenueGross'] || '',
+      record['secondCarsAttendanceStandard'] || '',
+      record['secondCarsAttendanceSenior'] || '',
+      record['secondCarsAttendanceSocial'] || '',
+      record['secondCarsRevenueGross'] || '',
+      record['otherRevenueGrossSani'] || '',
+      record['otherRevenueElectrical'] || '',
+      record['otherRevenueShower'] || ''
     ])
   }
   let csvData = '';
@@ -312,3 +356,4 @@ function convertMonth(monthNumber){
   }
 
 }
+

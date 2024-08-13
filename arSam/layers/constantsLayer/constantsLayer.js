@@ -743,10 +743,51 @@ const CSV_SYSADMIN_SCHEMA = [
   },
 ];
 
-VARIANCE_CSV_SCHEMA = [
-  'Bundle', 'ORCS', 'Park Name', 'Sub-area Name', 'Sub-area ID', 'Activity', 'Year', 'Month', 'Notes', 'Variances', 'Resolved'
-]
-
+ VARIANCE_CSV_SCHEMA = [
+  'Bundle',
+  'ORCS',
+  'Park Name',
+  'Sub-area Name',
+  'Sub-area ID',
+  'Activity',
+  'Year',
+  'Month',
+  'Notes',
+  'Resolved',
+  'Backcountry Cabins - People - Adult',
+  'Backcountry Cabins - People - Youth',
+  'Backcountry Cabins - People - Family',
+  'Backcountry Cabins - Revenue Family',
+  'Backcountry Camping - People',
+  'Backcountry Camping - Gross Revenue',
+  'Boating - Boat Attendance - Nights On Dock',
+  'Boating - Boat Attendance - Nights On Bouys',
+  'Boating - Boat Attendance - Miscellaneous',
+  'Boating - Boat Revenue - Gross Revenue',
+  'Day Use - People And Vehicles - Trail Count',
+  'Day Use - People And Vehicles - Vehicle Count',
+  'Day Use - People And Vehicles - Bus Count',
+  'Day Use - Picnic Shelters - Rentals',
+  'Day Use - Picnic Shelters - People',
+  'Day Use - Picnic Shelters - Gross Revenue',
+  'Day Use - Hot Springs - People',
+  'Day Use - Hot Springs - Gross Revenue',
+  'Frontcountry Cabins - Total Attendance - Parties',
+  'Frontcountry Cabins - Gross Revenue',
+  'Frontcountry Camping - Camping Party Nights - Standard',
+  'Frontcountry Camping - Camping Party Nights - Senior',
+  'Frontcountry Camping - Camping Party Nights - Social Services Fee Exemption',
+  'Frontcountry Camping - Camping Party Nights - Long Stay',
+  'Frontcountry Camping - Camping Party Nights - Gross Revenue',
+  'Frontcountry Camping - Second Cars - Standard',
+  'Frontcountry Camping - Second Cars - Senior',
+  'Frontcountry Camping - Second Cars - Social Services Fee Exemption',
+  'Frontcountry Camping - Second Cars - Gross Revenue',
+  'Frontcountry Camping - Other Frontcountry Camping - Gross Sani',
+  'Frontcountry Camping - Other Frontcountry Camping - Electrical',
+  'Frontcountry Camping - Other Frontcountry Camping - Shower'
+];
+ 
 module.exports = {
   EXPORT_NOTE_KEYS,
   EXPORT_VARIANCE_CONFIG,
@@ -754,5 +795,5 @@ module.exports = {
   CSV_SYSADMIN_SCHEMA,
   STATE_DICTIONARY,
   VARIANCE_CSV_SCHEMA,
-  VARIANCE_STATE_DICTIONARY
+  VARIANCE_STATE_DICTIONARY,
 };

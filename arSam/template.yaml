@@ -50,7 +50,7 @@ Parameters:
     Default: 'false'
   S3BucketData:
     Type: String
-    Default: 'parks-ar-assets-tools' 
+    Default: 'parks-ar-assets-tools'
   TableNameAR:
     Type: String
     Default: 'ParksAr'
@@ -60,16 +60,16 @@ Parameters:
   TableNameConfigAR:
     Type: String
     Default: "ConfigAr"
-  DataRegisterNameEndpoint: 
+  DataRegisterNameEndpoint:
     Type: String
     Default: "defaultEndpoint"
   DataRegisterNameApiKey:
     Type: String
     Default: "defaultApiKey"
-  SSOIssuerUrl: 
+  SSOIssuerUrl:
     Type: String
     Default: "https://dev.loginproxy.gov.bc.ca/auth/realms/bcparks-service-transformation"
-  SSOJWKSUri: 
+  SSOJWKSUri:
     Type: String
     Default: "https://dev.loginproxy.gov.bc.ca/auth/realms/bcparks-service-transformation/protocol/openid-connect/certs"
   SSOOrigin:
@@ -256,7 +256,7 @@ Resources:
             Path: /activity/lock
             Method: POST
             RestApiId: !Ref ApiDeployment
-    
+
   ActivityPostUnlockFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -388,7 +388,7 @@ Resources:
   ExportInvokableFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Timeout: 300
+      Timeout: 900
       CodeUri: handlers/export/invokable/
       Handler: index.handler
       Runtime: nodejs20.x
@@ -455,7 +455,7 @@ Resources:
   VarianceExportInvokableFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Timeout: 300
+      Timeout: 900
       CodeUri: handlers/export-variance/invokable/
       Handler: index.handler
       Runtime: nodejs20.x
@@ -557,7 +557,7 @@ Resources:
       CodeUri: handlers/nameUpdate/
       Handler: index.handler
       Runtime: nodejs20.x
-      Timeout: 300
+      Timeout: 900
       Environment:
         Variables:
           TABLE_NAME: !Ref TableNameAR
@@ -686,7 +686,7 @@ Resources:
             Auth:
               Authorizer: NONE
               OverrideApiAuth: true
-            
+
   SubAreaGetFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -785,7 +785,7 @@ Resources:
             Path: /subArea
             Method: PUT
             RestApiId: !Ref ApiDeployment
-  
+
   VarianceGetFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -815,7 +815,7 @@ Resources:
             Path: /variance
             Method: OPTIONS
             RestApiId: !Ref ApiDeployment
-  
+
   VariancePostFunction:
     Type: AWS::Serverless::Function
     Properties:
