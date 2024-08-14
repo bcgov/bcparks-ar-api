@@ -1,60 +1,60 @@
 const { DynamoDBClient, PutItemCommand } = require('@aws-sdk/client-dynamodb');
-const { REGION, ENDPOINT } = require("../../../__tests__/settings");
-const { PARKSLIST, SUBAREAS, VARIANCE_JOBSLIST, VARIANCE_MOCKJOB } = require("../../../__tests__/mock_data.json");
-const { getHashedText, deleteDB, createDB } = require("../../../__tests__/setup");
+const { REGION, ENDPOINT } = require('../../../__tests__/settings');
+const { PARKSLIST, SUBAREAS, VARIANCE_JOBSLIST, VARIANCE_MOCKJOB } = require('../../../__tests__/mock_data.json');
+const { getHashedText, deleteDB, createDB } = require('../../../__tests__/setup');
 const { marshall } = require('@aws-sdk/util-dynamodb');
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
 const tokenContent = {
-  resource_access: { "attendance-and-revenue": { roles: ["sysadmin"] } },
+  resource_access: { 'attendance-and-revenue': { roles: ['sysadmin'] } },
 };
-const token = jwt.sign(tokenContent, "defaultSecret");
+const token = jwt.sign(tokenContent, 'defaultSecret');
 
 async function setupDb(TABLE_NAME) {
   const dynamoClient = new DynamoDBClient({
     region: REGION,
-    endpoint: ENDPOINT
+    endpoint: ENDPOINT,
   });
 
   for (const park of PARKSLIST) {
     let params = {
-        TableName: TABLE_NAME,
-        Item: marshall(park),
-      }
+      TableName: TABLE_NAME,
+      Item: marshall(park),
+    };
     await dynamoClient.send(new PutItemCommand(params));
   }
 
   for (const subarea of SUBAREAS) {
     params = {
-        TableName: TABLE_NAME,
-        Item: marshall(subarea),
-      }
+      TableName: TABLE_NAME,
+      Item: marshall(subarea),
+    };
     await dynamoClient.send(new PutItemCommand(params));
   }
 
   for (const job of VARIANCE_JOBSLIST) {
     params = {
-        TableName: TABLE_NAME,
-        Item: marshall(job),
-      }
+      TableName: TABLE_NAME,
+      Item: marshall(job),
+    };
     await dynamoClient.send(new PutItemCommand(params));
   }
 }
 
-describe("Export Variance Report", () => {
+describe('Export Variance Report', () => {
   const OLD_ENV = process.env;
-  let hash
-  let TABLE_NAME
-  let NAME_CACHE_TABLE_NAME
-  let CONFIG_TABLE_NAME
-  
+  let hash;
+  let TABLE_NAME;
+  let NAME_CACHE_TABLE_NAME;
+  let CONFIG_TABLE_NAME;
+
   beforeEach(async () => {
     jest.resetModules();
     process.env = { ...OLD_ENV }; // Make a copy of environment
     hash = getHashedText(expect.getState().currentTestName);
-    process.env.TABLE_NAME = hash
+    process.env.TABLE_NAME = hash;
     TABLE_NAME = process.env.TABLE_NAME;
-    NAME_CACHE_TABLE_NAME = TABLE_NAME.concat("-nameCache");
-    CONFIG_TABLE_NAME = TABLE_NAME.concat("-config");
+    NAME_CACHE_TABLE_NAME = TABLE_NAME.concat('-nameCache');
+    CONFIG_TABLE_NAME = TABLE_NAME.concat('-config');
     await createDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
     await setupDb(TABLE_NAME);
   });
@@ -64,135 +64,133 @@ describe("Export Variance Report", () => {
     process.env = OLD_ENV; // Restore old environment
   });
 
-  test("Handler - 403 GET Invalid Auth", async () => {
+  test('Handler - 403 GET Invalid Auth', async () => {
     const event = {
-        headers: {
-            Authorization: "Bearer " + token,
+      headers: {
+        Authorization: 'Bearer ' + token,
+      },
+      httpMethod: 'GET',
+      requestContext: {
+        authorizer: {
+          roles: '["public"]',
+          isAdmin: false,
+          isAuthenticated: false,
         },
-        httpMethod: "GET",
-        requestContext: {
-            authorizer: {
-            roles: "[\"public\"]",
-            isAdmin: false,
-            isAuthenticated: false,
-            },
-        },
+      },
     };
 
-    const varianceExportGET = require("../GET/index");
+    const varianceExportGET = require('../GET/index');
     const response = await varianceExportGET.handler(event, null);
 
     expect(response.statusCode).toBe(403);
   });
 
-  test("Handler - 400 no fiscal year provided", async () => {
-    const dateField = "dateGenerated"
+  test('Handler - 400 no fiscal year provided', async () => {
+    const dateField = 'dateGenerated';
     const event = {
       headers: {
-        Authorization: "Bearer " + token,
+        Authorization: 'Bearer ' + token,
       },
-      httpMethod: "GET",
+      httpMethod: 'GET',
       requestContext: {
         authorizer: {
-          roles: "[\"sysadmin\"]",
+          roles: '["sysadmin"]',
           isAdmin: true,
           isAuthenticated: true,
         },
       },
       queryStringParameters: {
-        getJob: "true"
+        getJob: 'true',
       },
     };
 
-    const varianceExportGET = require("../GET/index");
+    const varianceExportGET = require('../GET/index');
     const result = await varianceExportGET.handler(event, null);
     let body;
     try {
-      body = JSON.parse(result.body)
+      body = JSON.parse(result.body);
     } catch (e) {
-      body = 'fail'
+      body = 'fail';
     }
     expect(result).toEqual(
       expect.objectContaining({
         headers: {
-          "Access-Control-Allow-Headers":
-          "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-          "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT,DELETE",
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json",
+          'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+          'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE',
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
         },
         statusCode: 400,
       }),
     );
-  })
+  });
 
-  test("Handler - 200 GET, with no jobs", async () => {
-    process.env.IS_OFFLINE = 'true'
-    const dateField = "dateGenerated"
+  test('Handler - 200 GET, with no jobs', async () => {
+    process.env.IS_OFFLINE = 'true';
+    const dateField = 'dateGenerated';
     const event = {
       headers: {
-        Authorization: "Bearer " + token,
+        Authorization: 'Bearer ' + token,
       },
-      httpMethod: "GET",
+      httpMethod: 'GET',
       requestContext: {
         authorizer: {
-          roles: "[\"sysadmin\"]",
+          roles: '["sysadmin"]',
           isAdmin: true,
           isAuthenticated: true,
         },
       },
       queryStringParameters: {
-        getJob: "true",
-        fiscalYearEnd: 2023
+        getJob: 'true',
+        fiscalYearEnd: 2023,
       },
     };
 
-    const varianceExportGET = require("../GET/index");
+    const varianceExportGET = require('../GET/index');
     const result = await varianceExportGET.handler(event, null);
     let body;
     try {
-      body = JSON.parse(result.body)
+      body = JSON.parse(result.body);
       console.log('body:', body);
     } catch (e) {
-      body = 'fail'
+      body = 'fail';
     }
     expect(result).toEqual(
       expect.objectContaining({
         headers: {
-          "Access-Control-Allow-Headers":
-          "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-          "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT,DELETE",
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json",
+          'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+          'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE',
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
         },
         statusCode: 200,
       }),
     );
-    expect(body.jobObj[dateField]).toMatch(VARIANCE_JOBSLIST[0][dateField])
-  })
+    expect(body.jobObj[dateField]).toMatch(VARIANCE_JOBSLIST[0][dateField]);
+  });
 
-  test("Handler - 200 GET, generate report", async () => {
+  test('Handler - 200 GET, generate report', async () => {
     const event = {
       headers: {
-        Authorization: "Bearer " + token,
+        Authorization: 'Bearer ' + token,
       },
-      httpMethod: "GET",
+      httpMethod: 'GET',
       requestContext: {
         authorizer: {
-          roles: "[\"sysadmin\"]",
+          roles: '["sysadmin"]',
           isAdmin: true,
           isAuthenticated: true,
         },
       },
       queryStringParameters: {
-        fiscalYearEnd: 2023
+        fiscalYearEnd: 2023,
       },
     };
-    const varianceExportGET = require("../GET/index"); 
-    const result = await varianceExportGET.handler(event, null)
+    const varianceExportGET = require('../GET/index');
+    const result = await varianceExportGET.handler(event, null);
 
     // Returns value below even with no job
     // Update when invokable can be called
-    expect(result.body).toBe("{\"msg\":\"Variance report export job already running\"}")
+    expect(result.body).toBe('{"msg":"Variance report export job already running"}');
   });
 });
