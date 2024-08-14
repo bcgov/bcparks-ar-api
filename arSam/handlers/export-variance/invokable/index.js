@@ -252,7 +252,7 @@ function formatRecords(records) {
       for (const field of record.fields) {
         // if the key matches an item in the array of EXPORT_VARIANCE_CONFIG, push it to the record
         const flattenedConfig = flattenConfig(EXPORT_VARIANCE_CONFIG);
-        if (flattenedSchema.includes(field.key)) {
+        if (flattenedConfig.includes(field.key)) {
           const percent = (parseFloat(field.percentageChange) * 100).toFixed(2);
           record[field.key] = String(percent + "%");
         }
