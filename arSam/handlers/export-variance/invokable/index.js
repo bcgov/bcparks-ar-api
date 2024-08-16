@@ -313,8 +313,16 @@ function createCSV(records) {
       record['secondCarsRevenueGross'] || '',
       record['otherRevenueGrossSani'] || '',
       record['otherRevenueElectrical'] || '',
-      record['otherRevenueShower'] || ''
-    ])
+      record['otherRevenueShower'] || '',
+      record['standardRateGroupsTotalPeopleStandard'] || '',
+      record['standardRateGroupsTotalPeopleAdults'] || '',
+      record['standardRateGroupsTotalPeopleYouth'] || '',
+      record['standardRateGroupsTotalPeopleKids'] || '',
+      record['standardRateGroupsRevenueGross'] || '',
+      record['youthRateGroupsAttendanceGroupNights'] || '',
+      record['youthRateGroupsAttendancePeople'] || '',
+      record['youthRateGroupsRevenueGross'],
+    ]);
   }
   let csvData = '';
   for (const row of content) {
