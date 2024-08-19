@@ -785,9 +785,17 @@ const CSV_SYSADMIN_SCHEMA = [
   'Frontcountry Camping - Second Cars - Gross Revenue',
   'Frontcountry Camping - Other Frontcountry Camping - Gross Sani',
   'Frontcountry Camping - Other Frontcountry Camping - Electrical',
-  'Frontcountry Camping - Other Frontcountry Camping - Shower'
+  'Frontcountry Camping - Other Frontcountry Camping - Shower',
+  'Group Camping - Standard Rate Groups - Nights',
+  'Group Camping - Standard Rate Groups - Adults',
+  'Group Camping - Standard Rate Groups - Youth',
+  'Group Camping - Standard Rate Groups - Kids',
+  'Group Camping - Standard Rate Groups - Gross Revenue',
+  'Group Camping - Youth Rate Groups - Nights',
+  'Group Camping - Youth Rate Groups - People',
+  'Group Camping - Youth Rate Groups - Gross Revenue',
 ];
- 
+
 module.exports = {
   EXPORT_NOTE_KEYS,
   EXPORT_VARIANCE_CONFIG,

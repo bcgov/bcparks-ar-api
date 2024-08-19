@@ -392,6 +392,7 @@ Resources:
       CodeUri: handlers/export/invokable/
       Handler: index.handler
       Runtime: nodejs20.x
+      MemorySize: 1536
       FunctionName: !Ref ExportFunctionName
       Environment:
         Variables:
@@ -459,6 +460,7 @@ Resources:
       CodeUri: handlers/export-variance/invokable/
       Handler: index.handler
       Runtime: nodejs20.x
+      MemorySize: 1536
       FunctionName: !Ref VarianceExportFunctionName
       Environment:
         Variables:
