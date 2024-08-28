@@ -1,0 +1,8 @@
+{
+  "name": "exportMissingInvokableFunction",
+  "version": "1.0.0",
+  "author": "Team Osprey",
+  "dependencies": {
+    "luxon": "^3.2.1"
+  }
+}

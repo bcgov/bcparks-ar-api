@@ -27,6 +27,9 @@ Parameters:
   VarianceExportFunctionName:
     Type: String
     Default: 'ar-api-VarianceExportInvokableFunction'
+  MissingExportFunctionName:
+    Type:  String
+    Default: 'ar-api-MissingExportInvokableFunction'
   ExportExpiryTime:
     Type: String
     Default: '900'
@@ -39,6 +42,9 @@ Parameters:
   FileNameVarianceExport:
     Type: String
     Default: 'A&R_Variance_Report'
+  FileNameMissingExport:
+    Type: String
+    Default: 'A&R_Missing_Report'
   JobUpdateModulo:
     Type: String
     Default: '1'
@@ -466,6 +472,68 @@ Resources:
         Variables:
           FILE_PATH: !Ref FilePath
           FILE_NAME_VARIANCE: !Ref FileNameVarianceExport
+          S3_BUCKET_DATA: !Ref S3BucketData
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: !Ref LogLevel
+      Layers:
+          - !Ref BaseLayer
+          - !Ref ConstantsLayer
+      Policies:
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
+          - S3FullAccessPolicy:
+              BucketName: !Ref S3BucketData
+
+  MissingExportGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/export-missing/GET/
+      Handler: index.handler
+      Runtime: nodejs20.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: !Ref LogLevel
+          MISSING_EXPORT_FUNCTION_NAME: !Ref MissingExportFunctionName
+          S3_BUCKET_DATA: !Ref S3BucketData
+          EXPORT_EXPIRY_TIME: !Ref ExportExpiryTime
+      Layers:
+          - !Ref BaseLayer
+      Policies:
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
+          - LambdaInvokePolicy:
+              FunctionName:
+                !Ref MissingExportInvokableFunction
+          - S3FullAccessPolicy:
+              BucketName: !Ref S3BucketData
+      Events:
+        missingExportGet:
+          Type: Api
+          Properties:
+            Path: /export-missing
+            Method: GET
+            RestApiId: !Ref ApiDeployment
+        missingExportOptions:
+          Type: Api
+          Properties:
+            Path: /export-missing
+            Method: OPTIONS
+            RestApiId: !Ref ApiDeployment
+
+  MissingExportInvokableFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 900
+      CodeUri: handlers/export-missing/invokable/
+      Handler: index.handler
+      Runtime: nodejs20.x
+      MemorySize: 1536
+      FunctionName: !Ref MissingExportFunctionName
+      Environment:
+        Variables:
+          FILE_PATH: !Ref FilePath
+          FILE_NAME_VARIANCE: !Ref FileNameMissingExport
           S3_BUCKET_DATA: !Ref S3BucketData
           TABLE_NAME: !Ref TableNameAR
           LOG_LEVEL: !Ref LogLevel
