@@ -51,8 +51,7 @@ describe('Export Missing Report', () => {
     jest.resetModules();
     process.env = { ...OLD_ENV }; // Make a copy of environment
     hash = getHashedText(expect.getState().currentTestName);
-    process.env.TABLE_NAME = hash;
-    TABLE_NAME = process.env.TABLE_NAME;
+    TABLE_NAME = process.env.TABLE_NAME = hash
     NAME_CACHE_TABLE_NAME = TABLE_NAME.concat('-nameCache');
     CONFIG_TABLE_NAME = TABLE_NAME.concat('-config');
     await createDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
@@ -64,7 +63,7 @@ describe('Export Missing Report', () => {
     process.env = OLD_ENV; // Restore old environment
   });
 
-  test('Handler - 403 GET Invalid Auth', async () => {
+  test('403 GET Invalid Auth', async () => {
     const event = {
       headers: {
         Authorization: 'Bearer ' + token,
@@ -85,7 +84,7 @@ describe('Export Missing Report', () => {
     expect(response.statusCode).toBe(403);
   });
 
-  test('Handler - 400 no fiscal year provided', async () => {
+  test('400 no fiscal year provided', async () => {
     const dateField = 'dateGenerated';
     const event = {
       headers: {
@@ -106,12 +105,7 @@ describe('Export Missing Report', () => {
 
     const missingExportGET = require('../GET/index');
     const result = await missingExportGET.handler(event, null);
-    let body;
-    try {
-      body = JSON.parse(result.body);
-    } catch (e) {
-      body = 'fail';
-    }
+    let body = JSON.parse(result.body);
     expect(result).toEqual(
       expect.objectContaining({
         headers: {
@@ -125,7 +119,7 @@ describe('Export Missing Report', () => {
     );
   });
 
-  test('Handler - 200 GET, with no jobs', async () => {
+  test('200 GET, with no jobs', async () => {
     process.env.IS_OFFLINE = 'true';
     const dateField = 'dateGenerated';
     const event = {
@@ -143,19 +137,12 @@ describe('Export Missing Report', () => {
       queryStringParameters: {
         getJob: 'true',
         fiscalYearEnd: '2023',
-        orcs: '0001',
       },
     };
 
     const missingExportGET = require('../GET/index');
     const result = await missingExportGET.handler(event, null);
-    let body;
-    try {
-      body = JSON.parse(result.body);
-      console.log('body:', body);
-    } catch (e) {
-      body = 'fail';
-    }
+    let body = JSON.parse(result.body);
     expect(result).toEqual(
       expect.objectContaining({
         headers: {
@@ -167,10 +154,10 @@ describe('Export Missing Report', () => {
         statusCode: 200,
       }),
     );
-    expect(body.jobObj[dateField]).toMatch(MISSING_JOBSLIST[0][dateField]);
+    expect(result?.body.jobObj[dateField]).toMatch(MISSING_JOBSLIST[0][dateField]);
   });
 
-  test('Handler - 200 GET, generate report', async () => {
+  test('200 GET, generate report', async () => {
     const event = {
       headers: {
         Authorization: 'Bearer ' + token,
@@ -194,6 +181,6 @@ describe('Export Missing Report', () => {
 
     // Returns value below even with no job
     // Update when invokable can be called
-    expect(result.body).toBe('{"msg":"missing report export job already running"}');
+    expect(result?.body).toBe('{"msg":"missing report export job already running"}');
   });
 });

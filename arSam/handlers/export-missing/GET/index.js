@@ -10,17 +10,19 @@ if (IS_OFFLINE) {
 }
 
 const {
-  runQuery,
-  TABLE_NAME,
   dynamoClient,
-  PutItemCommand,
-  marshall,
-  lambda,
-  s3Client,
+  exportPutObj,
+  getOne,
   GetObjectCommand,
   getSignedUrl,
-  sendResponse,
+  lambda,
   logger,
+  marshall,
+  PutItemCommand,
+  runQuery,
+  s3Client,
+  sendResponse,
+  TABLE_NAME
 } = require('/opt/baseLayer');
 const { createHash } = require('node:crypto');
 
@@ -62,17 +64,7 @@ exports.handler = async (event, context) => {
     const hash = createHash('md5').update(decodedHash).digest('hex');
     const pk = 'missing-exp-job';
 
-    // check for existing job
-    let queryObj = {
-      TableName: TABLE_NAME,
-      ExpressionAttributeValues: {
-        ':pk': { S: pk },
-        ':sk': { S: hash },
-      },
-      KeyConditionExpression: 'pk = :pk and sk = :sk',
-    };
-
-    const res = (await runQuery(queryObj))[0];
+    const res = await getOne(pk, hash);
 
     if (params?.getJob) {
       // We're trying to download an existing job
@@ -90,7 +82,7 @@ exports.handler = async (event, context) => {
         }
         let URL = '';
         if (!IS_OFFLINE) {
-          logger.debug('S3_BUCKET_DATA:', process.env.S3_BUCKET_DATA);
+          logger.debug('S3_BUCKET_DATA:', bucket);
           logger.debug('Url key:', urlKey);
           let command = new GetObjectCommand({ Bucket: bucket, Key: urlKey });
           URL = await getSignedUrl(s3Client, command, { expiresIn: EXPIRY_TIME });
@@ -114,30 +106,13 @@ exports.handler = async (event, context) => {
       if (res?.progressState === 'complete' && res?.key) {
         lastSuccessfulJob = {
           key: res?.key,
-          dateGenerated: res?.dateGenerated || new Date().toISOString(),
+          dateGenerated: res?.dateGenerated || new Date().toISOString
         };
       } else if (res?.progressState === 'error') {
         lastSuccessfulJob = res?.lastSuccessfulJob || {};
       }
       // create the new job object
-      const missingExportPutObj = {
-        TableName: TABLE_NAME,
-        ExpressionAttributeValues: {
-          ':complete': { S: 'complete' },
-          ':error': { S: 'error' },
-        },
-        ConditionExpression:
-          '(attribute_not_exists(pk) AND attribute_not_exists(sk)) OR attribute_not_exists(progressState) OR progressState = :complete OR progressState = :error',
-        Item: marshall({
-          pk: pk,
-          sk: hash,
-          params: params,
-          progressPercentage: 0,
-          progressDescription: 'Initializing job.',
-          progressState: 'Initializing',
-          lastSuccessfulJob: lastSuccessfulJob,
-        }),
-      };
+      const missingExportPutObj = exportPutObj(pk, hash, params, lastSuccessfulJob);
 
       logger.debug('Creating new job:', missingExportPutObj);
       let newJob;
@@ -155,7 +130,7 @@ exports.handler = async (event, context) => {
           Payload: JSON.stringify({
             jobId: hash,
             params: params,
-            lastSuccessfulJob: lastSuccessfulJob,
+            lastSuccessfulJob: lastSuccessfulJob
           }),
         };
         // Invoke the missing report export lambda

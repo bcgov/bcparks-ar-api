@@ -18,7 +18,7 @@ const logger = createLogger({
       return `${info.timestamp} ${[info.level.toUpperCase()]}: ${info.message} ${meta}`;
     }),
   ),
-  transports: [new transports.Console()],
+  transports: [new transports.Console()]
 });
 
 // ResponseUtils
@@ -29,9 +29,9 @@ const sendResponse = function (code, data, context) {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE',
+      'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify(data)
   };
   return response;
 };
@@ -73,7 +73,7 @@ function calculateVariance(historicalValues, currentValue, variancePercentage) {
     varianceMessage: varianceMessage,
     varianceTriggered: varianceTriggered,
     percentageChange: +percentageChange,
-    averageHistoricValue: averageHistoricValue,
+    averageHistoricValue: averageHistoricValue
   };
   logger.info('Variance return obj:', res);
   logger.info('=== Variance calculation complete ===');
@@ -101,7 +101,7 @@ const {
   BatchWriteItemCommand,
   TransactWriteItemsCommand,
   ScanCommand,
-  DeleteItemCommand,
+  DeleteItemCommand
 } = require('@aws-sdk/client-dynamodb');
 const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
@@ -117,7 +117,7 @@ const AWS_REGION = process.env.AWS_REGION || 'ca-central-1';
 const DYNAMODB_ENDPOINT_URL = process.env.DYNAMODB_ENDPOINT_URL || 'http://localhost:8000/';
 const options = {
   region: AWS_REGION,
-  endpoint: DYNAMODB_ENDPOINT_URL,
+  endpoint: DYNAMODB_ENDPOINT_URL
 };
 if (process.env.IS_OFFLINE === 'true') {
   // If offline point at local
@@ -134,7 +134,7 @@ const PM_ACTIVATION_HOUR = 12;
 const PASS_TYPE_EXPIRY_HOURS = {
   AM: 12,
   PM: 0,
-  DAY: 0,
+  DAY: 0
 };
 
 const FISCAL_YEAR_FINAL_MONTH = 3; // March
@@ -146,7 +146,7 @@ const RECORD_ACTIVITY_LIST = [
   'Backcountry Cabins',
   'Group Camping',
   'Day Use',
-  'Boating',
+  'Boating'
 ];
 
 const dynamoClient = new DynamoDBClient(options);
@@ -158,7 +158,7 @@ async function getOne(pk, sk) {
   logger.debug(`getItem: { pk: ${pk}, sk: ${sk} }`);
   const params = {
     TableName: TABLE_NAME,
-    Key: marshall({ pk, sk }),
+    Key: marshall({ pk, sk })
   };
   let item = await dynamoClient.send(new GetItemCommand(params));
   if (item?.Item) {
@@ -197,7 +197,7 @@ async function runQuery(query, paginated = false) {
   if (paginated) {
     return {
       LastEvaluatedKey: pageData.LastEvaluatedKey,
-      data: data,
+      data: data
     };
   } else {
     return data;
@@ -222,7 +222,7 @@ async function runScan(query, paginated = false) {
     data = data.concat(
       pageData.Items.map((item) => {
         return unmarshall(item);
-      }),
+      })
     );
     if (page < 2) {
       logger.debug(`Page ${page} data:`, data);
@@ -235,7 +235,7 @@ async function runScan(query, paginated = false) {
   if (paginated) {
     return {
       LastEvaluatedKey: pageData.LastEvaluatedKey,
-      data: data,
+      data: data
     };
   } else {
     return data;
@@ -249,7 +249,7 @@ async function getParks(includeLegacy = true) {
     TableName: TABLE_NAME,
     KeyConditionExpression: 'pk = :pk',
     ExpressionAttributeValues: {
-      ':pk': { S: 'park' },
+      ':pk': { S: 'park' }
     },
   };
   if (!includeLegacy) {
@@ -271,7 +271,7 @@ async function batchWrite(items, action = 'put') {
       if (action === 'put') {
         batchChunk.RequestItems[TABLE_NAME].push({
           PutRequest: {
-            Item: marshall(item, { removeUndefinedValues: true }),
+            Item: marshall(item, { removeUndefinedValues: true })
           },
         });
       }
@@ -280,9 +280,9 @@ async function batchWrite(items, action = 'put') {
           DeleteRequest: {
             Key: {
               pk: { S: item.pk },
-              sk: { S: item.sk },
+              sk: { S: item.sk }
             },
-          },
+          }
         });
       }
     }
@@ -304,8 +304,8 @@ async function getSubAreas(orcs, includeLegacy = true) {
     TableName: TABLE_NAME,
     KeyConditionExpression: 'pk = :pk',
     ExpressionAttributeValues: {
-      ':pk': { S: `park::${orcs}` },
-    },
+      ':pk': { S: `park::${orcs}` }
+    }
   };
   if (!includeLegacy) {
     subAreaQuery.FilterExpression = 'isLegacy = :legacy OR attribute_not_exists(isLegacy)';
@@ -329,8 +329,8 @@ async function getRecords(subArea, bundle, section, region, filter = true, inclu
       TableName: TABLE_NAME,
       KeyConditionExpression: `pk = :pk`,
       ExpressionAttributeValues: {
-        ':pk': { S: `${subArea.sk}::${activity}` },
-      },
+        ':pk': { S: `${subArea.sk}::${activity}` }
+      }
     };
     if (!includeLegacy) {
       recordQuery.FilterExpression = 'isLegacy = :legacy OR attribute_not_exists(isLegacy)';
@@ -353,16 +353,38 @@ async function incrementAndGetNextSubAreaID() {
   const configUpdateObj = {
     TableName: CONFIG_TABLE_NAME,
     Key: {
-      pk: { S: 'subAreaID' },
+      pk: { S: 'subAreaID' }
     },
     UpdateExpression: 'ADD lastID :incrVal',
     ExpressionAttributeValues: {
-      ':incrVal': { N: '1' },
+      ':incrVal': { N: '1' }
     },
-    ReturnValues: 'UPDATED_NEW',
+    ReturnValues: 'UPDATED_NEW'
   };
   const response = await dynamoClient.send(new UpdateItemCommand(configUpdateObj));
   return response?.Attributes?.lastID?.N;
+}
+
+// Update an export job's state
+function exportPutObj(pk, hash, params, lastSuccessfulJob) {
+  return {
+    TableName: TABLE_NAME,
+    ExpressionAttributeValues: {
+      ':complete': { S: 'complete' },
+      ':error': { S: 'error' }
+    },
+    ConditionExpression:
+      '(attribute_not_exists(pk) AND attribute_not_exists(sk)) OR attribute_not_exists(progressState) OR progressState = :complete OR progressState = :error',
+    Item: marshall({
+      pk: pk,
+      sk: hash,
+      params: params,
+      progressPercentage: 0,
+      progressDescription: 'Initializing job.',
+      progressState: 'Initializing',
+      lastSuccessfulJob: lastSuccessfulJob
+    })
+  };
 }
 
 module.exports = {
@@ -403,4 +425,5 @@ module.exports = {
   getSubAreas,
   getRecords,
   incrementAndGetNextSubAreaID,
+  exportPutObj
 };
