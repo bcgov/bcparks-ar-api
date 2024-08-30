@@ -136,7 +136,7 @@ describe('Export Missing Report', () => {
       },
       queryStringParameters: {
         getJob: 'true',
-        fiscalYearEnd: '2023',
+        fiscalYearEnd: '2023'
       },
     };
 
@@ -154,7 +154,7 @@ describe('Export Missing Report', () => {
         statusCode: 200,
       }),
     );
-    expect(result?.body.jobObj[dateField]).toMatch(MISSING_JOBSLIST[0][dateField]);
+    expect(body.jobObj[dateField]).toMatch(MISSING_JOBSLIST[0][dateField]);
   });
 
   test('200 GET, generate report', async () => {
