@@ -1,7 +1,7 @@
 // Logger, ResponseUtils, VarianceUtils and DynamoUtils are all included in this baseLayer
 
 // Logger
-const { createLogger, format, transports } = require('winston');
+const { createLogger, format, transports, info } = require('winston');
 const { combine, timestamp } = format;
 const LEVEL = process.env.LOG_LEVEL || 'error';
 
@@ -10,14 +10,13 @@ const logger = createLogger({
   format: combine(
     timestamp(),
     format.printf((info) => {
-      let meta = ''
-      let symbols = Object.getOwnPropertySymbols(info)
+      let meta = '';
+      let symbols = Object.getOwnPropertySymbols(info);
       if (symbols.length == 2) {
-        meta = JSON.stringify(info[symbols[1]])
-
+        meta = JSON.stringify(info[symbols[1]]);
       }
       return `${info.timestamp} ${[info.level.toUpperCase()]}: ${info.message} ${meta}`;
-    })
+    }),
   ),
   transports: [new transports.Console()]
 });
@@ -38,21 +37,17 @@ const sendResponse = function (code, data, context) {
 };
 
 // VarianceUtils
-function calculateVariance(
-  historicalValues,
-  currentValue,
-  variancePercentage
-) {
+function calculateVariance(historicalValues, currentValue, variancePercentage) {
   const filteredInputs = historicalValues.filter((val) => val !== null && !isNaN(val));
 
-  logger.info("=== Calculating variance ===");
+  logger.info('=== Calculating variance ===');
   // We might receive two past years instead of three
   const numberOfYearsProvided = filteredInputs.length;
-  logger.debug("Number of years provided:", numberOfYearsProvided);
+  logger.debug('Number of years provided:', numberOfYearsProvided);
 
   // Get the average value across provided years
   const averageHistoricValue = filteredInputs.reduce((acc, val) => acc + val, 0) / filteredInputs.length;
-  logger.debug("Average historic value:", averageHistoricValue);
+  logger.debug('Average historic value:', averageHistoricValue);
 
   // Calculate the percentage change only if averageHistoricValue is not zero
   let percentageChange;
@@ -65,14 +60,14 @@ function calculateVariance(
 
   const percentageChangeAbs = Math.abs(percentageChange);
 
-  const varianceMessage = `Variance triggered: ${percentageChangeAbs >= variancePercentage ? "+" : "-"}${Math.round(percentageChangeAbs * 100)}%`;
+  const varianceMessage = `Variance triggered: ${percentageChangeAbs >= variancePercentage ? '+' : '-'}${Math.round(percentageChangeAbs * 100)}%`;
 
   // Since percentage change is absolute, we can subtract from variance percentage
   // If negative, variance is triggered
   const varianceTriggered = variancePercentage - percentageChangeAbs <= 0 ? true : false;
-  logger.info("Variance Triggered:", varianceTriggered);
-  logger.info("Variance percentageChange:", percentageChange);
-  logger.info("Variance variancePercentage:", variancePercentage);
+  logger.info('Variance Triggered:', varianceTriggered);
+  logger.info('Variance percentageChange:', percentageChange);
+  logger.info('Variance variancePercentage:', variancePercentage);
 
   const res = {
     varianceMessage: varianceMessage,
@@ -80,13 +75,25 @@ function calculateVariance(
     percentageChange: +percentageChange,
     averageHistoricValue: averageHistoricValue
   };
-  logger.info("Variance return obj:", res);
-  logger.info("=== Variance calculation complete ===");
+  logger.info('Variance return obj:', res);
+  logger.info('=== Variance calculation complete ===');
   return res;
 }
 
+// used to flatten EXPORT_VARIANCE_CONFIG keys into an array
+function flattenConfig(config) {
+  let flattenedKeys = [];
+  Object.values(config).forEach((category) => {
+    Object.keys(category).forEach((key) => {
+      flattenedKeys.push(key);
+    });
+  });
+  return flattenedKeys;
+}
+
 // DynamoUtils
-const { DynamoDBClient,
+const {
+  DynamoDBClient,
   GetItemCommand,
   QueryCommand,
   PutItemCommand,
@@ -97,17 +104,17 @@ const { DynamoDBClient,
   DeleteItemCommand
 } = require('@aws-sdk/client-dynamodb');
 const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
-const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const { Lambda } = require("@aws-sdk/client-lambda");
+const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const { Lambda } = require('@aws-sdk/client-lambda');
 
-const TABLE_NAME = process.env.TABLE_NAME || "ParksAr-tests";
-const ORCS_INDEX = process.env.ORCS_INDEX || "orcs-index";
-const NAME_CACHE_TABLE_NAME = process.env.NAME_CACHE_TABLE_NAME || "NameCacheAr-tests";
-const CONFIG_TABLE_NAME = process.env.CONFIG_TABLE_NAME || "ConfigAr-tests";
+const TABLE_NAME = process.env.TABLE_NAME || 'ParksAr-tests';
+const ORCS_INDEX = process.env.ORCS_INDEX || 'orcs-index';
+const NAME_CACHE_TABLE_NAME = process.env.NAME_CACHE_TABLE_NAME || 'NameCacheAr-tests';
+const CONFIG_TABLE_NAME = process.env.CONFIG_TABLE_NAME || 'ConfigAr-tests';
 const MAX_TRANSACTION_SIZE = 25;
-const AWS_REGION = process.env.AWS_REGION || "ca-central-1";
-const DYNAMODB_ENDPOINT_URL = process.env.DYNAMODB_ENDPOINT_URL || "http://localhost:8000/";
+const AWS_REGION = process.env.AWS_REGION || 'ca-central-1';
+const DYNAMODB_ENDPOINT_URL = process.env.DYNAMODB_ENDPOINT_URL || 'http://localhost:8000/';
 const options = {
   region: AWS_REGION,
   endpoint: DYNAMODB_ENDPOINT_URL
@@ -116,42 +123,42 @@ if (process.env.IS_OFFLINE === 'true') {
   // If offline point at local
   options.endpoint = 'http://localhost:8000/';
 }
-const ACTIVE_STATUS = "active";
-const RESERVED_STATUS = "reserved";
-const EXPIRED_STATUS = "expired";
-const PASS_TYPE_AM = "AM";
-const PASS_TYPE_PM = "PM";
-const PASS_TYPE_DAY = "DAY";
-const TIMEZONE = "America/Vancouver";
+const ACTIVE_STATUS = 'active';
+const RESERVED_STATUS = 'reserved';
+const EXPIRED_STATUS = 'expired';
+const PASS_TYPE_AM = 'AM';
+const PASS_TYPE_PM = 'PM';
+const PASS_TYPE_DAY = 'DAY';
+const TIMEZONE = 'America/Vancouver';
 const PM_ACTIVATION_HOUR = 12;
 const PASS_TYPE_EXPIRY_HOURS = {
   AM: 12,
   PM: 0,
-  DAY: 0,
+  DAY: 0
 };
 
 const FISCAL_YEAR_FINAL_MONTH = 3; // March
 
 const RECORD_ACTIVITY_LIST = [
-  "Frontcountry Camping",
-  "Frontcountry Cabins",
-  "Backcountry Camping",
-  "Backcountry Cabins",
-  "Group Camping",
-  "Day Use",
-  "Boating",
+  'Frontcountry Camping',
+  'Frontcountry Cabins',
+  'Backcountry Camping',
+  'Backcountry Cabins',
+  'Group Camping',
+  'Day Use',
+  'Boating'
 ];
 
 const dynamoClient = new DynamoDBClient(options);
-const s3Client = new S3Client({region: AWS_REGION});
-const lambda = new Lambda({region: AWS_REGION});
+const s3Client = new S3Client({ region: AWS_REGION });
+const lambda = new Lambda({ region: AWS_REGION });
 
 // simple way to return a single Item by primary key.
 async function getOne(pk, sk) {
   logger.debug(`getItem: { pk: ${pk}, sk: ${sk} }`);
   const params = {
     TableName: TABLE_NAME,
-    Key: marshall({ pk, sk }),
+    Key: marshall({ pk, sk })
   };
   let item = await dynamoClient.send(new GetItemCommand(params));
   if (item?.Item) {
@@ -168,7 +175,6 @@ async function runQuery(query, paginated = false) {
   let pageData = [];
   let page = 0;
   const command = new QueryCommand(query);
- 
   do {
     page++;
     if (pageData?.LastEvaluatedKey) {
@@ -178,24 +184,20 @@ async function runQuery(query, paginated = false) {
     data = data.concat(
       pageData.Items.map((item) => {
         return unmarshall(item);
-      })
+      }),
     );
     if (page < 2) {
-      logger.debug(`Page ${page} data:`, data);
+      logger.info(`Page ${page} data:`, data);
     } else {
-      logger.debug(
-        `Page ${page} contains ${pageData.Items.length} additional query results...`
-      );
+      logger.info(`Page ${page} contains ${pageData.Items.length} additional query results...`);
     }
   } while (pageData?.LastEvaluatedKey && !paginated);
 
-  logger.debug(
-    `Query result pages: ${page}, total returned items: ${data.length}`
-  );
+  logger.info(`Query result pages: ${page}, total returned items: ${data.length}`);
   if (paginated) {
     return {
       LastEvaluatedKey: pageData.LastEvaluatedKey,
-      data: data,
+      data: data
     };
   } else {
     return data;
@@ -206,7 +208,7 @@ async function runQuery(query, paginated = false) {
 // (1MB) unless they are explicitly specified to retrieve more.
 // TODO: Ensure the returned object has the same structure whether results are paginated or not.
 async function runScan(query, paginated = false) {
-  logger.debug("query:", query);
+  logger.debug('query:', query);
   let data = [];
   let pageData = [];
   let page = 0;
@@ -225,19 +227,15 @@ async function runScan(query, paginated = false) {
     if (page < 2) {
       logger.debug(`Page ${page} data:`, data);
     } else {
-      logger.debug(
-        `Page ${page} contains ${pageData.Items.length} additional scan results...`
-      );
+      logger.debug(`Page ${page} contains ${pageData.Items.length} additional scan results...`);
     }
   } while (pageData?.LastEvaluatedKey && !paginated);
 
-  logger.debug(
-    `Scan result pages: ${page}, total returned items: ${data.length}`
-  );
+  logger.debug(`Scan result pages: ${page}, total returned items: ${data.length}`);
   if (paginated) {
     return {
       LastEvaluatedKey: pageData.LastEvaluatedKey,
-      data: data,
+      data: data
     };
   } else {
     return data;
@@ -249,14 +247,14 @@ async function runScan(query, paginated = false) {
 async function getParks(includeLegacy = true) {
   const parksQuery = {
     TableName: TABLE_NAME,
-    KeyConditionExpression: "pk = :pk",
+    KeyConditionExpression: 'pk = :pk',
     ExpressionAttributeValues: {
-      ":pk": { S: "park" },
+      ':pk': { S: 'park' }
     },
   };
   if (!includeLegacy) {
-    parksQuery.FilterExpression = "isLegacy = :legacy OR attribute_not_exists(isLegacy)";
-    parksQuery.ExpressionAttributeValues[":legacy"] = { BOOL: false };
+    parksQuery.FilterExpression = 'isLegacy = :legacy OR attribute_not_exists(isLegacy)';
+    parksQuery.ExpressionAttributeValues[':legacy'] = { BOOL: false };
   }
   return await runQuery(parksQuery);
 }
@@ -273,8 +271,8 @@ async function batchWrite(items, action = 'put') {
       if (action === 'put') {
         batchChunk.RequestItems[TABLE_NAME].push({
           PutRequest: {
-            Item: marshall(item, {removeUndefinedValues: true })
-          }
+            Item: marshall(item, { removeUndefinedValues: true })
+          },
         });
       }
       if (action === 'delete') {
@@ -283,12 +281,12 @@ async function batchWrite(items, action = 'put') {
             Key: {
               pk: { S: item.pk },
               sk: { S: item.sk }
-            }
+            },
           }
         });
       }
-    } try {
-
+    }
+    try {
       await dynamoClient.send(new BatchWriteItemCommand(batchChunk));
     } catch (err) {
       for (const item of items) {
@@ -304,14 +302,14 @@ async function batchWrite(items, action = 'put') {
 async function getSubAreas(orcs, includeLegacy = true) {
   const subAreaQuery = {
     TableName: TABLE_NAME,
-    KeyConditionExpression: "pk = :pk",
+    KeyConditionExpression: 'pk = :pk',
     ExpressionAttributeValues: {
-      ":pk": { S: `park::${orcs}` },
-    },
+      ':pk': { S: `park::${orcs}` }
+    }
   };
   if (!includeLegacy) {
-    subAreaQuery.FilterExpression = "isLegacy = :legacy OR attribute_not_exists(isLegacy)";
-    subAreaQuery.ExpressionAttributeValues[":legacy"] = { BOOL: false };
+    subAreaQuery.FilterExpression = 'isLegacy = :legacy OR attribute_not_exists(isLegacy)';
+    subAreaQuery.ExpressionAttributeValues[':legacy'] = { BOOL: false };
   }
   return await runQuery(subAreaQuery);
 }
@@ -331,12 +329,12 @@ async function getRecords(subArea, bundle, section, region, filter = true, inclu
       TableName: TABLE_NAME,
       KeyConditionExpression: `pk = :pk`,
       ExpressionAttributeValues: {
-        ":pk": { S: `${subArea.sk}::${activity}` },
-      },
+        ':pk': { S: `${subArea.sk}::${activity}` }
+      }
     };
     if (!includeLegacy) {
-      recordQuery.FilterExpression = "isLegacy = :legacy OR attribute_not_exists(isLegacy)";
-      recordQuery.ExpressionAttributeValues[":legacy"] = { BOOL: false };
+      recordQuery.FilterExpression = 'isLegacy = :legacy OR attribute_not_exists(isLegacy)';
+      recordQuery.ExpressionAttributeValues[':legacy'] = { BOOL: false };
     }
     let recordsFromQuery = await runQuery(recordQuery);
     for (let rec of recordsFromQuery) {
@@ -355,22 +353,45 @@ async function incrementAndGetNextSubAreaID() {
   const configUpdateObj = {
     TableName: CONFIG_TABLE_NAME,
     Key: {
-      pk: { S: "subAreaID" },
+      pk: { S: 'subAreaID' }
     },
-    UpdateExpression: "ADD lastID :incrVal",
+    UpdateExpression: 'ADD lastID :incrVal',
     ExpressionAttributeValues: {
-      ":incrVal": { N: "1" },
+      ':incrVal': { N: '1' }
     },
-    ReturnValues: "UPDATED_NEW",
+    ReturnValues: 'UPDATED_NEW'
   };
   const response = await dynamoClient.send(new UpdateItemCommand(configUpdateObj));
   return response?.Attributes?.lastID?.N;
+}
+
+// Update an export job's state
+function exportPutObj(pk, hash, params, lastSuccessfulJob) {
+  return {
+    TableName: TABLE_NAME,
+    ExpressionAttributeValues: {
+      ':complete': { S: 'complete' },
+      ':error': { S: 'error' }
+    },
+    ConditionExpression:
+      '(attribute_not_exists(pk) AND attribute_not_exists(sk)) OR attribute_not_exists(progressState) OR progressState = :complete OR progressState = :error',
+    Item: marshall({
+      pk: pk,
+      sk: hash,
+      params: params,
+      progressPercentage: 0,
+      progressDescription: 'Initializing job.',
+      progressState: 'Initializing',
+      lastSuccessfulJob: lastSuccessfulJob
+    })
+  };
 }
 
 module.exports = {
   logger,
   sendResponse,
   calculateVariance,
+  flattenConfig,
   ACTIVE_STATUS,
   RESERVED_STATUS,
   EXPIRED_STATUS,
@@ -404,4 +425,5 @@ module.exports = {
   getSubAreas,
   getRecords,
   incrementAndGetNextSubAreaID,
-}
+  exportPutObj
+};

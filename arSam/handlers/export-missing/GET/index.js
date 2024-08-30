@@ -26,13 +26,13 @@ const {
 } = require('/opt/baseLayer');
 const { createHash } = require('node:crypto');
 
-const VARIANCE_EXPORT_FUNCTION_NAME =
-  process.env.VARIANCE_EXPORT_FUNCTION_NAME || 'ar-api-VarianceExportInvokableFunction';
+const MISSING_EXPORT_FUNCTION_NAME =
+  process.env.MISSING_EXPORT_FUNCTION_NAME || 'ar-api-MissingExportInvokableFunction';
 
 const EXPIRY_TIME = process.env.EXPORT_EXPIRY_TIME ? Number(process.env.EXPORT_EXPIRY_TIME) : 60 * 15; // 15 minutes
 
 exports.handler = async (event, context) => {
-  logger.info('GET: Export variances - ', event?.queryStringParameters);
+  logger.info('GET: Export Missing Data - ', event?.queryStringParameters);
 
   // Allow CORS
   if (event.httpMethod === 'OPTIONS') {
@@ -55,13 +55,15 @@ exports.handler = async (event, context) => {
     if (!params?.fiscalYearEnd) {
       return sendResponse(400, { msg: 'No fiscal year end provided.' }, context);
     }
+
     // generate a job id from params+role
     let hashParams = { ...params };
-        
+
     delete hashParams.getJob;
     const decodedHash = JSON.stringify(hashParams) + JSON.stringify(permissionObject.roles);
     const hash = createHash('md5').update(decodedHash).digest('hex');
-    const pk = 'variance-exp-job';
+    const pk = 'missing-exp-job';
+
 
     const res = await getOne(pk, hash);
 
@@ -105,25 +107,25 @@ exports.handler = async (event, context) => {
       if (res?.progressState === 'complete' && res?.key) {
         lastSuccessfulJob = {
           key: res?.key,
-          dateGenerated: res?.dateGenerated || new Date().toISOString()
+          dateGenerated: res?.dateGenerated || new Date().toISOString
         };
       } else if (res?.progressState === 'error') {
         lastSuccessfulJob = res?.lastSuccessfulJob || {};
       }
       // create the new job object
-      const varianceExportPutObj = exportPutObj(pk, hash, params, lastSuccessfulJob)
+      const missingExportPutObj = exportPutObj(pk, hash, params, lastSuccessfulJob);
 
-      logger.debug('Creating new job:', varianceExportPutObj);
+      logger.debug('Creating new job:', missingExportPutObj);
       let newJob;
       try {
-        newJob = await dynamoClient.send(new PutItemCommand(varianceExportPutObj));
+        newJob = await dynamoClient.send(new PutItemCommand(missingExportPutObj));
         // Check if there's already a report being generated.
         // If there are is no instance of a job or the job is 100% complete, generate a report.
         logger.debug('New job created:', newJob);
 
         // run the export function
-        const varianceExportParams = {
-          FunctionName: VARIANCE_EXPORT_FUNCTION_NAME,
+        const missingExportParams = {
+          FunctionName: MISSING_EXPORT_FUNCTION_NAME,
           InvocationType: 'Event',
           LogType: 'None',
           Payload: JSON.stringify({
@@ -132,14 +134,14 @@ exports.handler = async (event, context) => {
             lastSuccessfulJob: lastSuccessfulJob
           }),
         };
-        // Invoke the variance report export lambda
-        await lambda.invoke(varianceExportParams);
+        // Invoke the missing report export lambda
+        await lambda.invoke(missingExportParams);
 
-        return sendResponse(200, { msg: 'Variance report export job created' }, context);
+        return sendResponse(200, { msg: 'missing report export job created' }, context);
       } catch (error) {
         // a job already exists
         logger.error('Error creating new job:', error);
-        return sendResponse(200, { msg: 'Variance report export job already running' }, context);
+        return sendResponse(200, { msg: 'missing report export job already running' }, context);
       }
     }
   } catch (error) {
