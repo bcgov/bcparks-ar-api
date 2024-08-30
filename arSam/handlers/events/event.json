@@ -5,7 +5,14 @@
   "httpMethod": "POST",
   "isBase64Encoded": false,
   "queryStringParameters": {
-    "foo": "bar"
+    "getJob": "false",
+    "fiscalYearEnd": "2023"
+  },
+  "jobId": "5b263c707c578ae7d824844b251c69dc",
+  "params": {
+    "fiscalYearEnd": "2023",
+    "orcs": "0001",
+    "roles": "[\"sysadmin\"]"
   },
   "pathParameters": {
     "proxy": "/path/to/resource"
@@ -40,6 +47,11 @@
     "requestId": "c6af9ac6-7b61-11e6-9a41-93e8deadbeef",
     "requestTime": "09/Apr/2015:12:34:56 +0000",
     "requestTimeEpoch": 1428582896000,
+    "authorizer": {
+      "roles": "[\"sysadmin\"]",
+      "isAdmin": "true",
+      "isAuthenticated": "true"
+    },
     "identity": {
       "cognitoIdentityPoolId": null,
       "accountId": null,

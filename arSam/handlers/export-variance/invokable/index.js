@@ -1,18 +1,20 @@
 const fs = require('fs');
-const { VARIANCE_CSV_SCHEMA, VARIANCE_STATE_DICTIONARY, EXPORT_VARIANCE_CONFIG } = require("/opt/constantsLayer");
-const { getParks,
+const { VARIANCE_CSV_SCHEMA, VARIANCE_STATE_DICTIONARY, EXPORT_VARIANCE_CONFIG } = require('/opt/constantsLayer');
+const {
+  getParks,
   TABLE_NAME,
   dynamoClient,
   PutItemCommand,
   marshall,
   s3Client,
   PutObjectCommand,
+  flattenConfig,
   runQuery,
-  logger
-} = require("/opt/baseLayer");
+  logger,
+} = require('/opt/baseLayer');
 
-const FILE_PATH = process.env.FILE_PATH || "/tmp/";
-const FILE_NAME = process.env.FILE_NAME || "A&R_Variance_Report";
+const FILE_PATH = process.env.FILE_PATH || '/tmp/';
+const FILE_NAME = process.env.FILE_NAME || 'A&R_Variance_Report';
 
 let LAST_SUCCESSFUL_JOB = {};
 let JOB_ID;
@@ -22,13 +24,13 @@ let JOB_UPDATE_MODULO = 20;
 let CURRENT_PROGRESS_PERCENT = 0;
 
 exports.handler = async (event, context) => {
-  logger.debug("Running export invokable: ", event);
+  logger.debug('Running export invokable: ', event);
 
   try {
     LAST_SUCCESSFUL_JOB = event.lastSuccessfulJob || {};
     if (event?.jobId && event?.params?.roles) {
       JOB_ID = event.jobId;
-      S3_KEY = JOB_ID + "/" + FILE_NAME + ".csv";
+      S3_KEY = JOB_ID + '/' + FILE_NAME + '.csv';
       const roles = event?.params?.roles;
       PARAMS = event?.params;
 
@@ -40,16 +42,13 @@ exports.handler = async (event, context) => {
 
       // must provide fiscal year end
       if (!fiscalYearEnd) {
-        throw new Error("Missing fiscal year end parameter");
+        throw new Error('Missing fiscal year end parameter');
       }
 
-      await updateJobWithState(
-        VARIANCE_STATE_DICTIONARY.FETCHING,
-        `Fetching all entries for ${roles}`
-      );
+      await updateJobWithState(VARIANCE_STATE_DICTIONARY.FETCHING, `Fetching all entries for ${roles}`);
 
       logger.info(`=== Exporting filtered data ===`);
-      
+
       // collect variance records
       const records = await getVarianceRecords(fiscalYearEnd, roles);
       await updateJobWithState(VARIANCE_STATE_DICTIONARY.FORMATTING);
@@ -70,16 +69,15 @@ exports.handler = async (event, context) => {
       LAST_SUCCESSFUL_JOB = {
         key: S3_KEY,
         dateGenerated: new Date().toISOString(),
-      }
+      };
       await updateJobWithState(VARIANCE_STATE_DICTIONARY.UPLOADING, 95);
       await updateJobWithState(VARIANCE_STATE_DICTIONARY.COMPLETE);
-
     }
   } catch (error) {
-    logger.error("Error running export invokable: ", error);
-    await updateJobWithState(VARIANCE_STATE_DICTIONARY.ERROR)
+    logger.error('Error running export invokable: ', error);
+    await updateJobWithState(VARIANCE_STATE_DICTIONARY.ERROR);
   }
-}
+};
 
 async function updateJobWithState(state, percentageOverride = null) {
   let percentage = null;
@@ -129,21 +127,20 @@ async function updateJobWithState(state, percentageOverride = null) {
     key: S3_KEY,
     params: PARAMS,
     dateGenerated: new Date().toISOString(),
-  }
+  };
   try {
     await updateJobEntry(jobObj);
     CURRENT_PROGRESS_PERCENT = jobObj.progressPercentage;
   } catch (error) {
-    throw new Error("Error updating job: " + error);
+    throw new Error('Error updating job: ' + error);
   }
 }
-
 
 async function updateJobEntry(jobObj) {
   const putObj = {
     TableName: TABLE_NAME,
-    Item: marshall(jobObj)
-  }
+    Item: marshall(jobObj),
+  };
   await dynamoClient.send(new PutItemCommand(putObj));
 }
 
@@ -157,7 +154,7 @@ async function getVarianceRecords(fiscalYearEnd, roles) {
   if (isAdmin) {
     // must check all parks.
     const parks = await getParks();
-    orcsList = parks.map(park => park.orcs)
+    orcsList = parks.map((park) => park.orcs);
   } else {
     // must check only parks that the user has access to
     for (const role of roles) {
@@ -179,15 +176,14 @@ async function getVarianceRecords(fiscalYearEnd, roles) {
     if (i > 3) {
       year -= 1;
     }
-    dates.push(year + String(i).padStart(2, '0'))
+    dates.push(year + String(i).padStart(2, '0'));
   }
 
   // get all variance records
   const varianceQueryObj = {
     TableName: TABLE_NAME,
-    ExpressionAttributeValues: {
-    }
-  }
+    ExpressionAttributeValues: {},
+  };
 
   let varianceRecords = [];
 
@@ -201,18 +197,18 @@ async function getVarianceRecords(fiscalYearEnd, roles) {
         const varianceQueryObj = {
           TableName: TABLE_NAME,
           ExpressionAttributeValues: {
-            ':pk': { S: `variance::${orcs}::${date}` }
+            ':pk': { S: `variance::${orcs}::${date}` },
           },
-          KeyConditionExpression: 'pk = :pk'
-        }
+          KeyConditionExpression: 'pk = :pk',
+        };
         // get records
         let records = await runQuery(varianceQueryObj);
         // filter records without subarea access
         if (!isAdmin) {
-          records = records.filter(record => {
+          records = records.filter((record) => {
             const said = record?.sk?.split('::')[0];
             return saidList.includes(said);
-          })
+          });
         }
         // add to array
         if (records.length > 0) {
@@ -226,23 +222,12 @@ async function getVarianceRecords(fiscalYearEnd, roles) {
   }
 }
 
-function updateHighAccuracyJobState(state, index, total, size){
+function updateHighAccuracyJobState(state, index, total, size) {
   if (index % JOB_UPDATE_MODULO === 0) {
-     const increment = JOB_UPDATE_MODULO*size/total;
-     const percentage = Math.floor(CURRENT_PROGRESS_PERCENT + increment);
-     updateJobWithState(state, percentage);
+    const increment = (JOB_UPDATE_MODULO * size) / total;
+    const percentage = Math.floor(CURRENT_PROGRESS_PERCENT + increment);
+    updateJobWithState(state, percentage);
   }
-}
-
-// used to flatten EXPORT_VARIANCE_CONFIG keys into an array
-function flattenConfig(config) {
-  let flattenedKeys = [];
-  Object.values(config).forEach(category => {
-    Object.keys(category).forEach(key => {
-      flattenedKeys.push(key);
-    });
-  });
-  return flattenedKeys;
 }
 
 function formatRecords(records) {
@@ -254,7 +239,7 @@ function formatRecords(records) {
         const flattenedConfig = flattenConfig(EXPORT_VARIANCE_CONFIG);
         if (flattenedConfig.includes(field.key)) {
           const percent = (parseFloat(field.percentageChange) * 100).toFixed(2);
-          record[field.key] = String(percent + "%");
+          record[field.key] = String(percent + '%');
         }
       }
     }
@@ -268,6 +253,7 @@ function formatRecords(records) {
   }
 }
 
+// Must match the VARIANCE_CSV_SCHEMA or the columns will be misaligned
 function createCSV(records) {
   let content = [VARIANCE_CSV_SCHEMA];
   for (const record of records) {
@@ -282,26 +268,7 @@ function createCSV(records) {
       record.month || 'N/A',
       `"${record.notes || ''}"`,
       record.resolved || '',
-      record['peopleAdult'] || '',
-      record['peopleChild'] || '',
-      record['peopleFamily'] || '',
-      record['revenueFamily'] || '',
-      record['people'] || '',
-      record['grossCampingRevenue'] || '',
-      record['boatAttendanceNightsOnDock'] || '',
-      record['boatAttendanceNightsOnBouys'] || '',
-      record['boatAttendanceMiscellaneous'] || '',
-      record['boatRevenueGross'] || '',
-      record['peopleAndVehiclesTrail'] || '',
-      record['peopleAndVehiclesVehicle'] || '',
-      record['peopleAndVehiclesBus'] || '',
-      record['picnicRevenueShelter'] || '',
-      record['picnicShelterPeople'] || '',
-      record['picnicRevenueGross'] || '',
-      record['otherDayUsePeopleHotSprings'] || '',
-      record['otherDayUseRevenueHotSprings'] || '',
-      record['totalAttendanceParties'] || '',
-      record['revenueGrossCamping'] || '',
+      // Frontcountry Camping
       record['campingPartyNightsAttendanceStandard'] || '',
       record['campingPartyNightsAttendanceSenior'] || '',
       record['campingPartyNightsAttendanceSocial'] || '',
@@ -314,6 +281,10 @@ function createCSV(records) {
       record['otherRevenueGrossSani'] || '',
       record['otherRevenueElectrical'] || '',
       record['otherRevenueShower'] || '',
+      // Frontcountry Cabins
+      record['totalAttendanceParties'] || '',
+      record['revenueGrossCamping'] || '',
+      // Group Camping
       record['standardRateGroupsTotalPeopleStandard'] || '',
       record['standardRateGroupsTotalPeopleAdults'] || '',
       record['standardRateGroupsTotalPeopleYouth'] || '',
@@ -322,6 +293,28 @@ function createCSV(records) {
       record['youthRateGroupsAttendanceGroupNights'] || '',
       record['youthRateGroupsAttendancePeople'] || '',
       record['youthRateGroupsRevenueGross'],
+      // Backcountry Camping
+      record['people'] || '',
+      record['grossCampingRevenue'] || '',
+      // Backcountry Cabins
+      record['peopleAdult'] || '',
+      record['peopleChild'] || '',
+      record['peopleFamily'] || '',
+      record['revenueFamily'] || '',
+      // Boating
+      record['boatAttendanceNightsOnDock'] || '',
+      record['boatAttendanceNightsOnBouys'] || '',
+      record['boatAttendanceMiscellaneous'] || '',
+      record['boatRevenueGross'] || '',
+      // Day Use
+      record['peopleAndVehiclesTrail'] || '',
+      record['peopleAndVehiclesVehicle'] || '',
+      record['peopleAndVehiclesBus'] || '',
+      record['picnicRevenueShelter'] || '',
+      record['picnicShelterPeople'] || '',
+      record['picnicRevenueGross'] || '',
+      record['otherDayUsePeopleHotSprings'] || '',
+      record['otherDayUseRevenueHotSprings'] || '',
     ]);
   }
   let csvData = '';
@@ -335,7 +328,7 @@ async function uploadToS3(csvData) {
   // write file
   const filePath = FILE_PATH + FILE_NAME + '.csv';
   fs.writeFileSync(filePath, csvData);
-  logger.debug("File written.");
+  logger.debug('File written.');
   // get buffer
   const buffer = fs.readFileSync(filePath);
 
@@ -347,14 +340,23 @@ async function uploadToS3(csvData) {
 
   const command = new PutObjectCommand(params);
   await s3Client.send(command);
-  logger.debug("File successfully uploaded to S3");
+  logger.debug('File successfully uploaded to S3');
 }
 
-function convertMonth(monthNumber){
-
+function convertMonth(monthNumber) {
   const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
 
   if (monthNumber >= 1 && monthNumber <= 12) {
@@ -362,6 +364,4 @@ function convertMonth(monthNumber){
   } else {
     return 'Invalid month number';
   }
-
 }
-
