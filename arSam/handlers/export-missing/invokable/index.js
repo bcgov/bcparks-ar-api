@@ -269,7 +269,7 @@ function formatRecords(records) {
         // We want to filter any records that have -100% variance
         const flattenedConfig = flattenConfig(EXPORT_VARIANCE_CONFIG);
         if (flattenedConfig.includes(field.key) && field.percentageChange == -1) {
-          record[field.key] = 'Missing';
+          record[field.key] = 'Data Missing';
         }
       }
     }
@@ -324,12 +324,12 @@ async function createCSV(records, year) {
   const startYear = Number(year);
   const yearRanges = generateYearRanges(startYear);
   const { missingHeadersRow, subHeadersRow } = constructHeaderRows(MISSING_CSV_HEADERS, yearRanges, [
-    'Missing',
+    `${startYear - 1}-${startYear} Missing?`,
     'Notes',
   ]);
 
-  // Add space before dates - bundles and subareas go below this column
-  subHeadersRow.unshift('');
+  // Add space before the date ranges for bundle, park, subarea, and months
+  subHeadersRow.unshift('', '', '', '');
 
   let content = [missingHeadersRow, subHeadersRow];
 
@@ -360,14 +360,7 @@ async function createCSV(records, year) {
   // and then each row is the subareas and the activity data for that subarea
   for (const bundle of Object.keys(recordsGroupedBundleParkMonth)) {
     for (const park of Object.keys(recordsGroupedBundleParkMonth[bundle])) {
-      // Add bundle and park as a sidebar heading
-      content.push([`Bundle: ${bundle}`]);
-      content.push([`Park: ${park}`]);
-
       for (const month of Object.keys(recordsGroupedBundleParkMonth[bundle][park])) {
-        // Add month as a sidebar heading
-        content.push([month]);
-
         // Start looping for each month in the park
         for (const record of recordsGroupedBundleParkMonth[bundle][park][month]) {
           const startDate = record.pk.split('::')[2];
@@ -377,8 +370,8 @@ async function createCSV(records, year) {
           const previousRecords = await getPreviousYearData(3, subAreaId, activity, startDate);
           const currentRecord = await getOne(`${subAreaId}::${activity}`, startDate);
 
-          // Row starts with sub area name, e.g. "Buttle Lake"
-          let subAreaRow = [record.subAreaName];
+          // Row starts with bundle, park, subarea, and month
+          let subAreaRow = [bundle, park, record.subAreaName, month];
 
           // For each matching item/activity, push the data that's found
           for (const item of flattenConfig(EXPORT_VARIANCE_CONFIG)) {
@@ -411,7 +404,7 @@ async function createCSV(records, year) {
 // We have four years, Variance and Notes columns for each activity, so we add empty
 // strings/cells to account for the additional columns beneath the activity header
 function constructHeaderRows(MISSING_CSV_HEADERS, yearRanges, staticSubHeaders) {
-  let missingHeadersRow = ['Parks by Month'];
+  let missingHeadersRow = ['Bundle, Park, Subarea, Month'];
   let subHeadersRow = [];
 
   // For each activity, we need to add the name of the activity and then the five
@@ -474,3 +467,4 @@ function convertMonth(monthNumber) {
     return 'Invalid month number';
   }
 }
+
