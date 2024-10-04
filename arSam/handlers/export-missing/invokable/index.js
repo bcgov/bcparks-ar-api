@@ -64,6 +64,12 @@ exports.handler = async (event, context) => {
 
       // collect missing records, use VARIANCE_STATE as it's the same
       const records = await getMissingRecords(fiscalYearEnd, roles, orcs);
+
+      if (!records.length) {
+        await updateJobWithState(VARIANCE_STATE_DICTIONARY.NODATA);
+        return
+      }
+
       await updateJobWithState(VARIANCE_STATE_DICTIONARY.FORMATTING);
 
       // format records for csv
@@ -101,6 +107,14 @@ async function updateJobWithState(state, percentageOverride = null) {
       state = 'error';
       message = 'Job failed. Exporter encountered an error.';
       break;
+    
+    // no data, no report
+    case 0:
+      state = 'no_data';
+      percentage = percentageOverride || 100;
+      message = 'No data - no report generated.';
+      break;
+
     // fetching data
     case 1:
       state = 'fetching_data';
