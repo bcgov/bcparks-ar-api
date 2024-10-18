@@ -73,19 +73,21 @@ exports.handler = async (event, context) => {
 
       // Get reports - 0-20
       let scanResults = [];
+
+      await updateJobWithState(
+        STATE_DICTIONARY.FETCHING,
+        `Fetching all entries for ${roles}`
+      );
+      
       let roleFilter = null;
 
       if (!roles.includes("sysadmin")) {
         roleFilter = roles;
       }
 
-      await updateJobWithState(
-        STATE_DICTIONARY.FETCHING,
-        `Fetching all entries for ${roles}`
-      );
-
       logger.info(`=== Exporting filtered data ===`);
-      scanResults = await getAllRecords(roleFilter);
+      scanResults = await getAllRecords(roleFilter, event?.dateRangeStart, event?.dateRangeEnd);
+      logger.info("Scan Results:", scanResults.length);
 
       await updateJobWithState(
         STATE_DICTIONARY.FETCHED,
@@ -116,6 +118,7 @@ exports.handler = async (event, context) => {
         await updateJobWithState(STATE_DICTIONARY.UPLOAD_TO_S3);
         await uploadToS3();
       }
+      
       // success
       LAST_SUCCESSFUL_JOB = {
         key: S3_KEY,
@@ -132,7 +135,7 @@ exports.handler = async (event, context) => {
   }
 };
 
-async function getAllRecords(roles = null) {
+async function getAllRecords(roles = null, dateRangeStart = null, dateRangeEnd = null) {
   let records = [];
   let subareas = [];
   try {
@@ -159,8 +162,10 @@ async function getAllRecords(roles = null) {
       }
     }
     for (const subarea of subareas) {
-      const subAreaRecords = await getRecords(subarea, subarea.bundle, subarea.section, subarea.region, true, false);
+      const subAreaRecords = await getRecords(subarea, subarea.bundle, subarea.section, subarea.region, true, false, dateRangeStart, dateRangeEnd);
       records = records.concat(subAreaRecords);
+    
+
     }
     return records;
   } catch (err) {

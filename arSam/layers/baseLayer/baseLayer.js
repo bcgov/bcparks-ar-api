@@ -175,23 +175,28 @@ async function runQuery(query, paginated = false) {
   let pageData = [];
   let page = 0;
   const command = new QueryCommand(query);
-  do {
-    page++;
-    if (pageData?.LastEvaluatedKey) {
-      command.input.ExclusiveStartKey = pageData.LastEvaluatedKey;
-    }
-    pageData = await dynamoClient.send(command);
-    data = data.concat(
-      pageData.Items.map((item) => {
-        return unmarshall(item);
-      }),
-    );
-    if (page < 2) {
-      logger.info(`Page ${page} data:`, data);
-    } else {
-      logger.info(`Page ${page} contains ${pageData.Items.length} additional query results...`);
-    }
-  } while (pageData?.LastEvaluatedKey && !paginated);
+  try {
+    do {
+      page++;
+      if (pageData?.LastEvaluatedKey) {
+        command.input.ExclusiveStartKey = pageData.LastEvaluatedKey;
+      }
+      pageData = await dynamoClient.send(command);
+      data = data.concat(
+        pageData.Items.map((item) => {
+          return unmarshall(item);
+        }),
+      );
+      if (page < 2) {
+        logger.info(`Page ${page} data:`, data);
+      } else {
+        logger.info(`Page ${page} contains ${pageData.Items.length} additional query results...`);
+      }
+    } while (pageData?.LastEvaluatedKey && !paginated);
+  } catch (error) {
+    logger.info('Error running query:', error);
+    throw error;
+  }
 
   logger.info(`Query result pages: ${page}, total returned items: ${data.length}`);
   if (paginated) {
@@ -318,7 +323,7 @@ async function getSubAreas(orcs, includeLegacy = true) {
 // pass the full subarea object.
 // pass filter = false to look for every possible activity
 // includeLegacy = false will only return records that are not marked as legacy.
-async function getRecords(subArea, bundle, section, region, filter = true, includeLegacy = true) {
+async function getRecords(subArea, bundle, section, region, filter = true, includeLegacy = true, skMin = null, skMax = null) {
   let records = [];
   let filteredActivityList = RECORD_ACTIVITY_LIST;
   if (filter && subArea.activities) {
@@ -331,6 +336,15 @@ async function getRecords(subArea, bundle, section, region, filter = true, inclu
       ExpressionAttributeValues: {
         ':pk': { S: `${subArea.sk}::${activity}` }
       }
+    };
+    //if exported with date range
+    if (skMin && skMax) {
+      skMin = skMin.replace("-","");
+      skMin = skMin.replace("-","");
+      
+      recordQuery.KeyConditionExpression += ` AND sk BETWEEN :skMin AND :skMax`;
+      recordQuery.ExpressionAttributeValues[':skMin'] = { S: skMin };
+      recordQuery.ExpressionAttributeValues[':skMax'] = { S: skMax };
     };
     if (!includeLegacy) {
       recordQuery.FilterExpression = 'isLegacy = :legacy OR attribute_not_exists(isLegacy)';

@@ -1,8 +1,8 @@
 const { dynamoClient, PutItemCommand, marshall } = require("/opt/baseLayer");
 const { createHash } = require("node:crypto");
 
-function convertRolesToMD5(roles, prefix = "") {
-  const codedRoles = prefix + roles.join("-");
+function convertRolesToMD5(roles, prefix = "", dateRange = "all") {
+  const codedRoles = prefix + roles.join("-") + dateRange;
   const hash = createHash("md5").update(codedRoles).digest("hex");
   return hash;
 }
