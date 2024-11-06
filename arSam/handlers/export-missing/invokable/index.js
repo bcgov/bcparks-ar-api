@@ -443,11 +443,7 @@ function createCSV(missingRecords, fiscalYearEnd) {
             content.push(subAreaRow);
           }
         }
-
-        content.push(['']); // New row for readability between parks
       }
-
-      content.push(['']); // New row for readability between bundles
     }
   }
 
