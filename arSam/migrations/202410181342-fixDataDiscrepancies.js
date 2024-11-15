@@ -12,7 +12,6 @@ const {
 } = require('../layers/baseLayer/baseLayer.js');
 const { EXPORT_VARIANCE_CONFIG } = require('../layers/constantsLayer/constantsLayer.js');
 const { DateTime } = require('luxon');
-const _ = require('lodash');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -64,17 +63,49 @@ async function getAllOrcs() {
   return orcsObj;
 }
 
-// Find differences between two arrays, matching based on pk and sk
-function findDifferences(oldParkArr, newParkArr) {
-  const diff = {
-    inOldPark: [],
-    inNewPark: []
-  };
+// Helper function for checking if two items are equal, mimic _.isEqual
+function isEqual(a, b) {
+  // Handle primitive types
+  if (a === b) return true;
+  if (a == null || b == null) return false;
 
-  diff.inOldPark.push(...oldParkArr.filter((item) => !_.some(newParkArr, item)));
-  diff.inNewPark.push(...newParkArr.filter((item) => !_.some(oldParkArr, item)));
+  // Handle NaN
+  if (Number.isNaN(a) && Number.isNaN(b)) return true;
 
-  return diff;
+  // Handle arrays
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+
+    for (let i = 0; i < a.length; i++) {
+      if (!isEqual(a[i], b[i])) return false;
+    }
+    return true;
+  }
+
+  // Handle objects
+  if (typeof a === 'object' && typeof b === 'object') {
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+
+    if (keysA.length !== keysB.length) return false;
+
+    for (const key of keysA) {
+      if (!isEqual(a[key], b[key])) return false;
+    }
+    return true;
+  }
+
+  return false;
+}
+
+// Helper function to determine if item is empty, mimic _.isEmpty
+function isEmpty(value) {
+  return (
+    value === undefined ||
+    value === null ||
+    (typeof value === 'object' && Object.keys(value).length === 0) ||
+    (typeof value === 'string' && value.trim().length === 0)
+  );
 }
 
 // For comparing two arrays, but comparing based on pk and sk
@@ -215,89 +246,12 @@ function checkVariances(currentRecord, records, activity) {
   return fields;
 }
 
-async function consolidateAllSubAreas() {
-  let transactionObj = { TransactItems: [] };
-  await logToFile('Fetching all the subAreas...');
-
-  // Get a list of all the parks (which are now up to date)
-  let allParks = await getParks();
-
-  // Get all the orcs for each park (which are likewise all up to date)
-  const allOrcs = allParks.filter((park) => park.orcs).map((park) => park.orcs);
-
-  // Now get the subAreas for each park::orcs
-  for (const orcs of allOrcs) {
-    try {
-      const oldOrcsQuery = {
-        TableName: 'parksar-XtbzOY7u',
-        ExpressionAttributeValues: {
-          ':pk': { S: `park::${orcs}` }
-        },
-        KeyConditionExpression: 'pk = :pk'
-      };
-
-      const newOrcsQuery = {
-        TableName: TABLE_NAME,
-        ExpressionAttributeValues: {
-          ':pk': { S: `park::${orcs}` }
-        },
-        KeyConditionExpression: 'pk = :pk'
-      };
-
-      // Get the new and old park::orcs
-      const oldOrcs = await runQuery(oldOrcsQuery);
-      const newOrcs = await runQuery(newOrcsQuery);
-      const fixOrcs = [];
-
-      // Deep equality check for any differences
-      let diffs;
-      if (!_.isEqual(oldOrcs, newOrcs)) {
-        diffs = findDifferences(oldOrcs, newOrcs);
-      }
-
-      // If there are any differences, we want to recreate the missing record
-      // in the new db. Differences *only* found in the new db (and not the old
-      // db) can be ignored.
-      if (diffs?.inOldPark?.length > 0) {
-        for (const item of diffs.inOldPark) {
-          await logToFile('Fixing this orcs: ', item);
-          transactionObj.TransactItems.push({
-            Update: {
-              TableName: TABLE_NAME,
-              Key: marshall({
-                pk: `${item.pk}`,
-                sk: `${item.sk}`
-              }),
-              ConditionExpression: 'attribute_not_exists(sk)',
-              ExpressionAttributeValues: marshall({
-                activities: item.activities,
-                parkName: item.parkName,
-                roles: item.roles,
-                section: item.section,
-                managementArea: item.managementArea,
-                orcs: item.orcs,
-                bundle: item.bundle,
-                region: item.region,
-                subAreaName: item.subAreaName
-              })
-            }
-          });
-        }
-      }
-    } catch (e) {
-      await logToFile('Issue checking park::orcs: ', e);
-    }
-  }
-
-  await executeTransactions(transactionObj);
-}
-
 async function consolidateAllActivities(orcsObj) {
   let transactionObj = { TransactItems: [] };
   await logToFile('Fetching all the activities...');
 
   // Now that we have an obj of the orcs and subAreas we can look at the
-  // activities and start a deep equality check between old db and new db
+  // activities and start an equality check between old db and new db
   for (const orcs of Object.keys(orcsObj)) {
     for (const subArea of Object.keys(orcsObj[orcs])) {
       for (const activity of orcsObj[orcs][subArea].activities) {
@@ -321,104 +275,107 @@ async function consolidateAllActivities(orcsObj) {
           // Get all the new and old subarea::activity records
           const oldActivity = await runQuery(oldActivityQuery);
           const newActivity = await runQuery(newActivityQuery);
-          const fixActivity = [];
 
           // Check for any differences
-          let diffs;
-          if (!_.isEqual(oldActivity, newActivity)) {
-            diffs = findDifferences(oldActivity, newActivity);
-          }
+          let comparisonResult;
+          if (!isEqual(oldActivity, newActivity)) {
+            comparisonResult = compareArrays(oldActivity, newActivity);
+            if (comparisonResult.length > 0) {
+              for (const item of comparisonResult) {
+                // Look for items that are from 2024 at the earliest
+                // legacyData won't get through, but skip it if it does just in case
+                const date = Number(item.sk.slice(0, 4));
+                if (date >= 2024 && (!item.differences?.legacyData?.old || !item.differences?.legacyData?.new)) {
+                  // For any items that have been 'removed' (only found in the old db)
+                  // we want to fully add the record to the new db
+                  if (item.removed && item.record) {
+                    const lastItemIndex = oldActivity.length != 0 ? oldActivity.length - 1 : 0;
+                    await logToFile(
+                      `Adding this activity - pk: ${item.pk} sk: ${item.sk}\n  Park: ${item.record.parkName},\n  SubArea: ${item.record.subAreaName}\n  Date: ${item.sk},\n`
+                    );
 
-          // If there are diffs, and it's the same activity we need to see
-          // which fields are missing/changed
-          let comparisonResult = [];
-          if (diffs?.inOldPark?.length > 0 || diffs?.inNewPark?.length > 0) {
-            comparisonResult = [...compareArrays(diffs.inOldPark, diffs.inNewPark)];
-          }
-
-          if (comparisonResult.length > 0) {
-            for (const item of comparisonResult) {
-              // For any items that have been 'removed' (only found in the old db)
-              // we want to fully add the record to the new db
-              if (item.removed && item.record) {
-                transactionObj.TransactItems.push({
-                  Put: {
-                    TableName: TABLE_NAME,
-                    Item: marshall(item.record),
-                    ConditionExpression: 'attribute_not_exists(sk)'
+                    transactionObj.TransactItems.push({
+                      Put: {
+                        TableName: TABLE_NAME,
+                        Item: marshall(item.record),
+                        ConditionExpression: 'attribute_not_exists(sk)'
+                      }
+                    });
                   }
-                });
-              }
 
-              // Look for differences where we should update
-              if (item.differences !== undefined) {
-                // Log the data that has changes for auditing later
-                let printOut = {};
-                let newData = {};
-                for (const attribute of Object.keys(item.differences)) {
-                  // Notes is the only attribute where we can't compare numbers,
-                  // just check if the note exist or not
-                  if (attribute === 'notes') {
-                    const oldVal = item.differences[attribute].old ?? undefined;
-                    const newVal = item.differences[attribute].new ?? undefined;
+                  // Look for differences where we should update
+                  if (item.differences !== undefined) {
+                    // Log the data that has changes for auditing later
+                    let printOut = {};
+                    let newData = {};
+                    for (const attribute of Object.keys(item.differences)) {
+                      // Notes is the only attribute where we can't compare numbers,
+                      // just check if the note exist or not
+                      {
+                        if (attribute === 'notes') {
+                          const oldVal = item.differences[attribute].old ?? undefined;
+                          const newVal = item.differences[attribute].new ?? undefined;
 
-                    newData[`:${attribute}`] = oldVal && !newVal ? oldVal : newVal;
+                          newData[`:${attribute}`] = oldVal && !newVal ? oldVal : newVal;
 
-                    // Skip isLegacy and isLocked because these should only be
-                    // different in the new db
-                  } else if (attribute !== 'isLocked' && attribute !== 'isLegacy') {
-                    // Give null values a -1 so we can compare to what exists
-                    const oldVal = item.differences[attribute].old ?? -1;
-                    const newVal = item.differences[attribute].new ?? -1;
+                          // Skip isLegacy and isLocked because these should only be
+                          // different in the new db
+                        } else if (attribute !== 'isLocked' && attribute !== 'isLegacy') {
+                          // Give null values a -1 so we can compare to what exists
+                          const oldVal = item.differences[attribute].old ?? -1;
+                          const newVal = item.differences[attribute].new ?? -1;
 
-                    // Maybe the best option is to just take the higher of the two
-                    // values? Only make a change if the old data is more than the
-                    // new data. Save the log for auditing later.
-                    if (oldVal > newVal) {
-                      newData[`:${attribute}`] = oldVal;
+                          // Maybe the best option is to just take the higher of the two
+                          // values? Only make a change if the old data is more than the
+                          // new data. Save the log for auditing later.
+                          if (oldVal > newVal) {
+                            newData[`:${attribute}`] = oldVal;
+                          }
+
+                          printOut[attribute] = {};
+                          printOut[attribute]['old'] = oldVal;
+                          printOut[attribute]['new'] = newVal;
+                        }
+                      }
+
+                      // Only making a change if the old data was more than the new data
+                      if (!isEmpty(newData)) {
+                        const record = await getOne(item.pk, item.sk);
+                        await logToFile(
+                          `Fixing this activity - pk: ${item.pk} sk: ${item.sk}\n  Park: ${record.parkName},\n  SubArea: ${record.subAreaName}\n  Date: ${item.sk},\n  Notes: ${record.notes ? record.notes : ''}\n  Changes:\n    `,
+                          printOut
+                        );
+
+                        // Creating expressions for properly inputting the updated data
+                        let updateExpression = 'SET ';
+                        let expressionAttributeValues = newData;
+                        let expressionAttributeNames = {};
+
+                        // Create the object for the expression { #attribute : attribute }
+                        Object.entries(newData).forEach(([key, value]) => {
+                          // remove the ':' from start of attribute name
+                          const attributeName = key.substring(1);
+                          expressionAttributeNames[`#${attributeName}`] = attributeName;
+                        });
+
+                        // Making the "SET #attribute = :attribute" expression
+                        const attributeUpdates = Object.keys(newData)
+                          .map((key) => `#${key.substring(1)} = ${key}`)
+                          .join(', ');
+                        updateExpression += attributeUpdates;
+
+                        transactionObj.TransactItems.push({
+                          Update: {
+                            TableName: TABLE_NAME,
+                            Key: marshall({ pk: item.pk, sk: item.sk }),
+                            UpdateExpression: updateExpression,
+                            ExpressionAttributeNames: expressionAttributeNames,
+                            ExpressionAttributeValues: marshall(expressionAttributeValues)
+                          }
+                        });
+                      }
                     }
-
-                    printOut[attribute] = {};
-                    printOut[attribute]['old'] = oldVal;
-                    printOut[attribute]['new'] = newVal;
                   }
-                }
-
-                // Only making a change if the old data was more than the new data
-                if (!_.isEmpty(newData)) {
-                  const record = await getOne(item.pk, item.sk);
-                  await logToFile(
-                    `Fixing this activity - pk: ${item.pk} sk: ${item.sk}\n  Park: ${record.parkName},\n  SubArea: ${record.subAreaName}\n  Date: ${item.sk},\n  Notes: ${record.notes ? record.notes : ''}\n  Changes:\n    `,
-                    printOut
-                  );
-
-                  // Creating expressions for properly inputting the updated data
-                  let updateExpression = 'SET ';
-                  let expressionAttributeValues = newData;
-                  let expressionAttributeNames = {};
-
-                  // Create the object for the expression { #attribute : attribute }
-                  Object.entries(newData).forEach(([key, value]) => {
-                    // remove the ':' from start of attribute name
-                    const attributeName = key.substring(1);
-                    expressionAttributeNames[`#${attributeName}`] = attributeName;
-                  });
-
-                  // Making the "SET #attribute = :attribute" expression
-                  const attributeUpdates = Object.keys(newData)
-                    .map((key) => `#${key.substring(1)} = ${key}`)
-                    .join(', ');
-                  updateExpression += attributeUpdates;
-
-                  transactionObj.TransactItems.push({
-                    Update: {
-                      TableName: TABLE_NAME,
-                      Key: marshall({ pk: item.pk, sk: item.sk }),
-                      UpdateExpression: updateExpression,
-                      ExpressionAttributeNames: expressionAttributeNames,
-                      ExpressionAttributeValues: marshall(expressionAttributeValues)
-                    }
-                  });
                 }
               }
             }
@@ -471,22 +428,16 @@ async function consolidateAllVariances(orcsObj) {
             const newVariance = await runQuery(newVarianceQuery);
 
             // Deep equality check for any differences
-            let diffs;
-            if (!_.isEqual(oldVariance, newVariance)) {
-              diffs = findDifferences(oldVariance, newVariance);
-            }
-
-            // If there are diffs we default to just calculate and update variance
-            // record again with the new records we added
             let comparisonResult = [];
-            if (diffs?.inOldPark?.length > 0) {
-              comparisonResult = [...compareArrays(diffs.inOldPark, diffs.inNewPark)];
+            if (!isEqual(oldVariance, newVariance)) {
+              comparisonResult = [...compareArrays(oldVariance, newVariance)];
 
-              // We basically reuse the functions from /activity GET to recalculate
-              // the variances (which would have the activities consolidated
-              // from the old db by now)
+              // If there are diffs we default to just calculate and update variance
+              // record again with the new records we added, just to be sure
               if (comparisonResult.length > 0) {
-                // Get the current record in the new db (ParksAr table)
+                // We basically reuse the functions from /activity GET to recalculate
+                // the variances (which would have the activities consolidated
+                // from the old db by now)
                 const theDate = runningDate.toFormat('yyyyLL');
                 const currentRecord = await getOne(`${subArea}::${activity}`, theDate);
                 let records = await getPreviousYearData(3, subArea, activity, theDate);
@@ -506,10 +457,18 @@ async function consolidateAllVariances(orcsObj) {
                   record.bundle = bundle;
 
                   const variance = `pk:variance::${orcs}::${theDate} sk: ${subArea}::${activity}`;
+                  const oldVarRecord = await getOne(`variance::${orcs}::${theDate}`, `${subArea}::${activity}`);
+
+                  let oldVarFields = [];
+                  for (let field of oldVarRecord?.fields) {
+                    oldVarFields.push(field);
+                  }
+
                   await logToFile(
-                    `Fixing the variance for: ${variance}\n  Park: ${record.parkName},\n  SubArea: ${record.subAreaName},\n  Date: ${theDate},\n  Notes: ${record.notes ? record.notes : ''},\n  Fields:\n    `,
-                    fields
+                    `Recreating the variance for: ${variance}\n  Park: ${record.parkName},\n  SubArea: ${record.subAreaName},\n  Date: ${theDate},\n  Notes: ${record.notes ? record.notes : ''},\n  Old Record:\n    `,
+                    oldVarFields
                   );
+                  await logToFile(`  New Record:\n    `, fields);
 
                   transactionObj.TransactItems.push({
                     Update: {
@@ -587,10 +546,6 @@ async function executeTransactions(transactionObj) {
 }
 
 async function runFixDataDisc() {
-  // Checking all subAreas
-  await consolidateAllSubAreas();
-
-  // One call for orcsObj now that we've updated the parks and subAreas
   const orcsObj = await getAllOrcs();
 
   // Check all activities
