@@ -72,10 +72,9 @@ describe("Activity Test", () => {
     await setupDb(TABLE_NAME);
   });
 
-  afterEach(() => {
-    deleteDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
+  afterEach(async () => {
+    await deleteDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
     process.env = OLD_ENV; // Restore old environment
-    
   });
 
   test("Handler - 200 GET specific activity entry", async () => {

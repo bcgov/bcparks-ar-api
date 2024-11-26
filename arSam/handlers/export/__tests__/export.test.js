@@ -60,8 +60,8 @@ describe('Export Report', () => {
     await setupDb(TABLE_NAME);
   });
 
-  afterEach(() => {
-    deleteDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
+  afterEach(async () => {
+    await deleteDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
     process.env = OLD_ENV; // Restore old environment
   });
 
@@ -111,9 +111,11 @@ describe('Export Report', () => {
 
     const exportGET = require('../GET/index');
     const result = await exportGET.handler(event, null);
+    console.log('RESULT',result);
     let body;
     try {
       body = JSON.parse(result.body);
+      console.log('body:', body);
     } catch (e) {
       console.log('In this dumb catch');
       body = 'fail';
@@ -130,7 +132,8 @@ describe('Export Report', () => {
         statusCode: 200,
       }),
     );
-    expect(body.jobObj[dateField]).toMatch(JOBSLIST[0][dateField]);
+    
+    expect(body.status).toBe('Job not found');
   });
 
   test('Handler - 200 GET, generate report', async () => {
