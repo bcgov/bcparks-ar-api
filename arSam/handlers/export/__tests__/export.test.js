@@ -111,11 +111,9 @@ describe('Export Report', () => {
 
     const exportGET = require('../GET/index');
     const result = await exportGET.handler(event, null);
-    console.log('RESULT',result);
     let body;
     try {
       body = JSON.parse(result.body);
-      console.log('body:', body);
     } catch (e) {
       console.log('In this dumb catch');
       body = 'fail';

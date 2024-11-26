@@ -48,19 +48,13 @@ exports.handler = async (event, context) => {
     if (!permissionObject.isAuthenticated) {
       return sendResponse(403, { msg: "Error: UnAuthenticated." }, context);
     }
-    console.log('event', event);
+
     //Check if date range provided
     const dateRangeStart = event?.queryStringParameters?.dateRangeStart || null;
     const dateRangeEnd = event?.queryStringParameters?.dateRangeEnd || null;
 
-    //TESTING TODO REMOVE
-    console.log('event', event);
-    console.log('daterangestart', dateRangeStart);
-    console.log('daterangeend', dateRangeEnd);
-
     // This will give us the sk
     const sk = convertRolesToMD5(permissionObject.roles, "export-", `${dateRangeStart}-${dateRangeEnd}`);
-    console.log('sk:', sk);
 
     // Check for existing job
     let queryObj = {
@@ -72,23 +66,13 @@ exports.handler = async (event, context) => {
       KeyConditionExpression: "pk =:pk and sk =:sk",
     };
 
-    console.log('queryObj:', queryObj);
-    //const res = (await runQuery(queryObj))[0];
-    const data = await runQuery(queryObj);
-    console.log('data:', data);
-    const res = data[0];
-    console.log('res:', res);
-
-    console.log('event.queryStringParameters.getJob:', event?.queryStringParameters?.getJob);
+    const res = (await runQuery(queryObj))[0];
 
     if (event?.queryStringParameters?.getJob) {
-      console.log('getJob flag is set');
       // If the getJob flag is set, that means we are trying to download the report
       if (!res) {
-        console.log('Job does not exist');
         // Job does not exist.
         return sendResponse(200, { status: "Job not found" }, context);
-        console.log('why');
       } else if (
         res.progressState === "complete" ||
         res.progressState === "error"
