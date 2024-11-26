@@ -53,7 +53,7 @@ describe("Park Test", () => {
     jest.resetModules();
     process.env = { ...OLD_ENV }; // Make a copy of environment
     hash = getHashedText(expect.getState().currentTestName);
-    process.env.TABLE_NAME = hash
+    process.env.TABLE_NAME = hash;
     TABLE_NAME = process.env.TABLE_NAME;
     NAME_CACHE_TABLE_NAME = TABLE_NAME.concat("-nameCache");
     CONFIG_TABLE_NAME = TABLE_NAME.concat("-config");
@@ -61,8 +61,8 @@ describe("Park Test", () => {
     await setupDb(TABLE_NAME);
   });
 
-  afterEach(() => {
-    deleteDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
+  afterEach(async () => {
+    await deleteDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
     process.env = OLD_ENV; // Restore old environment
   });
 

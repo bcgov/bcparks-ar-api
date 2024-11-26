@@ -48,9 +48,13 @@ exports.handler = async (event, context) => {
     if (!permissionObject.isAuthenticated) {
       return sendResponse(403, { msg: "Error: UnAuthenticated." }, context);
     }
-    
+
+    //Check if date range provided
+    const dateRangeStart = event?.queryStringParameters?.dateRangeStart || null;
+    const dateRangeEnd = event?.queryStringParameters?.dateRangeEnd || null;
+
     // This will give us the sk
-    const sk = convertRolesToMD5(permissionObject.roles, "export-");
+    const sk = convertRolesToMD5(permissionObject.roles, "export-", `${dateRangeStart}-${dateRangeEnd}`);
 
     // Check for existing job
     let queryObj = {
@@ -152,6 +156,8 @@ exports.handler = async (event, context) => {
             jobId: sk,
             roles: permissionObject.roles,
             lastSuccessfulJob: lastSuccessfulJob,
+            dateRangeStart: dateRangeStart,
+            dateRangeEnd: dateRangeEnd,
           }),
         };
         // Invoke generate report function

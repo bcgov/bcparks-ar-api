@@ -71,8 +71,8 @@ describe("Variance Test", () => {
     await setupDb(TABLE_NAME);
   }, 20000);
 
-  afterEach(() => {
-    deleteDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
+  afterEach(async () => {
+    await deleteDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
     process.env = OLD_ENV; // Restore old environment
   });
 

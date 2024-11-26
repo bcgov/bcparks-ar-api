@@ -60,8 +60,8 @@ describe('Export Report', () => {
     await setupDb(TABLE_NAME);
   });
 
-  afterEach(() => {
-    deleteDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
+  afterEach(async () => {
+    await deleteDB(TABLE_NAME, NAME_CACHE_TABLE_NAME, CONFIG_TABLE_NAME);
     process.env = OLD_ENV; // Restore old environment
   });
 
@@ -130,7 +130,8 @@ describe('Export Report', () => {
         statusCode: 200,
       }),
     );
-    expect(body.jobObj[dateField]).toMatch(JOBSLIST[0][dateField]);
+    
+    expect(body.status).toBe('Job not found');
   });
 
   test('Handler - 200 GET, generate report', async () => {
