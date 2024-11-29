@@ -323,7 +323,16 @@ async function getSubAreas(orcs, includeLegacy = true) {
 // pass the full subarea object.
 // pass filter = false to look for every possible activity
 // includeLegacy = false will only return records that are not marked as legacy.
-async function getRecords(subArea, bundle, section, region, filter = true, includeLegacy = true, skMin = null, skMax = null) {
+async function getRecords(
+  subArea,
+  bundle,
+  section,
+  region,
+  filter = true,
+  includeLegacy = true,
+  skMin = 'null',
+  skMax = 'null'
+) {
   let records = [];
   let filteredActivityList = RECORD_ACTIVITY_LIST;
   if (filter && subArea.activities) {
@@ -338,14 +347,14 @@ async function getRecords(subArea, bundle, section, region, filter = true, inclu
       }
     };
     //if exported with date range
-    if (skMin && skMax) {
-      skMin = skMin.replace("-","");
-      skMin = skMin.replace("-","");
-      
+    if (skMin !== 'null' && skMax !== 'null') {
+      skMin = skMin.replace('-', '');
+      skMax = skMax.replace('-', '');
+
       recordQuery.KeyConditionExpression += ` AND sk BETWEEN :skMin AND :skMax`;
       recordQuery.ExpressionAttributeValues[':skMin'] = { S: skMin };
       recordQuery.ExpressionAttributeValues[':skMax'] = { S: skMax };
-    };
+    }
     if (!includeLegacy) {
       recordQuery.FilterExpression = 'isLegacy = :legacy OR attribute_not_exists(isLegacy)';
       recordQuery.ExpressionAttributeValues[':legacy'] = { BOOL: false };

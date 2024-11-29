@@ -432,7 +432,7 @@ function createCSV(missingRecords, fiscalYearEnd) {
                 // Not missing data, add empty space to that column
                 subAreaRow.push('');
               }
-              subAreaRow.push(missingRecord[bundle][park].notes || ''); // Notes
+              subAreaRow.push(`"${missingRecord[bundle][park][date].notes}"` || ''); // Notes
             }
 
             // Add these to the start of the array because we might not have subAreaName early on
