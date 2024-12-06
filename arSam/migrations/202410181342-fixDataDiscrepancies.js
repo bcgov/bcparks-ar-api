@@ -337,43 +337,43 @@ async function consolidateAllActivities(orcsObj) {
                           printOut[attribute]['new'] = newVal;
                         }
                       }
+                    }
 
-                      // Only making a change if the old data was more than the new data
-                      if (!isEmpty(newData)) {
-                        const record = await getOne(item.pk, item.sk);
-                        await logToFile(
-                          `Fixing this activity - pk: ${item.pk} sk: ${item.sk}\n  Park: ${record.parkName},\n  SubArea: ${record.subAreaName}\n  Date: ${item.sk},\n  Notes: ${record.notes ? record.notes : ''}\n  Changes:\n    `,
-                          printOut
-                        );
+                    // Only making a change if the old data was more than the new data
+                    if (!isEmpty(newData)) {
+                      const record = await getOne(item.pk, item.sk);
+                      await logToFile(
+                        `Fixing this activity - pk: ${item.pk} sk: ${item.sk}\n  Park: ${record.parkName},\n  SubArea: ${record.subAreaName}\n  Date: ${item.sk},\n  Notes: ${record.notes ? record.notes : ''}\n  Changes:\n    `,
+                        printOut
+                      );
 
-                        // Creating expressions for properly inputting the updated data
-                        let updateExpression = 'SET ';
-                        let expressionAttributeValues = newData;
-                        let expressionAttributeNames = {};
+                      // Creating expressions for properly inputting the updated data
+                      let updateExpression = 'SET ';
+                      let expressionAttributeValues = newData;
+                      let expressionAttributeNames = {};
 
-                        // Create the object for the expression { #attribute : attribute }
-                        Object.entries(newData).forEach(([key, value]) => {
-                          // remove the ':' from start of attribute name
-                          const attributeName = key.substring(1);
-                          expressionAttributeNames[`#${attributeName}`] = attributeName;
-                        });
+                      // Create the object for the expression { #attribute : attribute }
+                      Object.entries(newData).forEach(([key, value]) => {
+                        // remove the ':' from start of attribute name
+                        const attributeName = key.substring(1);
+                        expressionAttributeNames[`#${attributeName}`] = attributeName;
+                      });
 
-                        // Making the "SET #attribute = :attribute" expression
-                        const attributeUpdates = Object.keys(newData)
-                          .map((key) => `#${key.substring(1)} = ${key}`)
-                          .join(', ');
-                        updateExpression += attributeUpdates;
+                      // Making the "SET #attribute = :attribute" expression
+                      const attributeUpdates = Object.keys(newData)
+                        .map((key) => `#${key.substring(1)} = ${key}`)
+                        .join(', ');
+                      updateExpression += attributeUpdates;
 
-                        transactionObj.TransactItems.push({
-                          Update: {
-                            TableName: TABLE_NAME,
-                            Key: marshall({ pk: item.pk, sk: item.sk }),
-                            UpdateExpression: updateExpression,
-                            ExpressionAttributeNames: expressionAttributeNames,
-                            ExpressionAttributeValues: marshall(expressionAttributeValues)
-                          }
-                        });
-                      }
+                      transactionObj.TransactItems.push({
+                        Update: {
+                          TableName: TABLE_NAME,
+                          Key: marshall({ pk: item.pk, sk: item.sk }),
+                          UpdateExpression: updateExpression,
+                          ExpressionAttributeNames: expressionAttributeNames,
+                          ExpressionAttributeValues: marshall(expressionAttributeValues)
+                        }
+                      });
                     }
                   }
                 }
