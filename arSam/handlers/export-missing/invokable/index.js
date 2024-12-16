@@ -254,10 +254,13 @@ async function getMissingRecords(fiscalYearEnd, roles, singleOrcs = undefined) {
             // an object that's nested as { bundle: { park: { date: {...}}}}
             const formattedRecords = formatRecords(records);
 
-            // We then parse through the object to find where/when items are
-            // missing data. We pass in activity and subAreaName for records that
-            // are missing any information, as we need to build "no data" records
-            missingRecords.push(findMissingRecords(formattedRecords, dates, activity, subArea[0].subAreaName));
+            // Skip historical items for the export
+            if (!subArea[0].isLegacy) {
+              // We then parse through the object to find where/when items are
+              // missing data. We pass in activity and subAreaName for records that
+              // are missing any information, as we need to build "no data" records
+              missingRecords.push(findMissingRecords(formattedRecords, dates, activity, subArea[0].subAreaName));
+            }
           }
         }
       }
@@ -283,10 +286,10 @@ function findMissingRecords(records, fiscalYearDates, activity, subAreaName) {
       for (const date of fiscalYearDates) {
         let recordCheck = {};
 
+        // We also need to add any "no data" items for dates that are missing up to
+        // today's date. These are somewhat placeholders for comparison, checking
+        // if the data exists and building the csv later
         if (!records[bundle][park]?.[date]) {
-          // We also need to add any "no data" items for dates that are missing up to
-          // today's date. These will be omitted if the previous year's months are missing
-          // data anyway (i.e. December never has data, won't trigger as missing later).
           records[bundle][park][date] = {
             bundle,
             parkName: park,
@@ -297,12 +300,13 @@ function findMissingRecords(records, fiscalYearDates, activity, subAreaName) {
 
         recordCheck = records[bundle][park][date];
 
-        // If we have a match for this bundle, park, and date, get the activities for it
         const requiredFields = EXPORT_VARIANCE_CONFIG[activity];
-        // Check if the activity's fields have any values in the current record
+
+        // Check if the activity's fields have any values in the current record, or if the value is 0
         const missingFields = Object.keys(requiredFields).filter(
-          (field) => !Object.prototype.hasOwnProperty.call(recordCheck, field)
+          (field) => !Object.prototype.hasOwnProperty.call(recordCheck, field) || recordCheck[field] == 0
         );
+
         // Now that we know what fields are missing, check the previous years
         for (const missingField of missingFields) {
           const prevYearsData = checkPreviousYears(records, bundle, park, date, missingField);
@@ -390,13 +394,10 @@ function createCSV(missingRecords, fiscalYearEnd) {
   const todayDate = DateTime.now().toFormat('yyyyLL');
   const startYear = Number(fiscalYearEnd);
   const yearRanges = generateYearRanges(startYear);
-  const { missingHeadersRow, subHeadersRow } = constructHeaderRows(MISSING_CSV_HEADERS, yearRanges, [
-    'Missing',
-    'Notes'
-  ]);
+  const { missingHeadersRow, subHeadersRow } = constructHeaderRows(MISSING_CSV_HEADERS, yearRanges, ['Missing']);
 
-  // Add space before the date ranges for bundle, park, subarea, and months
-  subHeadersRow.unshift('', '', '', '');
+  // Add space before the date ranges for bundle, park, subarea, months, and notes
+  subHeadersRow.unshift('', '', '', '', '');
 
   let content = [missingHeadersRow, subHeadersRow];
 
@@ -413,13 +414,19 @@ function createCSV(missingRecords, fiscalYearEnd) {
             const month = date.slice(4);
 
             for (const item of flattenConfig(EXPORT_VARIANCE_CONFIG)) {
-              subAreaRow.push(missingRecord[bundle][park][`${year - 3}${month}`][item] || ''); // Three years ago
-              subAreaRow.push(missingRecord[bundle][park][`${year - 2}${month}`][item] || ''); // Two years ago
-              subAreaRow.push(missingRecord[bundle][park][`${year - 1}${month}`][item] || ''); // One year ago
+              subAreaRow.push(missingRecord[bundle][park][`${year - 3}${month}`][item] || ''); // 3 years ago
+              subAreaRow.push(missingRecord[bundle][park][`${year - 2}${month}`][item] || ''); // 2 years ago
+              subAreaRow.push(missingRecord[bundle][park][`${year - 1}${month}`][item] || ''); // 1 year ago
               subAreaRow.push(missingRecord[bundle][park][date][item] || ''); // Current year
 
+              // It is considered "missing data" when:
+              // the current year        DOES NOT exist OR it's 0
+              // the previous year       DOES exist,    AND it's not 0
+              // or the year before that DOES exist,    AND it's not 0
+              // or the year before that DOES exist,    AND it's not 0
               if (
-                !missingRecord[bundle][park][date][item] &&
+                (!missingRecord[bundle][park][date][item] ||
+                  missingRecord[bundle][park][`${year}${month}`][item] == 0) &&
                 ((missingRecord[bundle][park][`${year - 1}${month}`][item] &&
                   missingRecord[bundle][park][`${year - 1}${month}`][item] !== 0) ||
                   (missingRecord[bundle][park][`${year - 2}${month}`][item] &&
@@ -432,13 +439,19 @@ function createCSV(missingRecords, fiscalYearEnd) {
                 // Not missing data, add empty space to that column
                 subAreaRow.push('');
               }
-              subAreaRow.push(`"${missingRecord[bundle][park][date].notes}"` || ''); // Notes
             }
 
             // Add these to the start of the array because we might not have subAreaName early on
             // Throw these into this strange format: `"${variable}"` as the double quotes help
-            // with any rogue special names/characters we don't want to affect the csv output
-            subAreaRow.unshift(`"${bundle}"`, `"${park}"`, `"${subAreaName}"`, convertMonth(date.slice(4)));
+            // with any special names/characters/commas we don't want to affect the csv output
+            const notes = missingRecord[bundle][park][date].notes ? missingRecord[bundle][park][date].notes : '';
+            subAreaRow.unshift(
+              `"${bundle}"`,
+              `"${park}"`,
+              `"${subAreaName}"`,
+              convertMonth(date.slice(4)),
+              `"${notes}"`
+            );
 
             content.push(subAreaRow);
           }
@@ -484,13 +497,13 @@ function formatRecords(records) {
 }
 
 function constructHeaderRows(MISSING_CSV_HEADERS, yearRanges, staticSubHeaders) {
-  let missingHeadersRow = ['Bundle, Park, Subarea, Month'];
+  let missingHeadersRow = ['Bundle, Park, Subarea, Month, Recent Notes'];
   let subHeadersRow = [];
 
   // For each activity, we need to add the name of the activity and then the five
   // additional spaces. The subheaders is also created with years, Variance, and Notes cells
   for (let i = 0; i < MISSING_CSV_HEADERS.length; i++) {
-    missingHeadersRow = [...missingHeadersRow, MISSING_CSV_HEADERS[i], '', '', '', '', ''];
+    missingHeadersRow = [...missingHeadersRow, MISSING_CSV_HEADERS[i], '', '', '', ''];
     subHeadersRow = [...subHeadersRow, ...yearRanges, ...staticSubHeaders];
   }
 
