@@ -1,21 +1,9 @@
-const fs = require("fs");
-const writeXlsxFile = require("write-excel-file/node");
-const {
-  TABLE_NAME,
-  getParks,
-  getSubAreas,
-  getRecords,
-  logger,
-  s3Client,
-  PutObjectCommand
-} = require("/opt/baseLayer");
-const {
-  EXPORT_NOTE_KEYS,
-  EXPORT_MONTHS,
-  CSV_SYSADMIN_SCHEMA,
-  STATE_DICTIONARY,
-} = require("/opt/constantsLayer");
-const { updateJobEntry } = require("/opt/functionsLayer");
+const fs = require('fs');
+const writeXlsxFile = require('write-excel-file/node');
+const { DateTime } = require('luxon');
+const { TABLE_NAME, getParks, getSubAreas, getRecords, logger, s3Client, PutObjectCommand } = require('/opt/baseLayer');
+const { EXPORT_NOTE_KEYS, EXPORT_MONTHS, CSV_SYSADMIN_SCHEMA, STATE_DICTIONARY } = require('/opt/constantsLayer');
+const { updateJobEntry } = require('/opt/functionsLayer');
 
 const {
   arraySum,
@@ -160,6 +148,11 @@ async function getAllRecords(roles = null, dateRangeStart = null, dateRangeEnd =
         const parkSubAreas = await getSubAreas(park.sk, false);
         subareas = subareas.concat(parkSubAreas);
       }
+    }
+    // Don't get records before 2017, all will be historical anyway
+    if (dateRangeStart == 'null' && dateRangeEnd == 'null') {
+      dateRangeStart = '2017-01';
+      dateRangeEnd = DateTime.now().setZone('America/Vancouver').toFormat('yyyyLL');
     }
     for (const subarea of subareas) {
       const subAreaRecords = await getRecords(subarea, subarea.bundle, subarea.section, subarea.region, true, false, dateRangeStart, dateRangeEnd);
