@@ -258,7 +258,8 @@ function createLegacyBaseRecord(data, activity, subAreaId) {
     subAreaId: subAreaId,
     lastUpdated: new Date().toISOString(),
     isLegacy: true,
-    isLocked: true
+    isLocked: true,
+    legacyMigrationVersion: 2
   };
 }
 
