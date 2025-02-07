@@ -172,6 +172,8 @@ Each activity type will have its own different `[activitySpecificFields]`.
 ### Frontcountry Camping Activity Record - Specific Fields
 ```js
 {
+  winterCampingPartyNightsAttendanceStandard: <number>,
+  winterCampingPartyNightsAttendanceSocial: <number>,
   campingPartyNightsAttendanceLongStay: <number>,
   campingPartyNightsAttendanceSenior: <number>,
   campingPartyNightsAttendanceSocial: <number>,

@@ -22,6 +22,8 @@ describe("Constants Test", () => {
           year: 1,
           fiscalYear: 1,
           month: 1,
+          winterCampingPartyNightsAttendanceStandard: 1,
+          winterCampingPartyNightsAttendanceSocial: 1,
           campingPartyNightsAttendanceStandard: 1,
           campingPartyNightsAttendanceSenior: 1,
           campingPartyNightsAttendanceSocial: 1,
