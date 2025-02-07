@@ -199,6 +199,14 @@
           "AttributeType": "N"
         },
         {
+          "AttributeName": "winterCampingPartyNightsAttendanceStandard",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "winterCampingPartyNightsAttendanceSocial",
+          "AttributeType": "N"
+        },
+        {
           "AttributeName": "campingPartyNightsAttendanceSenior",
           "AttributeType": "N"
         },

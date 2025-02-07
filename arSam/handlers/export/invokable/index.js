@@ -219,6 +219,8 @@ async function modifyReportForCSV(report) {
       report.calc_frontCountryCamping_frontCountryCamping_campingPartyNights_totalNights =
         frontcountryCampingPartyAttendance(
           [
+            report.winterCampingPartyNightsAttendanceStandard,
+            report.winterCampingPartyNightsAttendanceSocial,
             report.campingPartyNightsAttendanceStandard,
             report.campingPartyNightsAttendanceSenior,
             report.campingPartyNightsAttendanceSocial,
@@ -229,6 +231,8 @@ async function modifyReportForCSV(report) {
       report.calc_frontCountryCamping_frontCountryCamping_campingPartyNights_totalAttendance =
         frontcountryCampingPartyAttendance(
           [
+            report.winterCampingPartyNightsAttendanceStandard,
+            report.winterCampingPartyNightsAttendanceSocial,
             report.campingPartyNightsAttendanceStandard,
             report.campingPartyNightsAttendanceSenior,
             report.campingPartyNightsAttendanceSocial,

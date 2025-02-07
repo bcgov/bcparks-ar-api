@@ -10,6 +10,8 @@ const EXPORT_NOTE_KEYS = {
 
 const EXPORT_VARIANCE_CONFIG = {
   'Frontcountry Camping': {
+    winterCampingPartyNightsAttendanceStandard: 0.2,
+    winterCampingPartyNightsAttendanceSocial: 0.2,
     campingPartyNightsAttendanceStandard: 0.2,
     campingPartyNightsAttendanceSenior: 0.2,
     campingPartyNightsAttendanceSocial: 0.2,
@@ -178,6 +180,19 @@ const CSV_SYSADMIN_SCHEMA = [
     type: Number,
     width: 63,
     value: (report) => report.campingPartyNightsAttendanceLongStay,
+  },
+  // Frontcountry Camping - Camping Party Nights - Winter
+  {
+    column: 'Camping Party Nights - Winter - Standard',
+    type: Number,
+    width: 63,
+    value: (report) => report.winterCampingPartyNightsAttendanceStandard,
+  },
+  {
+    column: 'Camping Party Nights - Winter - SSCFE',
+    type: Number,
+    width: 63,
+    value: (report) => report.winterCampingPartyNightsAttendanceSocial,
   },
   {
     column: 'Frontcountry Camping - Camping Party Nights',

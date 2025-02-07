@@ -89,7 +89,7 @@ function formatTotalWithModifier(arr, mod) {
 }
 
 function frontcountryCampingPartyAttendance(attendances, modifier) {
-  let formula = `Total attendance = (Standard + Senior + SSFE + Long stay)`;
+  let formula = `Total attendance = (Winter Standard + Winter SSCFE + Standard + Senior + SSCFE + Long stay)`;
   if (modifier) {
     formula += ` x ${modifier}`;
   }
@@ -102,7 +102,7 @@ function frontcountryCampingPartyAttendance(attendances, modifier) {
 function frontcountryCampingSecondCarAttendance(attendances) {
   return {
     result: formatTotalWithModifier(attendances),
-    formula: `Total attendance = (Standard + Senior + SSFE)`,
+    formula: `Total attendance = (Standard + Senior + SSCFE)`,
   };
 }
 
