@@ -7,6 +7,7 @@ This script assists in recovering a table using PITR or AWS Backups, as well as 
 ## Table of Contents
 
 - [Quick Start](#quick-start)
+- [Config.js](#configjs)
 
 - [The Disaster Recovery Steps](#the-disaster-recovery-steps)
   - [1. Point-in-Time Recovery Steps](#1-point-in-time-recovery-pitr-steps)
@@ -44,6 +45,8 @@ const config = {
 };
 ```
 
+> The `config.js` file will be checked when the script is started to ensure that the proper environment, vault names role, and policies are in place. Check the section [Config.js](#configjs) for more information on what's required in the config.
+
 3. Go to _BC Gov AWS login_ portal and login using your IDIR. Select the environment you want to run the script in and select the **Click for Credentials** button to generate your credentials.
 
 4. Paste the token in the terminal to export the credentials.
@@ -65,6 +68,8 @@ const config = {
 Choose a recover type and follow the steps outlined in the console.
 
 ```
+✅ No issues with the config! Continuing...
+
 *------------------------------------------------------------------*
 |  Disaster Recovery Initiated.                                    |
 |                                                                  |
@@ -89,7 +94,7 @@ Choose a recover type and follow the steps outlined in the console.
 |         |       Snapshot       | from the last 12 months (this   |
 |         |                      | is SIGNIFICANTLY faster if it's |
 |         | est. time warm: ~20m | coming from warm storage).      |
-|         | est. time cold: ~2h  |                                 |
+|         | est. time cold: ~3h  |                                 |
 *----------------------------------------------------------------- *
 *------------------------*
 |  TABLE MANAGEMENT      |
@@ -123,6 +128,20 @@ Choose a recover type and follow the steps outlined in the console.
 <br>
 <br>
 
+## Config.js
+
+The script performs initial validation of the `config.js` file:
+
+- **Environment Configuration**: Verifies that the specified `environment` parameter aligns with the _BC Gov AWS login_ portal credentials
+- **Vault Verification**: Confirms that the designated `vaultName` corresponds to an existing AWS Backup vault
+- **Role Authentication**: Validates that the specified `backupRole` possesses the required - [AWSBackupServiceRolePolicyForRestores](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AWSBackupServiceRolePolicyForRestores.html) policy for table restoration operations
+- **Timeout Setting**: Ensures the `timeout` parameter is properly configured
+
+If any validation check fails, the script will terminate execution to prevent potential configuration-related issues.
+
+<br>
+<br>
+
 ## The Disaster Recovery Steps
 
 There are two automated restore options for recovering tables in DynamoDB. These are the Point-in-Time Recovery (PITR) and AWS Backups.
@@ -142,7 +161,7 @@ PITR allows the user to select a specific date and time for a restore, up to the
 |    1    |     Point-in-Time    | Allows you to choose a date and |
 |         |    Recovery (PITR)   | precise time (up to the second) |
 |         |                      | to restore the table, from up   |
-|         |     time: ~20m       | to 35 days ago.                 |
+|         |     time: ~30m       | to 35 days ago.                 |
 *------------------------------------------------------------------*
 ```
 
@@ -162,7 +181,7 @@ Select an existing table to replace with the PITR backup:
 |      4     |  ar-tests                                           |
 *------------------------------------------------------------------*
 
-🗂️  Please select a table to continue [1 to 6]
+🗂️ Please select a table to continue [1 to 6]
 >> 3
 ```
 
@@ -259,8 +278,8 @@ Replaces an existing table with a backup in AWS Backups. The table **must alread
 |    2    |      AWS Backup      | Allows you to choose a snapshot |
 |         |       Snapshot       | from the last 12 months (this   |
 |         |                      | is SIGNIFICANTLY faster if it's |
-|         | time if warm: ~5-10m | coming from warm storage).      |
-|         | time if cold: ~2-4h  |                                 |
+|         | est. time warm: ~20m | coming from warm storage).      |
+|         | est. time cold: ~3h  |                                 |
 *----------------------------------------------------------------- *
 ```
 
@@ -278,7 +297,7 @@ Select an existing table to replace with the backup:
 |      4     |  ar-tests                                           |
 *------------------------------------------------------------------*
 
-🗂️_ Please select a table to continue [1,2,3,4,5]
+🗂️ Please select a table to continue [1,2,3,4,5]
 >> 3
 ```
 
@@ -372,7 +391,7 @@ An example of running this process:
 |      4     |  ar-tests                                           |
 *------------------------------------------------------------------*
 
-🗂️_ Please select a table to continue [1,2,3,4,5]
+🗂️ Please select a table to continue [1,2,3,4,5]
 >> 3
 
 ⭐ Confirm to continue with [ParksAr] table? [y,n]
@@ -409,7 +428,7 @@ An example of running this process:
 |  Initializing RESTORE DYNAMODB BACKUPS option...                 |
 *------------------------------------------------------------------*
 
-🖊  Enter the name of the table you'd like to restore. Only tables with matching backup names will be available for selection.
+🖋️  Enter the name of the table you'd like to restore. Only tables with matching backup names will be available for selection.
 >> ParksAr
 
 ⭐ Confirm the table name is [ParksAr]? [y,n]
@@ -462,7 +481,7 @@ An example of running this process:
 |  Initializing RESTORE AWS BACKUP option...                       |
 *------------------------------------------------------------------*
 
-🖊  Enter the name of the table you'd like to restore. Only tables
+🖋️  Enter the name of the table you'd like to restore. Only tables
 with matching backup names will be available for selection.
 >> ParksAr
 
@@ -533,7 +552,7 @@ An example of running this process:
 |      4     |  ar-tests                                           |
 *------------------------------------------------------------------*
 
-🗂️_ Please select a table to continue [1,2,3,4,5]
+🗂️ Please select a table to continue [1,2,3,4,5]
 >> 3
 
 ⭐ Confirm to continue with [ParksAr]

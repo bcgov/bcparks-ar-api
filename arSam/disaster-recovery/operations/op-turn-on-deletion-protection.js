@@ -1,4 +1,4 @@
-const { checkAndUpdate, enableDeletionProtection } = require('../functions');
+const { awsCommand, checkAndUpdate } = require('../functions');
 
 /**
  * Executes the operation for enabling Deletion Protection for a table in DynamoDB.
@@ -11,7 +11,13 @@ const { checkAndUpdate, enableDeletionProtection } = require('../functions');
 async function opTurnOnDeletionProtection(turnOnDelProOp) {
   try {
     process.stdout.write(turnOnDelProOp.message);
-    turnOnDelProOp.response = await enableDeletionProtection(turnOnDelProOp.targetTable);
+    turnOnDelProOp.response = await awsCommand([
+      'dynamodb',
+      'update-table',
+      '--table-name',
+      turnOnDelProOp.targetTable,
+      '--deletion-protection-enabled'
+    ]);
 
     // Verify that Deletion Protection is enabled for the table, check should return true
     turnOnDelProOp.args = [turnOnDelProOp.targetTable, true];

@@ -1,9 +1,4 @@
-const {
-  checkTableExists,
-  checkBackupExistsInDynamo,
-  checkPitrEnabled,
-  checkDeletionProtectionEnabled
-} = require('./functions');
+const { awsCommand, checkTableExists, checkBackupExistsInDynamo } = require('./functions');
 
 /**
  * All operation types (eg. delete, restore, backup) run during any of the recovery
@@ -80,7 +75,10 @@ const operations = {
   turnOnPitr: {
     operationName: 'Turn on PITR',
     args: [],
-    check: checkPitrEnabled,
+    check: async (tableName) => {
+      const result = await awsCommand(['dynamodb', 'describe-continuous-backups', '--table-name', tableName]);
+      return result?.ContinuousBackupsDescription?.ContinuousBackupsStatus === 'ENABLED';
+    },
     message: null,
     errorMessage: null,
     expectFromCheck: true,
@@ -90,7 +88,10 @@ const operations = {
   turnOnDelPro: {
     operationName: 'Turn on Deletion Protection',
     args: [],
-    check: checkDeletionProtectionEnabled,
+    check: async (tableName) => {
+      let checkDelPro = await awsCommand(['dynamodb', 'describe-table', '--table-name', tableName]);
+      return checkDelPro?.Table?.DeletionProtectionEnabled;
+    },
     errorMessage: null,
     expectFromCheck: true,
     message: null,

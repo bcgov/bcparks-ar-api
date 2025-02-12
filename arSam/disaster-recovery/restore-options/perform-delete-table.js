@@ -1,10 +1,4 @@
-const {
-  cleanAndExit,
-  confirmToContinueYesNo,
-  describeTable,
-  removeDeletionProtection,
-  getConsoleInput
-} = require('../functions');
+const { awsCommand, cleanAndExit, confirmToContinueYesNo, getConsoleInput } = require('../functions');
 
 const { opDeleteTable } = require('../operations/op-delete-table');
 
@@ -21,24 +15,32 @@ async function performDeleteTable(ops, chosenTable) {
     ops.deleteOG.message = `\n🗑  DELETING [${ops.deleteOG.sourceTable}] table...`;
 
     // Before deleting, check if Deletion Protection exists
-    let checkTable = await describeTable(ops.deleteOG.sourceTable);
-    let deletionProtection = checkTable.DeletionProtectionEnabled;
+    let checkTable = await awsCommand(['dynamodb', 'describe-table', '--table-name', ops.deleteOG.sourceTable]);
+    let deletionProtection = checkTable.Table.DeletionProtectionEnabled;
 
     // CONFIRM
     // Deletion Protection exists, ask to remove it or clean up and exit
     if (deletionProtection) {
       while (true) {
         let confirmedRemoveDelPro = await confirmToContinueYesNo(
-          `\n❗ Looks like there's Deletion Protection for [${deleteOG.sourceTable}] - would you like to remove this and continue with the recovery process?`,
+          `\n❗ Looks like there's Deletion Protection for [${ops.deleteOG.sourceTable}] - would you like to remove this and continue with the recovery process?`,
           ['y', 'n'],
-          removeDeletionProtection,
+          async (chosenTable) => {
+            return await awsCommand([
+              'dynamodb',
+              'update-table',
+              '--table-name',
+              chosenTable,
+              '--no-deletion-protection-enabled'
+            ]);
+          },
           [deleteOG.sourceTable]
         );
 
         // If confirmedRemoveDelPro comes back false, then they want to exit.
         // Double check that's the case.
         if (!confirmedRemoveDelPro) {
-          let confirmedExit = await getConsoleInput(`\n🪣. Exit process and initiate clean up?`, ['y', 'n']);
+          let confirmedExit = await getConsoleInput(`\n🪣 Exit process and initiate clean up?`, ['y', 'n']);
 
           if (confirmedExit == 'y') {
             await cleanAndExit(ops);
@@ -54,14 +56,14 @@ async function performDeleteTable(ops, chosenTable) {
     // Double check with user that they want to delete this table, or clean up and exit
     while (true) {
       let confirmDeleteTable = await confirmToContinueYesNo(
-        `\n❗ Confirm DELETION of the table [${deleteOG.sourceTable}] and continue?`,
+        `\n❗ Confirm DELETION of the table [${ops.deleteOG.sourceTable}] and continue?`,
         ['y', 'n']
       );
 
       // If confirmDeleteTable comes back false, then they want to exit.
       // Double check that's the case.
       if (!confirmDeleteTable) {
-        let confirmedExit = await getConsoleInput(`\n🪣. Exit process and initiate clean up?`, ['y', 'n']);
+        let confirmedExit = await getConsoleInput(`\n🪣 Exit process and initiate clean up?`, ['y', 'n']);
 
         if (confirmedExit == 'y') {
           await cleanAndExit(ops);
@@ -73,7 +75,7 @@ async function performDeleteTable(ops, chosenTable) {
     }
 
     // Start the delete process
-    ops.deleteOG = await opDeleteTable(ops.deleteOG, ops);
+    ops.deleteOG = await opDeleteTable(ops.deleteOG);
   } catch (error) {
     ops.deleteOG.opStatus = 'failed';
     ops.deleteOG.errorMessage = error;

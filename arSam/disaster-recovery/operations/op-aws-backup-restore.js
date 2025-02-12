@@ -1,4 +1,7 @@
-const { checkAndUpdate, restoreFromAWSBackup } = require('../functions');
+const { awsCommand, checkAndUpdate } = require('../functions');
+
+const config = require('../config');
+const { environment, backupRole } = config;
 
 /**
  * Process for performing a manual DynamoDB Restore for a table
@@ -12,7 +15,16 @@ async function opAWSRestore(restoreAWS) {
   try {
     // RESTORE the original table from the back up
     process.stdout.write(restoreAWS.message);
-    restoreAWS.response = await restoreFromAWSBackup(restoreAWS.targetTable, restoreAWS.backupObj);
+    restoreAWS.response = await awsCommand([
+      'backup',
+      'start-restore-job',
+      '--recovery-point-arn',
+      restoreAWS.backupObj.RecoveryPointArn,
+      '--metadata',
+      `TargetTableName=${restoreAWS.targetTable}`,
+      '--iam-role-arn',
+      `arn:aws:iam::${environment}:role/${backupRole}`
+    ]);
     restoreAWS.args = [restoreAWS.targetTable, true];
 
     await checkAndUpdate(restoreAWS);

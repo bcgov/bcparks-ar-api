@@ -1,4 +1,4 @@
-const { checkAndUpdate, enablePointInTimeRecovery } = require('../functions');
+const { awsCommand, checkAndUpdate } = require('../functions');
 
 /**
  * Executes the operation for enabling PITR for a table in DynamoDB.
@@ -11,7 +11,14 @@ const { checkAndUpdate, enablePointInTimeRecovery } = require('../functions');
 async function opTurnOnPitr(turnOnPitrOp) {
   try {
     process.stdout.write(turnOnPitrOp.message);
-    turnOnPitrOp.response = await enablePointInTimeRecovery(turnOnPitrOp.targetTable);
+    turnOnPitrOp.response = await awsCommand([
+      'dynamodb',
+      'update-continuous-backups',
+      '--table-name',
+      turnOnPitrOp.targetTable,
+      '--point-in-time-recovery-specification',
+      'PointInTimeRecoveryEnabled=true'
+    ]);
     turnOnPitrOp.args = [turnOnPitrOp.targetTable, true];
 
     await checkAndUpdate(turnOnPitrOp);

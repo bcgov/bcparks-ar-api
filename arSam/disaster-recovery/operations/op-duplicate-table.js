@@ -1,4 +1,4 @@
-const { checkAndUpdate, duplicateTablePitr } = require('../functions');
+const { awsCommand, checkAndUpdate } = require('../functions');
 
 /**
  * Executes the operation for duplicating and verifies the duplication exists.
@@ -11,11 +11,16 @@ const { checkAndUpdate, duplicateTablePitr } = require('../functions');
 async function opDuplicateTable(duplicateOp) {
   try {
     process.stdout.write(duplicateOp.message);
-    duplicateOp.response = await duplicateTablePitr(
+    duplicateOp.response = await awsCommand([
+      'dynamodb',
+      'restore-table-to-point-in-time',
+      '--source-table-name',
       duplicateOp.sourceTable,
+      '--target-table-name',
       duplicateOp.targetTable,
+      '--restore-date-time',
       duplicateOp.dateTimeInputISO
-    );
+    ]);
 
     // Verify that the duplication exists, check should return true
     duplicateOp.args = [duplicateOp.targetTable, true];

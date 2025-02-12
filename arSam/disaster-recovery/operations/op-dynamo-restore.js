@@ -1,4 +1,4 @@
-const { checkAndUpdate, restoreFromDynamoBackup } = require('../functions');
+const { awsCommand, checkAndUpdate } = require('../functions');
 
 /**
  * Executes the operation for restoring a table from DynamoDB Backups.
@@ -11,7 +11,20 @@ const { checkAndUpdate, restoreFromDynamoBackup } = require('../functions');
 async function opDynamoRestore(restoreDynamoOp) {
   try {
     process.stdout.write(restoreDynamoOp.message);
-    restoreDynamoOp.response = await restoreFromDynamoBackup(restoreDynamoOp.targetTable, restoreDynamoOp.backupName);
+
+    // Pull all backups in DynamoDB, get the ARN for the one that matches restoreDynamoOp.backupName
+    let backups = await awsCommand(['dynamodb', 'list-backups']);
+    let backup = backups.BackupSummaries.find((item) => item.BackupName == restoreDynamoOp.backupName);
+    let backupArn = backup.BackupArn;
+
+    restoreDynamoOp.response = await awsCommand([
+      'dynamodb',
+      'restore-table-from-backup',
+      '--target-table-name',
+      restoreDynamoOp.targetTable,
+      '--backup-arn',
+      backupArn
+    ]);
 
     // Verify that the restored table now exists, check should return true
     restoreDynamoOp.args = [restoreDynamoOp.targetTable, true];

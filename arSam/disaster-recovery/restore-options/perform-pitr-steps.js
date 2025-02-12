@@ -1,11 +1,16 @@
+const { DateTime } = require('luxon');
 const {
+  awsCommand,
   backToMenuOrExit,
-  confirmPitrDateTime,
-  getPitr,
   confirmInitiateCleanup,
-  wrapQuery,
-  exit
+  exit,
+  getConsoleInput,
+  getDateTimeInput,
+  lineWrap
 } = require('../functions');
+
+const config = require('../config');
+const { inputType } = config;
 
 const operations = require('../operations');
 const { duplicate, backupDynamoOG, backupDynamoDupe, restoreDynamo, deleteOG, turnOnPitr, turnOnDelPro } = operations;
@@ -41,7 +46,10 @@ async function performPitrSteps(ops, chosenTable) {
   ops.turnOnDelPro = turnOnDelPro;
 
   try {
-    let pitrBackups = await getPitr(chosenTable);
+    // Look for PITR backups
+    console.log(`\n🔍 Looking at Point-in-Time Recovery for [${chosenTable}]...`);
+    let backupsObj = await awsCommand(['dynamodb', 'describe-continuous-backups', '--table-name', chosenTable]);
+    pitrBackups = backupsObj.ContinuousBackupsDescription;
 
     if (pitrBackups.PointInTimeRecoveryDescription.PointInTimeRecoveryStatus == 'ENABLED') {
       // User confirms the PITR date/time they're restoring to
@@ -75,7 +83,7 @@ async function performPitrSteps(ops, chosenTable) {
     } else {
       // It may be that not all tables have PITR enabled
       console.log(
-        wrapQuery(
+        lineWrap(
           `\n❗ Doesn't look like PITR is enabled for [${chosenTable}]. You can enable PITR for a table from the main menu.`
         )
       );
@@ -88,6 +96,69 @@ async function performPitrSteps(ops, chosenTable) {
   }
 
   return ops;
+}
+
+/**
+ * Lets the user see available restore times for a table's Point-in-Time recovery.
+ * User is offered the earliest restorable time and latest restorable time and must
+ * select a date/time between them using the acceptable DateTime format.
+ *
+ * @param   {Object} pitrBackups - object from AWS that contains information about
+ *                                a table's PITR options
+ * @returns {String} a DateTime item in the format of 'LLL dd yyyy - HH:mm:ss'
+ *
+ */
+async function confirmPitrDateTime(chosenTable, pitrBackups) {
+  let backups = pitrBackups.PointInTimeRecoveryDescription;
+
+  // Convert backup times to a readable format, also the format expected to
+  // be entered by user
+  let earliestFormatted = DateTime.fromISO(backups.EarliestRestorableDateTime).toFormat(inputType);
+  let latestFormatted = DateTime.fromISO(backups.LatestRestorableDateTime).toFormat(inputType);
+
+  console.log(`\n*-------------------------------*                                   `);
+  console.log(`|  🕑 CHOOSE A RESTORE TIME 🕑  |                                   `);
+  console.log(`|------------------------------------------------------------------*`);
+  console.log('|  Restorable Time              |  Date and Time                   |');
+  console.log(`|------------------------------------------------------------------|`);
+  console.log(`|  Earliest restorable time     |  ${earliestFormatted}          |`);
+  console.log(`|  Latest restorable time       |  ${latestFormatted}          |`);
+  console.log(`*------------------------------------------------------------------*`);
+
+  // Confirm the date/time from the user
+  let dateTimeInput = await getDateTimeInput(
+    `\n🕑 How early would you like to restore?`,
+    [inputType],
+    earliestFormatted,
+    latestFormatted
+  );
+
+  console.log(`\n*-------------------------------*                                   `);
+  console.log(`| ❗ READ BEFORE CONTINUING ❗  |                                   `);
+  console.log(`|------------------------------------------------------------------*`);
+  console.log(`|  In order to recreate a table from PITR, this script will:       |`);
+  console.log(`|------------------------------------------------------------------|`);
+  console.log(`|  1. DUPLICATE the original table from the desired PITR date/time.|`);
+  console.log(`|  2. BACKUP    the original to DynamoDB as a fallback.            |`);
+  console.log(`|  3. BACKUP    the duplicate table after it's created in Step 1.  |`);
+  console.log(`|  4. DELETE    the original table after it's backed up in Step 2. |`);
+  console.log(`|               > CONFIRM: check if Deletion Protection is enabled.|`);
+  console.log(`|               > CONFIRM: check again before deletion.            |`);
+  console.log(`|  5. RESTORE   the original table from the duplicate backup.      |`);
+  console.log(`|------------------------------------------------------------------|`);
+  console.log(`|  🕑 PITR and Deletion Protection will then be activated again 🔒 |`);
+  console.log(`*------------------------------------------------------------------*`);
+
+  confirmRestoreTime = await getConsoleInput(
+    `\n⭐ Confirm you want to restore [${chosenTable}] to [${dateTimeInput}] and continue?`,
+    ['y', 'n']
+  );
+
+  // Rerun if user changes mind about time
+  if (confirmRestoreTime == 'n') {
+    dateTimeInput = await confirmPitrDateTime(chosenTable, pitrBackups);
+  }
+  return dateTimeInput;
 }
 
 module.exports = { performPitrSteps };

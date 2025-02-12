@@ -1,10 +1,9 @@
 const { exit } = require('process');
-const { DateTime } = require('luxon');
 const readline = require('readline');
 const { spawn } = require('child_process');
 
 const config = require('./config');
-const { environment, timeout, vaultName, backupRole, inputType, dynamoInputType } = config;
+const { timeout } = config;
 
 let rlInterface;
 
@@ -56,9 +55,8 @@ async function awsCommand(args) {
 
     childProcess.on('close', (code) => {
       if (code !== 0) {
-        console.error(`Child process exited with code ${code}`);
-        console.error('stderr:', stderrData);
-        reject(new Error(`AWS CLI command failed with exit code ${code}`));
+        console.log('\n');
+        reject(new Error(`\n📦 AWS CLI command failed with error: \n${stderrData}`));
       } else {
         try {
           const parsedOutput = JSON.parse(stdoutData);
@@ -103,31 +101,6 @@ async function backToMenuOrExit() {
 }
 
 /**
- * Create a backup of a table in DynamoDB.
- *
- * @param   {String} sourceTable - the selected table to be back up
- * @param   {Object} backupName - name of the backup to be created
- * @returns {Object} AWS response with backup details
- *
- */
-async function backupTableOnDemandDynamo(sourceTable, backupName) {
-  try {
-    let backedUpTable = await awsCommand([
-      'dynamodb',
-      'create-backup',
-      '--table-name',
-      sourceTable,
-      '--backup-name',
-      backupName
-    ]);
-
-    return backedUpTable.BackupDetails;
-  } catch (error) {
-    throw error;
-  }
-}
-
-/**
  * Takes an operation type and uses its check function, args, and expectFromCheck to
  * update the console accordingly.
  *
@@ -137,18 +110,14 @@ async function backupTableOnDemandDynamo(sourceTable, backupName) {
  *
  */
 async function checkAndUpdate(opsType) {
-  try {
-    // Run the check function, which is something like checkTableExists(), etc.
-    let check = await opsType.check(...opsType.args);
+  // Run the check function, which is something like checkTableExists(), etc.
+  let check = await opsType.check(...opsType.args);
 
-    if (check === opsType.expectFromCheck) {
-      opsType.opStatus = 'success';
-      updateConfirmMessage();
-    } else {
-      throw `Check function expected ${opsType.expectFromCheck} but returned ${check}. Were you expecting ${opsType.expectFromCheck}?`;
-    }
-  } catch (error) {
-    throw error;
+  if (check === opsType.expectFromCheck) {
+    opsType.opStatus = 'success';
+    updateConfirmMessage();
+  } else {
+    throw `Check function expected ${opsType.expectFromCheck} but returned ${check}. Were you expecting ${opsType.expectFromCheck}?`;
   }
 
   return opsType;
@@ -170,23 +139,20 @@ async function checkBackupExistsInDynamo(sourceTable, backupName) {
   // or timeout is reached (if set in config)
   while (!exists && (waitIndefinitely || t < timeout)) {
     outputTimeUpdate(t);
+    t++;
 
     // Check every 5 seconds if table has been restored
-    if (t == 0 || t % 5 == 0) {
-      try {
-        backupsObj = await awsCommand(['dynamodb', 'list-backups', '--table-name', sourceTable]);
+    if (t % 5 == 0) {
+      backupsObj = await awsCommand(['dynamodb', 'list-backups', '--table-name', sourceTable]);
 
-        exists = backupsObj.BackupSummaries.some(
-          (summary) =>
-            summary.TableName == sourceTable && summary.BackupName == backupName && summary.BackupStatus == 'AVAILABLE'
-        );
-      } catch (error) {
-        throw error;
-      }
+      exists = backupsObj.BackupSummaries.some(
+        (summary) =>
+          summary.TableName == sourceTable && summary.BackupName == backupName && summary.BackupStatus == 'AVAILABLE'
+      );
+      t++;
     } else {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
-    t++;
   }
 
   // Only get here after timeout, offer user to keep waiting
@@ -199,8 +165,8 @@ async function checkBackupExistsInDynamo(sourceTable, backupName) {
     if (continueChecking == 'y') {
       exists = await checkBackupExistsInDynamo(sourceTable, backupName);
     } else {
-      console.log(`\nTry running again.`);
-      console.log(`\nExiting...`);
+      console.log(`\n❗ Try running again.`);
+      console.log(`\n👋 Exiting...`);
       exit();
     }
   }
@@ -216,62 +182,71 @@ async function checkBackupExistsInDynamo(sourceTable, backupName) {
  * @returns {Object} isValid boolean and an array of any errors
  *
  */
-function checkConfig(config) {
+async function checkConfig(config) {
   const errors = [];
 
-  // Check environment exists and is valid
-  if (!config.environment || typeof config.environment !== 'number') {
-    errors.push('Environment must be a valid number');
+  function hourglass(num) {
+    const emoji = ['⏳', '⌛'];
+    process.stdout.cursorTo(0);
+    process.stdout.write(`${emoji[num]} Checking the config.js for issues...`);
   }
 
-  // Validate timeout
+  // Get account info, backup vaults, and backup role and its policies
+  console.log('\n');
+  hourglass(0);
+  const accountObj = await awsCommand([`sts`, `get-caller-identity`]);
+  const account = accountObj.Account;
+  hourglass(1);
+  const vaultsObj = await awsCommand([`backup`, `list-backup-vaults`]);
+  const vaultExists = vaultsObj?.BackupVaultList?.some((vault) => vault.BackupVaultName === config.vaultName);
+  hourglass(0);
+  const roles = await awsCommand([`iam`, `list-roles`]);
+  const roleExists = roles?.Roles?.some((role) => role.RoleName === config.backupRole);
+  hourglass(1);
+  let awsBackupRestorePolicy = false;
+  if (roleExists) {
+    const policies = await awsCommand([`iam`, 'list-attached-role-policies', `--role-name`, config.backupRole]);
+    awsBackupRestorePolicy = policies?.AttachedPolicies?.some(
+      (policy) => policy.PolicyName === 'AWSBackupServiceRolePolicyForRestores'
+    );
+  }
+  hourglass(0);
+
+  // Check environment matches AWS credentials
+  if (config.environment != account) {
+    errors.push(
+      `Your configured environment [${config.environment}] does not match the AWS account environment [${account}] identified by your AWS credentials.`
+    );
+  }
+
+  // Check vault name exists in AWS Backups
+  if (!vaultExists) {
+    errors.push(`The vault [${config.vaultName}] does not exist in AWS Backup.`);
+  }
+
+  // Check vault name exists in AWS Backups
+  if (!roleExists) {
+    errors.push(`The backup and restore role [${config.backupRole}] does not exist in AWS.`);
+  }
+
+  // Check if AWSBackupServiceRolePolicyForRestores policy exists on the backupRole
+  if (!awsBackupRestorePolicy) {
+    errors.push(
+      `The role [${config.backupRole}] does not have the required policy [AWSBackupServiceRolePolicyForRestores] and can't restore from AWS Backup.`
+    );
+  }
+
+  // Check that timeout is a number
   if (!Number.isInteger(config.timeout)) {
     errors.push('Timeout must be an integer');
   } else if (config.timeout !== -1 && config.timeout <= 0) {
     errors.push('Timeout must be -1 or a positive integer');
   }
 
-  // Validate vaultName
-  if (!config.vaultName || typeof config.vaultName !== 'string') {
-    errors.push('Vault name must be a non-empty string');
-  }
-
-  // Validate backupRole
-  if (!config.backupRole || typeof config.backupRole !== 'string') {
-    errors.push('Backup role must be a non-empty string');
-  }
-
   return {
     isValid: errors.length === 0,
     errors: errors
   };
-}
-
-/**
- * Gets all the AWS Backups for a table.
- *
- * @param   {String} chosenTable - the selected table to be backed up
- * @returns {Object} AWS response with backups details
- *
- */
-async function getRecoveryPointsAWSBackupsByTable(chosenTable) {
-  try {
-    let backupsObj = await awsCommand([
-      'backup',
-      'list-recovery-points-by-backup-vault',
-      '--backup-vault-name',
-      `${vaultName}`,
-      '--by-resource-type',
-      'DynamoDB'
-    ]);
-
-    // Filter by recovery points where it matches the user's chosen table
-    let backups = backupsObj.RecoveryPoints.filter((recoverPoints) => recoverPoints.ResourceName === chosenTable);
-
-    return backups;
-  } catch (error) {
-    throw error;
-  }
 }
 
 /**
@@ -294,42 +269,48 @@ async function checkTableExists(chosenTable, shouldExist) {
   // or timeout is reached (if set in config)
   while (exists !== shouldExist && (waitIndefinitely || t < timeout)) {
     outputTimeUpdate(t);
+    t++;
 
     // Check every 5 seconds if table has been restored
-    if (t == 0 || t % 5 == 0) {
-      try {
-        const tables = await listTables();
+    if (t % 5 == 0) {
+      let tablesObj = await awsCommand(['dynamodb', 'list-tables']);
+      let tables = tablesObj.TableNames;
 
-        // Check that the table exists. Table might show that it exists using list-tables
-        // but it might still be loading.
-        if (tables.length > 0) {
-          tableListed = tables.some((table) => table == chosenTable);
-        }
+      // Check that the table exists. Table might show that it exists using list-tables
+      // but it might still be loading.
+      if (tables.length > 0) {
+        tableListed = tables.some((table) => table == chosenTable);
+      }
 
-        // We flag if the table is missing and shouldExist is false because
-        // this would mean it's deleted and we can send back the response now
-        if (tableListed == false && shouldExist == false) {
-          return false;
-        }
+      // We flag if the table is missing and shouldExist is false because
+      // this would mean it's deleted and we can send back the response now
+      if (tableListed == false && shouldExist == false) {
+        return false;
+      }
 
-        if (tableListed) {
-          const tableDescription = await describeTable(chosenTable);
+      outputTimeUpdate(t);
 
-          const tableStatus = tableDescription.TableStatus;
-
-          if (tableStatus == 'ACTIVE') {
-            exists = true;
+      if (tableListed) {
+        let tableStatus;
+        try {
+          const tableDescription = await awsCommand(['dynamodb', 'describe-table', '--table-name', chosenTable]);
+          tableStatus = tableDescription?.Table?.TableStatus;
+        } catch (error) {
+          // If we're looking for a table and it's not found, then it's been deleted
+          if (error.name === 'ResourceNotFoundException') {
+            exists = false;
           }
         }
-        outputTimeUpdate(t);
-      } catch (error) {
-        console.log('error', error);
-        throw error;
+
+        if (tableStatus == 'ACTIVE') {
+          exists = true;
+        }
+
+        t++;
       }
     } else {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
-    t++;
   }
 
   // Only get here after timeout, offer user to keep waiting
@@ -352,44 +333,6 @@ async function checkTableExists(chosenTable, shouldExist) {
 }
 
 /**
- * Checks if Deletion Protection is enabled for table.
- *
- * @param   {String}  chosenTable - the selected table to check
- * @returns {Boolean} confirms if Deletion Protection is enabled for a table
- *
- */
-async function checkDeletionProtectionEnabled(chosenTable) {
-  try {
-    let checkDelPro = await awsCommand(['dynamodb', 'describe-table', '--table-name', chosenTable]);
-
-    return checkDelPro.Table.DeletionProtectionEnabled;
-  } catch (error) {
-    throw error;
-  }
-}
-
-/**
- * Checks that Point-in-Time Recovery is enabled for table
- *
- * @param   {String}  tableName - the selected table to check
- * @returns {Boolean} confirms if PITR is enabled for a table
- *
- */
-async function checkPitrEnabled(tableName) {
-  try {
-    let checkPitr = await awsCommand(['dynamodb', 'describe-continuous-backups', '--table-name', tableName]);
-
-    if (checkPitr.ContinuousBackupsDescription.ContinuousBackupsStatus == 'ENABLED') {
-      return true;
-    }
-
-    return false;
-  } catch (error) {
-    throw error;
-  }
-}
-
-/**
  * Clean up what's been created and lingering in AWS. The only table this deletes
  * is the duplicated table from PITR, otherwise it deletes any backups from the
  * other processes.
@@ -402,253 +345,82 @@ async function checkPitrEnabled(tableName) {
  *
  */
 async function cleanAndExit(ops) {
-  try {
-    /*************************************************************
-     * Cleaning up the duplicated table from PITR                *
-     *************************************************************/
-    if (ops.duplicate?.response && ops.duplicate?.response !== null) {
-      process.stdout.write(`\n🪣  CLEANING the duplicate [${ops.duplicate.response.TableDescription.TableName}]...`);
-      // Check the newly created duplicate exists still
-      let duplicateExists = await checkTableExists(ops.duplicate.response.TableDescription.TableName, true);
+  /*************************************************************
+   * Cleaning up the duplicated table from PITR                *
+   *************************************************************/
+  if (ops.duplicate?.response && ops.duplicate?.response !== null) {
+    process.stdout.write(`\n🪣  CLEANING the duplicate [${ops.duplicate.response.TableDescription.TableName}]...`);
+    // Check the newly created duplicate exists still
+    let duplicateExists = await checkTableExists(ops.duplicate.response.TableDescription.TableName, true);
 
-      if (!duplicateExists) {
-        console.log(
-          `\n🗂️  Duplicate with name [${ops.duplicate.response.TableDescription.TableName}]. Has it already been deleted?`
-        );
-      } else {
-        await deleteTable(ops.duplicate.response.TableDescription.TableName);
-      }
-      updateConfirmMessage();
-    }
-
-    /*************************************************************
-     * Cleaning up any of the original table's DynamoDB Backups  *
-     * but ONLY if the original table exists in DynamoDB         *                          *
-     *************************************************************/
-    const tables = await listTables();
-    let tableListed = false;
-    // Check that the table exists. Table might show that it exists using list-tables
-    // but it might still be loading.
-    if (tables.length > 0) {
-      tableListed = tables.some((table) => table == ops.backupDynamoOG?.sourceTable);
-    }
-
-    if (tableListed && ops.backupDynamoOG?.response && ops.backupDynamoOG?.response !== null) {
-      process.stdout.write(`\n🪣  CLEANING the original backup [${ops.backupDynamoOG.response.BackupName}]...`);
-      // Check the newly created backup exists still
-      let backupExistsOG = await checkBackupExistsInDynamo(
-        ops.backupDynamoOG.sourceTable,
-        ops.backupDynamoOG.response.BackupName
+    if (!duplicateExists) {
+      console.log(
+        `\n🗂️  Duplicate with name [${ops.duplicate.response.TableDescription.TableName}]. Has it already been deleted?`
       );
-
-      // If it doesn't exist, then it means it wasn't created for some reason.
-      if (!backupExistsOG) {
-        console.log(`\n💾 Backup with name [${ops.backupDynamoOG.backupName}] has already been deleted.`);
-      } else {
-        await deleteDynamoBackup(ops.backupDynamoOG.response.BackupArn);
-      }
-      updateConfirmMessage();
-    } else if (ops.backupDynamoOG?.sourceTable) {
-      process.stdout.write(`\n❗ Did not find original table [${ops.backupDynamoOG?.sourceTable}]`);
-      process.stdout.write(`\n❗ SKIPPING DELETING the backup [${ops.backupDynamoOG?.response.BackupName}]...`);
+    } else {
+      await awsCommand(['dynamodb', 'delete-table', '--table-name', ops.duplicate.response.TableDescription.TableName]);
     }
-
-    /*************************************************************
-     * Cleaning up any of the duplicate table's DynamoDB Backups *
-     *************************************************************/
-    if (ops.backupDynamoDupe?.response && ops.backupDynamoDupe?.response !== null) {
-      process.stdout.write(`\n🪣  CLEANING the duplicate backup [${ops.backupDynamoDupe.response.BackupName}]...`);
-      // Check the newly created backup exists still
-      let backupExistsDupe = await checkBackupExistsInDynamo(
-        ops.backupDynamoDupe.sourceTable,
-        ops.backupDynamoDupe.backupName
-      );
-
-      // If it doesn't exist, then it means it wasn't created for some reason.
-      if (!backupExistsDupe) {
-        console.log(`\n💾 Backup with name [${ops.backupDynamoDupe.response.BackupName}] has already been deleted.`);
-      } else {
-        await deleteDynamoBackup(ops.backupDynamoDupe.response.BackupArn);
-      }
-      updateConfirmMessage();
-    }
-
-    console.log('\n✅ Finished cleaning.');
-  } catch (error) {
-    throw error;
+    updateConfirmMessage();
   }
+
+  /*************************************************************
+   * Cleaning up any of the original table's DynamoDB Backups  *
+   * but ONLY if the original table exists in DynamoDB         *                          *
+   *************************************************************/
+  let tablesObj = await awsCommand(['dynamodb', 'list-tables']);
+  let tables = tablesObj.TableNames;
+
+  let tableListed = false;
+  // Check that the table exists. Table might show that it exists using list-tables
+  // but it might still be loading.
+  if (tables.length > 0) {
+    tableListed = tables.some((table) => table == ops.backupDynamoOG?.sourceTable);
+  }
+
+  if (tableListed && ops.backupDynamoOG?.response && ops.backupDynamoOG?.response !== null) {
+    process.stdout.write(`\n🪣  CLEANING the original backup [${ops.backupDynamoOG.response.BackupName}]...`);
+    // Check the newly created backup exists still
+    let backupExistsOG = await checkBackupExistsInDynamo(
+      ops.backupDynamoOG.sourceTable,
+      ops.backupDynamoOG.response.BackupName
+    );
+
+    // If it doesn't exist, then it means it wasn't created for some reason.
+    if (!backupExistsOG) {
+      console.log(`\n💾 Backup with name [${ops.backupDynamoOG.backupName}] has already been deleted.`);
+    } else {
+      await awsCommand(['dynamodb', 'delete-backup', '--backup-arn', ops.backupDynamoOG.response.BackupArn]);
+    }
+    updateConfirmMessage();
+  } else if (ops.backupDynamoOG?.sourceTable) {
+    console.log(`\n❗ Did not find original table [${ops.backupDynamoOG?.sourceTable}]`);
+    console.log(`\n❗ SKIPPING DELETING the backup [${ops.backupDynamoOG?.response.BackupName}]...`);
+  }
+
+  /*************************************************************
+   * Cleaning up any of the duplicate table's DynamoDB Backups *
+   *************************************************************/
+  if (ops.backupDynamoDupe?.response && ops.backupDynamoDupe?.response !== null) {
+    process.stdout.write(`\n🪣  CLEANING the duplicate backup [${ops.backupDynamoDupe.response.BackupName}]...`);
+    // Check the newly created backup exists still
+    let backupExistsDupe = await checkBackupExistsInDynamo(
+      ops.backupDynamoDupe.sourceTable,
+      ops.backupDynamoDupe.backupName
+    );
+
+    // If it doesn't exist, then it means it wasn't created for some reason.
+    if (!backupExistsDupe) {
+      console.log(`\n💾 Backup with name [${ops.backupDynamoDupe.response.BackupName}] has already been deleted.`);
+    } else {
+      await awsCommand(['dynamodb', 'delete-backup', '--backup-arn', ops.backupDynamoDupe.response.BackupArn]);
+    }
+    updateConfirmMessage();
+  }
+
+  console.log('\n✅ Finished cleaning.');
 
   console.log('\n✨ Reached the end of the process. ✨');
   await backToMenuOrExit();
-}
-
-/**
- * Let the user decide which backup they would like to restore from AWS Backups.
- *
- * @param   {String} chosenTable - the selected table used to look for backups
- * @param   {Array}  backups - the backups available from AWS Backups
- * @param   {String} manual - a flag to discern if this is a manual backup or part of
- *                   the AWS Backup Snapshot process. Only difference is console log at
- *                   the end of the function.
- * @returns {Object} the user-selected object from the backups array
- */
-async function confirmAWSBackupChoice(chosenTable, backups, manual = true) {
-  let currentTime = DateTime.now().toISO();
-  console.log(`\n🔍 Looking at the AWS Backups for [${chosenTable}]...`);
-
-  // Continue asking the user until they've decided on a backup choice.
-  while (true) {
-    try {
-      console.log(`\n*-------------------------------*                                   `);
-      console.log(`|  💾 CHOOSE A BACKUP 💾        |                                   `);
-      console.log(`|------------------------------------------------------------------*`);
-      console.log('|  Backup # |  Date         |  Name                     |  Storage |');
-      console.log(`|------------------------------------------------------------------|`);
-
-      for (let i = 0; i < backups.length; i++) {
-        // Make sure the backups are completed and match table
-        if (backups[i].Status === 'COMPLETED' && backups[i].ResourceName === chosenTable) {
-          let dateTime = DateTime.fromISO(backups[i].CompletionDate).toFormat('LLL dd yyyy');
-          let resource = backups[i].ResourceName;
-          let resourceLength = resource.length;
-          // Trim resource names that are too long
-          resource = resourceLength >= 25 ? resource.slice(0, 21) + '...' : resource;
-
-          // Share if it's cold or warm storage
-          let storageType = '-';
-          let coldStorageTime = backups[i].CalculatedLifecycle.MoveToColdStorageAt;
-          if (coldStorageTime < currentTime) {
-            storageType = 'Cold ⛄';
-          } else {
-            storageType = 'Warm 🔥';
-          }
-
-          console.log(
-            `|     ${i + 1}     |  ${dateTime}  |  ${resource}${Array(
-              25 - (resourceLength < 25 ? resourceLength : 24)
-            ).join(' ')} |  ${storageType} |`
-          );
-        } else {
-          console.log(`  No backups available for [${chosenTable}]!`);
-          console.log(`|------------------------------------------------------------------|`);
-          console.log('|  Try rerunning the script. 👋 Exiting...');
-          console.log(`*------------------------------------------------------------------*`);
-          exit();
-        }
-      }
-      console.log(`|------------------------------------------------------------------|`);
-      console.log(`| ⛄ Cold storage type takes -SIGNIFICANTLY- longer to restore ⛄  |`);
-      console.log(`*------------------------------------------------------------------*`);
-
-      // User selects the backup they want to provide for restore
-      let chosenBackup = await getNumberInput(`\n💾 Which [${chosenTable}] backup would you like to restore from?`, [
-        backups.length
-      ]);
-
-      // Warn users about cold storage restore times
-      let coldStorageTime = backups[chosenBackup - 1].CalculatedLifecycle.MoveToColdStorageAt;
-      if (coldStorageTime < currentTime) {
-        confirmedColdStorage = await getConsoleInput(
-          `\n⛄❗ Please note that restore from cold storage can take SEVERAL hours - continue?`,
-          ['y', 'n']
-        );
-
-        // User changes their mind on which backup they want to use
-        if (confirmedColdStorage == 'n') {
-          console.log('Please select another backup.');
-          continue;
-        }
-      }
-
-      // Only show this message if it's the full AWS Snapshot restore.
-      if (!manual) {
-        console.log(`\n*-------------------------------*                                 `);
-        console.log(`| ❗ READ BEFORE CONTINUING ❗  |                                   `);
-        console.log(`|------------------------------------------------------------------*`);
-        console.log(`|  In order to recreate a table from AWS Backup, this script will: |`);
-        console.log(`|------------------------------------------------------------------|`);
-        console.log(`|  1. BACKUP   the original to DynamoDB as a fallback.             |`);
-        console.log(`|  1. DELETE   the original table                                  |`);
-        console.log(`|              > CONFIRM: check if Deletion Protection is enabled. |`);
-        console.log(`|              >CONFIRM: the table again before deletion.          |`);
-        console.log(`|  2. RESTORE  the original from the backup                        |`);
-        console.log(`*------------------------------------------------------------------*`);
-      }
-
-      // Confirm they want to continue with this restore choice
-      let chosenBackupNumber = DateTime.fromISO(backups[chosenBackup - 1].CompletionDate).toFormat('LLL dd yyyy');
-      let confirmBackup = await getConsoleInput(
-        `\n⭐ Confirm you want to restore [${chosenTable}] from [${chosenBackupNumber}] and continue?`,
-        ['y', 'n']
-      );
-
-      // User changes their mind on which backup they want to use
-      if (confirmBackup == 'n') {
-        console.log('Please select another backup.');
-        continue;
-      }
-
-      return backups[chosenBackup - 1];
-    } catch (error) {
-      throw error;
-    }
-  }
-}
-
-/**
- * Let the user decide which backup they would like to restore from DynamoDB Backups.
- *
- * @param   {String} chosenTable - the selected table used to look for backups
- * @param   {Array}  backups - the backups available from DynamoDB Backups
- * @returns {Object} the user-selected object from the backups array
- */
-async function confirmDynamoBackupChoice(chosenTable, backups) {
-  console.log(`\n🔍 Looking at the Dynamo Backups for [${chosenTable}]...`);
-  try {
-    // If we have at least one backup, show the items
-    if (backups.length > 0) {
-      console.log(`\n*-------------------------------*                                   `);
-      console.log(`|  💾 CHOOSE A BACKUP 💾        |                                   `);
-      console.log(`|------------------------------------------------------------------*`);
-      console.log('|  Backup #  |  Date                    |  Backup Name             |');
-      console.log(`|------------------------------------------------------------------|`);
-      for (let i = 0; i < backups.length; i++) {
-        // Make sure the backups are completed and match table
-        if (backups[i].BackupStatus === 'AVAILABLE' && backups[i].TableName === chosenTable) {
-          let dateTime = DateTime.fromISO(backups[i].BackupCreationDateTime).toFormat('LLL dd yyyy - HH:mm:ss');
-          let backupName = backups[i].BackupName;
-          let backupNameLength = backups[i].BackupName.length;
-          backupName = backupNameLength >= 24 ? backupName.slice(0, 21) + '...' : backupName;
-
-          space = i < 9 ? '  ' : ' ';
-          console.log(`|     ${i + 1}${space}    |  ${dateTime}  |  ${backupName}|`);
-        }
-      }
-      console.log(`*------------------------------------------------------------------*`);
-    }
-
-    // User selects the backup they want to provide for restore
-    let chosenBackup = await getNumberInput(`\n💾 Which [${chosenTable}] backup would you like to restore from?`, [
-      backups.length
-    ]);
-
-    let chosenBackupNumber = DateTime.fromISO(backups[chosenBackup - 1].BackupCreationDateTime).toFormat(
-      'LLL dd yyyy - HH:mm:ss'
-    );
-    let confirmBackup = await getConsoleInput(
-      `\n⭐ Confirm you want to restore [${chosenTable}] from [${chosenBackupNumber}] and continue?`,
-      ['y', 'n']
-    );
-
-    // User changes their mind on which backup they want to use
-    if (confirmBackup == 'n') {
-      chosenBackup = await confirmDynamoBackupChoice(chosenTable, backups);
-    }
-
-    return backups[chosenBackup - 1];
-  } catch (error) {
-    throw error;
-  }
 }
 
 /**
@@ -662,7 +434,7 @@ async function confirmDynamoBackupChoice(chosenTable, backups) {
 async function confirmInitiateCleanup(ops) {
   while (true) {
     let initiatedCleanup = await getConsoleInput(
-      `\n🪣. Would you like to initiate the cleanup process? This will delete lingering resources created during the restore process. Although this will check (and double check again) and ensure tables are properly created/recreated, you may want to double check in AWS yourself before continuing, or skip this and delete manually in the AWS Console. Initiate cleanup here?`,
+      `\n🪣 Would you like to initiate the cleanup process? This will delete lingering resources created during the restore process. Although this will check (and double check again) and ensure tables are properly created/recreated, you may want to double check in AWS yourself before continuing, or skip this and delete manually in the AWS Console. Initiate cleanup here?`,
       ['y', 'n']
     );
 
@@ -674,315 +446,6 @@ async function confirmInitiateCleanup(ops) {
 }
 
 /**
- * Lets the user see available restore times for a table's Point-in-Time recovery.
- * User is offered the earliest restorable time and latest restorable time and must
- * select a date/time between them using the acceptable DateTime format.
- *
- * @param   {Object} pitrBackups - object from AWS that contains information about
- *                                a table's PITR options
- * @returns {String} a DateTime item in the format of 'LLL dd yyyy - HH:mm:ss'
- *
- */
-async function confirmPitrDateTime(chosenTable, pitrBackups) {
-  let backups = pitrBackups.PointInTimeRecoveryDescription;
-
-  // Convert backup times to a readable format, also the format expected to
-  // be entered by user
-  let earliestFormatted = DateTime.fromISO(backups.EarliestRestorableDateTime).toFormat(inputType);
-  let latestRestore = backups.LatestRestorableDateTime;
-  let latestFormatted = DateTime.fromISO(backups.LatestRestorableDateTime).toFormat(inputType);
-
-  console.log(`\n*-------------------------------*                                   `);
-  console.log(`|  🕑 CHOOSE A RESTORE TIME 🕑  |                                   `);
-  console.log(`|------------------------------------------------------------------*`);
-  console.log('|  Restorable Time              |  Date and Time                   |');
-  console.log(`|------------------------------------------------------------------|`);
-  console.log(`|  Earliest restorable time     |  ${earliestFormatted}          |`);
-  console.log(`|  Latest restorable time       |  ${latestFormatted}          |`);
-  console.log(`*------------------------------------------------------------------*`);
-
-  // Confirm the date/time from the user
-  let dateTimeInput = await getDateTimeInput(
-    `\n🕑 How early would you like to restore?`,
-    [inputType],
-    earliestFormatted,
-    latestFormatted
-  );
-
-  console.log(`\n*-------------------------------*                                   `);
-  console.log(`| ❗ READ BEFORE CONTINUING ❗  |                                   `);
-  console.log(`|------------------------------------------------------------------*`);
-  console.log(`|  In order to recreate a table from PITR, this script will:       |`);
-  console.log(`|------------------------------------------------------------------|`);
-  console.log(`|  1. DUPLICATE the original table from the desired PITR date/time.|`);
-  console.log(`|  2. BACKUP    the original to DynamoDB as a fallback.            |`);
-  console.log(`|  3. BACKUP    the duplicate table after it's created in Step 1.  |`);
-  console.log(`|  4. DELETE    the original table after it's backed up in Step 2. |`);
-  console.log(`|               > CONFIRM: check if Deletion Protection is enabled.|`);
-  console.log(`|               > CONFIRM: check again before deletion.            |`);
-  console.log(`|  5. RESTORE   the original table from the duplicate backup.      |`);
-  console.log(`|------------------------------------------------------------------|`);
-  console.log(`|  🕑 PITR and Deletion Protection will then be activated again 🔒 |`);
-  console.log(`*------------------------------------------------------------------*`);
-
-  confirmRestoreTime = await getConsoleInput(
-    `\n⭐ Confirm you want to restore [${chosenTable}] to [${dateTimeInput}] and continue?`,
-    ['y', 'n']
-  );
-
-  // Rerun if user changes mind about time
-  if (confirmRestoreTime == 'n') {
-    dateTimeInput = await confirmPitrDateTime(chosenTable, pitrBackups);
-  }
-  return dateTimeInput;
-}
-
-/**
- * Ask the user what type of recovery process they would like to initiate. This can be
- * PITR, AWS Snapshot, Create a Backup in DynamoDB Backups, Restore from DynamoDB Backups,
- * Restore from a backup in AWS Backups, Delete a Table in DynamoDB, Enable PITR or Enable
- * Deletion Protection
- *
- * @returns {String} user's selection
- *
- */
-async function confirmRestoreProcess() {
-  let confirmConfig = checkConfig(config);
-
-  // Exit if there is an issue with the config
-  if (!confirmConfig.isValid) {
-    console.error('\n❗ Errors with config.js:');
-    for (let error of confirmConfig.errors) {
-      console.error('\n❗', error);
-    }
-    console.error(`\n👋 Exiting...`);
-    exit();
-  }
-
-  let restoreOption;
-  while (true) {
-    try {
-      console.log(`\n*------------------------------------------------------------------*`);
-      console.log(`|  Disaster Recovery Initiated.                                    |`);
-      console.log(`|                                                                  |`);
-      console.log(`|  Environment: [${environment}]${Array(50 - environment.toString().length).join(' ')}|`);
-      console.log(`|  Vault Name:  [${vaultName}]${Array(50 - vaultName.length).join(' ')}|`);
-      console.log(`|  Backup Role: [${backupRole}]${Array(50 - backupRole.length).join(' ')}|`);
-      console.log(`|                                                                  |`);
-      console.log(`|  Please select a restore option from below.                      |`);
-      console.log(`*------------------------------------------------------------------*`);
-
-      console.log(`\n*------------------------*                                           `);
-      console.log(`|  AUTO RESTORE OPTIONS  |                                        `);
-      console.log(`|------------------------------------------------------------------*`);
-      console.log('|  Option |  Restore Type        |  Description                    |');
-      console.log('|------------------------------------------------------------------|');
-      console.log(`|    1    |     Point-in-Time    | Allows you to choose a date and |`);
-      console.log(`|         |    Recovery (PITR)   | precise time (up to the second) |`);
-      console.log(`|         |                      | to restore the table, from up   |`);
-      console.log(`|         |   est. time: ~20m    | to 35 days ago.                 |`);
-      console.log(`|------------------------------------------------------------------|`);
-      console.log(`|    2    |      AWS Backup      | Allows you to restore a table   |`);
-      console.log(`|         |       Snapshot       | from the last 12 months (this   |`);
-      console.log(`|         |                      | is SIGNIFICANTLY faster if it's |`);
-      console.log(`|         | est. time warm: ~20m | coming from warm storage).      |`);
-      console.log(`|         | est. time cold: ~2h  |                                 |`);
-      console.log(`*----------------------------------------------------------------- *`);
-      console.log(`*------------------------*                                           `);
-      console.log(`|  TABLE MANAGEMENT      |                                        `);
-      console.log(`|------------------------------------------------------------------*`);
-      console.log('|  Option |  Restore Type        |  Description                    |');
-      console.log('|------------------------------------------------------------------|');
-      console.log(`|    3    |  Create a Backup in  | Build a snapshot of a table and |`);
-      console.log(`|         |   DynamoDB Backups   | store it in DynamoDB Backups.   |`);
-      console.log('|------------------------------------------------------------------|');
-      console.log(`|    4    |     Restore from     | Create a new table from a       |`);
-      console.log(`|         |   DynamoDB Backups   | snapshot in DynamoDB Backups    |`);
-      console.log('|------------------------------------------------------------------|');
-      console.log(`|    5    |     Restore from     | Create a new table from a       |`);
-      console.log(`|         |      AWS Backup      | snapshot in AWS Backups         |`);
-      console.log('|------------------------------------------------------------------|');
-      console.log(`|    6    |    Delete a Table    | Delete a table in DynamoDB.     |`);
-      console.log(`|         |     in DynamoDB      | Check for Deletion Protection.  |`);
-      console.log(`|------------------------------------------------------------------|`);
-      console.log(`|    7    |   Enable Point-in-   | Enable Point-in-Time Recovery   |`);
-      console.log(`|         | Time Recovery (PITR) | for a table.                    |`);
-      console.log(`|------------------------------------------------------------------|`);
-      console.log(`|    8    |   Enable Deletion    | Enable Deletion Protection for  |`);
-      console.log(`|         |      Protection      | a table.                        |`);
-      console.log(`*------------------------------------------------------------------*`);
-
-      const restoreOptions = {
-        1: {
-          value: 'PITR',
-          message: `
-*------------------------------------------------------------------*
-|  Initiating POINT-IN-TIME RECOVERY option...                     |
-*------------------------------------------------------------------*`
-        },
-        2: {
-          value: 'BACKUP',
-          message: `
-*------------------------------------------------------------------*
-|  Initiating AWS BACKUP SNAPSHOT option...                        |
-*------------------------------------------------------------------*`
-        },
-        3: {
-          value: 'MANUAL_BACKUP',
-          message: `
-*------------------------------------------------------------------*
-|  Initializing MANUAL BACKUP option...                            |
-*------------------------------------------------------------------*`
-        },
-        4: {
-          value: 'MANUAL_RESTORE_DYNAMO',
-          message: `
-*------------------------------------------------------------------*
-|  Initializing RESTORE DYNAMODB BACKUPS option...                 |
-*------------------------------------------------------------------*`
-        },
-        5: {
-          value: 'MANUAL_RESTORE_AWS',
-          message: `
-*------------------------------------------------------------------*
-|  Initializing RESTORE AWS BACKUP option...                       |
-*------------------------------------------------------------------*`
-        },
-        6: {
-          value: 'DELETE_TABLE',
-          message: `
-*------------------------------------------------------------------*
-|  Initializing DELETE TABLE option...                             |
-*------------------------------------------------------------------*`
-        },
-        7: {
-          value: 'TURN_ON_PITR',
-          message: `
-*------------------------------------------------------------------*
-|  Initializing Turning on PITR...                                 |
-*------------------------------------------------------------------*`
-        },
-        8: {
-          value: 'TURN_ON_DELETION_PROTECTION',
-          message: `
-*------------------------------------------------------------------*
-|  Initializing Turning on DELETION PROTECTION...                  |
-*------------------------------------------------------------------*`
-        }
-      };
-
-      restoreOption = await getNumberInput(
-        '\n❔ Which option would you like to use?',
-        Object.keys(restoreOptions).length
-      );
-
-      // Print the restore option message and exit now that the user has
-      // made their Option
-      if (restoreOption in restoreOptions) {
-        console.log(restoreOptions[restoreOption].message);
-        restoreOption = restoreOptions[restoreOption].value;
-        break;
-      }
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  return restoreOption;
-}
-
-/**
- * Confirms the table from available tables in DynamoDB.
- *
- * @param   {Array}  tables - available table names in DynamoDB from the
- *                   current environment
- * @returns {String} the chosen table name from the tables array
- *
- */
-async function confirmTable(tables) {
-  let decided = false;
-
-  while (!decided) {
-    try {
-      console.log(`\n*-------------------------------*                                   `);
-      console.log(`|  🗂️  CHOOSE A TABLE 🗂️          |                                 `);
-      console.log(`|------------------------------------------------------------------*`);
-      console.log('|  Table #   |  Table Name                                         |');
-      console.log(`|------------------------------------------------------------------|`);
-
-      for (let i = 0; i < tables.length; i++) {
-        let tableLength = tables[i].length;
-        let extraSpace = i >= 9 ? ' ' : '  ';
-        console.log(
-          `|    ${extraSpace + (i + 1)}     |  ${tables[i]}${Array(52 - (tableLength < 52 ? tableLength : 51)).join(
-            ' '
-          )}|`
-        );
-      }
-      console.log(`*------------------------------------------------------------------*`);
-
-      // Confirm the table the user wants to use
-      chosenTable = await getNumberInput(`\n🗂️_ Please choose a table # to continue`, tables.length);
-
-      let confirmTable = await getConsoleInput(
-        `\n⭐ Confirm we are continuing with the [${tables[chosenTable - 1]}] table?`,
-        ['y', 'n']
-      );
-
-      if (confirmTable == 'y' || confirmTable == 'Y') {
-        decided = true;
-      }
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  return tables[chosenTable - 1];
-}
-
-/**
- * Confirms the table name from user-typed input. The user can enter any name
- * as long as it's an acceptable DynamoDB naming convention as outlined in getDynamoNameInput.
- *
- * @param   {Array}  tables -  dynamo table names from the environment
- * @returns {String} the chosen table name for restoring
- *
- */
-async function confirmTableName(tables) {
-  let confirmedName;
-  let chosenTable;
-  // Confirm name, ensure table name doesn't already exist
-  while (!confirmedName) {
-    chosenTable = await getDynamoNameInput(
-      `\n🖊  Enter the name of the table you'd like to restore. Only tables with matching backup names will be available for selection.`
-    );
-
-    confirmedName = await confirmToContinueYesNo(`\n⭐ Confirm the table name is [${chosenTable}]?`, ['y', 'n']);
-
-    // Check that the table doesn't already exist
-    if (confirmedName) {
-      process.stdout.write(`\n⏳ Checking if table name already exists...`);
-      tables = await listTables();
-      tableAlreadyExists = tables.some((table) => table == chosenTable);
-
-      // If table already exists, offer to send the user back to the menu
-      if (tableAlreadyExists) {
-        console.log(
-          '\n\n❗ Table already exists, please delete the table first or provide a different table name for restore.'
-        );
-        return new Promise(async () => {
-          await backToMainMenu();
-        });
-      } else {
-        updateConfirmMessage();
-      }
-    }
-  }
-
-  return chosenTable;
-}
-
-/**
  * Ask the user if they would like to complete an action (e.g. remove deletion
  * protection or confirm delete table); if yes, complete action; if no, exit.
  * This is an easier way to preserve history in ops and exit gracefully.
@@ -990,7 +453,7 @@ async function confirmTableName(tables) {
  * @param   {Array}    query - question for user to consider in console.
  * @param   {Array}    yesOrNo - yes or no, expected by getConsoleInput.
  * @param   {Function} action - optional action to be completed if a user continues.
- * @param   {Array}    args - the params for the action function
+ * @param   {Array}    args - the params for the optional action function
  * @returns {Boolean}  returns if action was completed or if user wishes to exit
  *
  */
@@ -1018,123 +481,6 @@ async function confirmToContinueYesNo(query, yesOrNo, action = null, args = []) 
 }
 
 /**
- * Delete a backup from DynamoDB Backups.
- *
- * @param   {String}  backupArn - the ARN for the backup to be deleted
- * @returns {Boolean} confirms the table is deleted
- *
- */
-async function deleteDynamoBackup(backupArn) {
-  try {
-    return await awsCommand(['dynamodb', 'delete-backup', '--backup-arn', backupArn]);
-  } catch (error) {
-    throw error;
-  }
-}
-
-/**
- * Delete a table in AWS.
- *
- * @param   {String} tableName - the selected table
- * @returns {Object} AWS object with table deletion details
- *
- */
-async function deleteTable(tableName) {
-  try {
-    return await awsCommand(['dynamodb', 'delete-table', '--table-name', tableName]);
-  } catch (error) {
-    throw error;
-  }
-}
-
-/**
- * Get the description of a table in DynamoDB.
- *
- * @param   {String} tableName - the selected table to describe
- * @returns {Object} AWS object with a table's configuration settings
- *
- */
-async function describeTable(tableName) {
-  try {
-    let tableConfig = await awsCommand(['dynamodb', 'describe-table', '--table-name', tableName]);
-    return tableConfig.Table;
-  } catch (error) {
-    throw error;
-  }
-}
-
-/**
- * Function to initiate creating the duplicate table from Point-in-Time.
- *
- * @param   {String} sourceTable - source table name
- * @param   {String} targetTable - name of the table being created as duplicate
- * @param   {String} dateTimeInputISO - DateTime in ISO format
- * @returns {Object} AWS response after creation
- *
- */
-async function duplicateTablePitr(sourceTable, targetTable, dateTimeInputISO) {
-  return await awsCommand([
-    'dynamodb',
-    'restore-table-to-point-in-time',
-    '--source-table-name',
-    sourceTable,
-    '--target-table-name',
-    targetTable,
-    '--restore-date-time',
-    dateTimeInputISO
-  ]);
-}
-
-/**
- * Enable Deletion Protection for a table
- *
- * @param   {String} targetTable - the selected table
- * @returns {Object} AWS response with the updated table information
- *
- */
-async function enableDeletionProtection(targetTable) {
-  try {
-    return await awsCommand(['dynamodb', 'update-table', '--table-name', targetTable, '--deletion-protection-enabled']);
-  } catch (error) {
-    throw error;
-  }
-}
-
-/**
- * Enable Point-in-Time Recovery for a table.
- *
- * @param   {String} targetTable - the selected table
- * @returns {Object} AWS response with ContinuousBackupsDescription
- *
- */
-async function enablePointInTimeRecovery(targetTable) {
-  try {
-    return await awsCommand([
-      'dynamodb',
-      'update-continuous-backups',
-      '--table-name',
-      targetTable,
-      '--point-in-time-recovery-specification',
-      'PointInTimeRecoveryEnabled=true'
-    ]);
-  } catch (error) {
-    throw error;
-  }
-}
-
-/**
- * Find and return all available tables in DynamoDB.
- *
- * @returns {Array} an array of available tables in DyanmoDB
- *
- */
-async function getAvailableTables() {
-  const tables = await listTables();
-  // Skip returning the BCGOV table
-  return tables.filter((table) => table !== 'BCGOV_IAM_USER_TABLE');
-}
-
-/**
  * Presents a console-based multiple-choice question to the user and validates their input.
  * Continues prompting until valid input is received or navigation commands are used.
  *
@@ -1153,7 +499,7 @@ async function getConsoleInput(query, options) {
   return new Promise((resolve) => {
     async function askQuestion() {
       activateReadline();
-      rlInterface.question(`${wrapQuery(query)} [${optionsPrint}]\n>> `, async (answer) => {
+      rlInterface.question(`${lineWrap(query)} [${optionsPrint}]\n>> `, async (answer) => {
         if (options.includes(answer.toLowerCase())) {
           rlInterface.close();
           resolve(answer);
@@ -1169,10 +515,54 @@ async function getConsoleInput(query, options) {
           askQuestion();
         } else {
           console.error(
-            wrapQuery(
+            lineWrap(
               `\nInvalid option - please enter [${optionsPrint}]. Alternatively, you can type 'help' to open a help menu, type 'menu' for the main menu, or type 'exit' to end process.`
             )
           );
+          rlInterface.close();
+          askQuestion();
+        }
+      });
+    }
+
+    rlInterface.close();
+    askQuestion();
+  });
+}
+
+/**
+ * Presents a console-based question to the user and validates their typed DateTime input.
+ * Continues prompting until valid input is received or navigation commands are used.
+ *
+ * @param   {String} query - the question for the user to answer
+ * @param   {String} dtOptions - the DateTime format the user can provide
+ * @returns {Promise} resolves with the user's DateTime input
+ *
+ */
+async function getDateTimeInput(query, dtOptions, earliestFormatted, latestFormatted) {
+  return new Promise((resolve) => {
+    async function askQuestion() {
+      activateReadline();
+      rlInterface.question(`${query} ${dtOptions}\n>> `, (answer) => {
+        answer = answer.trim();
+
+        // Check that the entered DateTime meets the LLL dd yyyy - HH:mm:ss format
+        dateTimePattern = /^[a-zA-Z]{3}\s\d{2}\s\d{4}\s-\s\d{2}:\d{2}:\d{2}$/;
+
+        // Check if date and time input is not within the constraints
+        if (answer >= earliestFormatted && answer <= latestFormatted) {
+          resolve(answer);
+        } else if (answer == 'exit') {
+          console.log(`\n👋 Exiting...`);
+          exit();
+        } else if (!dateTimePattern.test(answer)) {
+          console.error(`\nInvalid time format, must be format:  LLL dd yyyy - HH:mm:ss`);
+          console.error(`Please try again or type 'exit' to end process.\n`);
+          rlInterface.close();
+          askQuestion();
+        } else {
+          console.error(`\nInvalid time, must be between [${earliestFormatted}] and [${latestFormatted}]`);
+          console.error(`Please try again or type 'exit' to end process.\n`);
           rlInterface.close();
           askQuestion();
         }
@@ -1224,50 +614,6 @@ async function getDynamoNameInput(query) {
 }
 
 /**
- * Presents a console-based question to the user and validates their typed DateTime input.
- * Continues prompting until valid input is received or navigation commands are used.
- *
- * @param   {String} query - the question for the user to answer
- * @param   {String} dtOptions - the DateTime format the user can provide
- * @returns {Promise} resolves with the user's DateTime input
- *
- */
-async function getDateTimeInput(query, dtOptions, earliestFormatted, latestFormatted) {
-  return new Promise((resolve) => {
-    async function askQuestion() {
-      activateReadline();
-      rlInterface.question(`${query} ${dtOptions}\n>> `, (answer) => {
-        answer = answer.trim();
-
-        // Check that the entered DateTime meets the LLL dd yyyy - HH:mm:ss format
-        dateTimePattern = /^[a-zA-Z]{3}\s\d{2}\s\d{4}\s-\s\d{2}:\d{2}:\d{2}$/;
-
-        // Check if date and time input is not within the constraints
-        if (answer >= earliestFormatted && answer <= latestFormatted) {
-          resolve(answer);
-        } else if (answer == 'exit') {
-          console.log(`\n👋 Exiting...`);
-          exit();
-        } else if (!dateTimePattern.test(answer)) {
-          console.error(`\nInvalid time format, must be format:  LLL dd yyyy - HH:mm:ss`);
-          console.error(`Please try again or type 'exit' to end process.\n`);
-          rlInterface.close();
-          askQuestion();
-        } else {
-          console.error(`\nInvalid time, must be between [${earliestFormatted}] and [${latestFormatted}]`);
-          console.error(`Please try again or type 'exit' to end process.\n`);
-          rlInterface.close();
-          askQuestion();
-        }
-      });
-    }
-
-    rlInterface.close();
-    askQuestion();
-  });
-}
-
-/**
  * Presents a console-based, multiple-choice question to the user and validates their input.
  * Continues prompting until valid input is received or navigation commands are used.
  *
@@ -1293,53 +639,15 @@ async function getNumberInput(query, numberOptions) {
     // Not a number
     if (!choice.trim()) {
       throw `Please enter a valid number.`;
-      continue;
     }
 
     const num = Number(choice);
 
     if (isNaN(num) || !isFinite(num)) {
       throw `That's not a valid number. Please try again.`;
-      continue;
     }
 
     return num;
-  }
-}
-
-/**
- * Fetches the available Point-in-Time Recovery options for a table
- *
- * @param   {String} tableName - the selected table
- * @returns {Object} AWS response with the PITR options for a table
- *
- */
-async function getPitr(tableName) {
-  console.log(`\n🔍 Looking at Point-in-Time Recovery for [${tableName}]...`);
-  let backups;
-  try {
-    let checkTables = await awsCommand(['dynamodb', 'describe-continuous-backups', '--table-name', tableName]);
-    backups = checkTables.ContinuousBackupsDescription;
-  } catch (error) {
-    throw error;
-  }
-
-  return backups;
-}
-
-/**
- * Fetches all the DynamoDB tables in the AWS environment
- * @returns {Array}  dynamo table names from the AWS environment
- *
- */
-async function listTables() {
-  try {
-    let tablesObj = await awsCommand(['dynamodb', 'list-tables']);
-    let tables = tablesObj.TableNames;
-
-    return tables;
-  } catch (error) {
-    throw error;
   }
 }
 
@@ -1396,79 +704,6 @@ function outputTimeUpdate(t) {
 
   process.stdout.cursorTo(cursorIndex);
   process.stdout.write(`${messageOutput}`);
-}
-
-/**
- * Remove Deletion Protection from a table.
- *
- * @param   {String} chosenTable - the selected table
- * @returns {Object} AWS response regarding the chosenTable table
- *
- */
-async function removeDeletionProtection(chosenTable) {
-  try {
-    return await awsCommand([
-      'dynamodb',
-      'update-table',
-      '--table-name',
-      chosenTable,
-      '--no-deletion-protection-enabled'
-    ]);
-  } catch (error) {
-    throw error;
-  }
-}
-
-/**
- * Restore a table from a backup in AWS Backup.
- *
- * @param   {String} targetTable - the selected table
- * @param   {Object} backupObj - an AWS backup object
- * @returns {Object} AWS response with details of the restored table
- */
-async function restoreFromAWSBackup(targetTable, backupObj) {
-  try {
-    return await awsCommand([
-      'backup',
-      'start-restore-job',
-      '--recovery-point-arn',
-      backupObj.RecoveryPointArn,
-      '--metadata',
-      `TargetTableName=${targetTable}`,
-      '--iam-role-arn',
-      `arn:aws:iam::${environment}:role/${backupRole}`
-    ]);
-  } catch (error) {
-    throw error;
-  }
-}
-
-/**
- * Restore a table from a backup in DynamoBackup.
- *
- * @param   {String} targetTable - the selected table
- * @param   {String} backupName - the selected backup name
- *
- */
-async function restoreFromDynamoBackup(targetTable, backupName) {
-  let backups = await awsCommand(['dynamodb', 'list-backups']);
-
-  // Find the backup
-  let backup = backups.BackupSummaries.find((item) => item.BackupName == backupName);
-  let backupArn = backup.BackupArn;
-
-  try {
-    return await awsCommand([
-      'dynamodb',
-      'restore-table-from-backup',
-      '--target-table-name',
-      targetTable,
-      '--backup-arn',
-      backupArn
-    ]);
-  } catch (error) {
-    throw error;
-  }
 }
 
 /**
@@ -1630,15 +865,21 @@ function updateConfirmMessage() {
  *
  */
 
-function wrapQuery(query, maxLength = 68) {
+function lineWrap(query, maxLength = 68) {
   const words = query.split(/\s+/);
   let result = [];
   let currentLine = '';
   let charCount = 0;
 
   for (let i = 0; i < words.length; i++) {
-    const word = words[i];
+    let word = words[i];
     const wordLength = word.length;
+
+    // Some emojis need extra spaces
+    emojis = ['💾', '⭐', '❔', '❗'];
+    if (/\p{Extended_Pictographic}/u.test(word) && !emojis.some((emoji) => word.includes(emoji))) {
+      word = word + ' ';
+    }
 
     if (charCount + wordLength > maxLength) {
       // If adding the word would exceed the limit, start a new line
@@ -1675,34 +916,18 @@ module.exports = {
   awsCommand,
   backToMainMenu,
   backToMenuOrExit,
-  backupTableOnDemandDynamo,
   checkAndUpdate,
   checkBackupExistsInDynamo,
-  checkDeletionProtectionEnabled,
-  checkPitrEnabled,
+  checkConfig,
   checkTableExists,
   cleanAndExit,
-  confirmAWSBackupChoice,
-  confirmDynamoBackupChoice,
   confirmInitiateCleanup,
-  confirmPitrDateTime,
-  confirmRestoreProcess,
-  confirmTable,
-  confirmTableName,
   confirmToContinueYesNo,
-  DateTime,
-  deleteTable,
-  describeTable,
-  duplicateTablePitr,
-  enableDeletionProtection,
-  enablePointInTimeRecovery,
   exit,
-  getAvailableTables,
   getConsoleInput,
-  getPitr,
-  getRecoveryPointsAWSBackupsByTable,
-  removeDeletionProtection,
-  restoreFromAWSBackup,
-  restoreFromDynamoBackup,
-  wrapQuery
+  getDateTimeInput,
+  getDynamoNameInput,
+  getNumberInput,
+  updateConfirmMessage,
+  lineWrap
 };

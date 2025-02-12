@@ -1,4 +1,4 @@
-const { checkAndUpdate, deleteTable } = require('../functions');
+const { awsCommand, checkAndUpdate } = require('../functions');
 
 /**
  * Executes the operation for table deletion and verifies the table no longer
@@ -12,7 +12,7 @@ const { checkAndUpdate, deleteTable } = require('../functions');
 async function opDeleteTable(deleteOp) {
   try {
     process.stdout.write(deleteOp.message);
-    deleteOp.response = await deleteTable(deleteOp.sourceTable);
+    deleteOp.response = await awsCommand(['dynamodb', 'delete-table', '--table-name', deleteOp.sourceTable]);
     // Verify that the table no longer exists, check should return false
     deleteOp.args = [deleteOp.sourceTable, false];
 

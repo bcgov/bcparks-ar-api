@@ -1,4 +1,4 @@
-const { backupTableOnDemandDynamo, checkAndUpdate } = require('../functions');
+const { awsCommand, checkAndUpdate } = require('../functions');
 
 /**
  * Executes the operation for backing up a table in DynamoDB Backups.
@@ -11,7 +11,15 @@ const { backupTableOnDemandDynamo, checkAndUpdate } = require('../functions');
 async function opDynamoBackup(backupOp) {
   try {
     process.stdout.write(backupOp.message);
-    backupOp.response = await backupTableOnDemandDynamo(backupOp.sourceTable, backupOp.backupName);
+    let backup = await awsCommand([
+      'dynamodb',
+      'create-backup',
+      '--table-name',
+      backupOp.sourceTable,
+      '--backup-name',
+      backupOp.backupName
+    ]);
+    backupOp.response = backup.BackupDetails;
 
     // Verify that the source table has a backup with the backup's name
     backupOp.args = [backupOp.sourceTable, backupOp.backupName];
