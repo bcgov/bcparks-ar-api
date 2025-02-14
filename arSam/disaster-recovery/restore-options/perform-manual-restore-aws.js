@@ -1,5 +1,5 @@
 const { DateTime } = require('luxon');
-const { awsCommand, backToMenuOrExit, getConsoleInput, getNumberInput } = require('../functions');
+const { awsCommand, backToMenuOrExit, getConsoleInput, getNumberInput, lineWrap } = require('../functions');
 
 const { opAWSRestore } = require('../operations/op-aws-backup-restore');
 
