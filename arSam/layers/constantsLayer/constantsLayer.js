@@ -10,12 +10,12 @@ const EXPORT_NOTE_KEYS = {
 
 const EXPORT_VARIANCE_CONFIG = {
   'Frontcountry Camping': {
-    winterCampingPartyNightsAttendanceStandard: 0.2,
-    winterCampingPartyNightsAttendanceSocial: 0.2,
     campingPartyNightsAttendanceStandard: 0.2,
     campingPartyNightsAttendanceSenior: 0.2,
     campingPartyNightsAttendanceSocial: 0.2,
     campingPartyNightsAttendanceLongStay: 0.2,
+    winterCampingPartyNightsAttendanceStandard: 0.2,
+    winterCampingPartyNightsAttendanceSocial: 0.2,
     campingPartyNightsRevenueGross: 0.2,
     secondCarsAttendanceStandard: 0.2,
     secondCarsAttendanceSenior: 0.2,
@@ -183,13 +183,13 @@ const CSV_SYSADMIN_SCHEMA = [
   },
   // Frontcountry Camping - Camping Party Nights - Winter
   {
-    column: 'Camping Party Nights - Winter - Standard',
+    column: 'Frontcountry Camping - Camping Party Nights - Winter - Standard',
     type: Number,
     width: 63,
     value: (report) => report.winterCampingPartyNightsAttendanceStandard,
   },
   {
-    column: 'Camping Party Nights - Winter - SSCFE',
+    column: 'Frontcountry Camping - Camping Party Nights - Winter - SSCFE',
     type: Number,
     width: 63,
     value: (report) => report.winterCampingPartyNightsAttendanceSocial,
@@ -758,6 +758,8 @@ MISSING_CSV_HEADERS = [
   'Frontcountry Camping - Camping Party Nights - Senior',
   'Frontcountry Camping - Camping Party Nights - Social Services Fee Exemption',
   'Frontcountry Camping - Camping Party Nights - Long Stay',
+  'Frontcountry Camping - Camping Party Nights - Winter - Standard',
+  'Frontcountry Camping - Camping Party Nights - Winter - Services Fee Exemption',
   'Frontcountry Camping - Camping Party Nights - Gross Revenue',
   'Frontcountry Camping - Second Cars - Standard',
   'Frontcountry Camping - Second Cars - Senior',
@@ -811,6 +813,8 @@ VARIANCE_CSV_SCHEMA = [
   'Frontcountry Camping - Camping Party Nights - Senior',
   'Frontcountry Camping - Camping Party Nights - Social Services Fee Exemption',
   'Frontcountry Camping - Camping Party Nights - Long Stay',
+  'Frontcountry Camping - Camping Party Nights - Winter - Standard',
+  'Frontcountry Camping - Camping Party Nights - Winter - Services Fee Exemption',
   'Frontcountry Camping - Camping Party Nights - Gross Revenue',
   'Frontcountry Camping - Second Cars - Standard',
   'Frontcountry Camping - Second Cars - Senior',

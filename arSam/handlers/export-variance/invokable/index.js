@@ -273,6 +273,8 @@ function createCSV(records) {
       record['campingPartyNightsAttendanceSenior'] || '',
       record['campingPartyNightsAttendanceSocial'] || '',
       record['campingPartyNightsAttendanceLongStay'] || '',
+      record['winterCampingPartyNightsAttendanceStandard'] || '',
+      record['winterCampingPartyNightsAttendanceSocial'] || '',
       record['campingPartyNightsRevenueGross'] || '',
       record['secondCarsAttendanceStandard'] || '',
       record['secondCarsAttendanceSenior'] || '',
