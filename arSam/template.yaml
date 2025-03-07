@@ -330,7 +330,7 @@ Resources:
   BundlesGetFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: handlers/bundles/GET
+      CodeUri: handlers/bundle/GET
       Handler: index.handler
       Runtime: nodejs20.x
       Environment:
