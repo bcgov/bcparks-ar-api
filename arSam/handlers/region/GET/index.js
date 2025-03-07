@@ -1,6 +1,5 @@
 
 const { runQuery, TABLE_NAME, sendResponse, logger } = require("/opt/baseLayer");
-const { roleFilter } = require("/opt/permissionLayer");
 
 exports.handler = async (event, context) => {
   logger.info("GET: Region");
