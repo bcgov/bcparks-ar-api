@@ -284,5 +284,36 @@
       "key": "MOCK_S3_KEY",
       "progressDescription": "",
       "lastSuccessfulJob": {}
+    },
+    "MOCK_REGION": {
+      "sk": "MOCK_REGION_ID",
+      "pk": "region",
+      "schema": "region",
+      "displayName": "Mock Region",
+      "lastUpdated": "2025-03-07T00:00:00.000Z"
+    },
+    "MOCK_SECTION": {
+      "sk": "MOCK_SECTION_ID",
+      "pk": "section::MOCK_REGION_ID",
+      "schema": "section",
+      "displayName": "Mock Section",
+      "regionId": "MOCK_REGION_ID",
+      "lastUpdated": "2025-03-07T00:00:00.000Z"
+    },
+    "MOCK_MANAGEMENT_AREA": {
+      "sk": "MOCK_MANAGEMENT_AREA_ID",
+      "pk": "managementArea::MOCK_REGION_ID::MOCK_SECTION_ID",
+      "schema": "managementArea",
+      "displayName": "Mock Management Area",
+      "regionId": "MOCK_REGION_ID",
+      "sectionId": "MOCK_SECTION_ID",
+      "lastUpdated": "2025-03-07T00:00:00.000Z"
+    },
+    "MOCK_BUNDLE": {
+      "sk": "MOCK_BUNDLE_ID",
+      "pk": "bundle",
+      "schema": "bundle",
+      "displayName": "Mock Bundle",
+      "lastUpdated": "2025-03-07T00:00:00.000Z"
     }
   }

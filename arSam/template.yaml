@@ -326,6 +326,37 @@ Resources:
             Method: PUT
             RestApiId: !Ref ApiDeployment
 
+
+  BundlesGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/bundles/GET
+      Handler: index.handler
+      Runtime: nodejs20.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: info
+      Layers:
+          - !Ref BaseLayer
+          - !Ref PermissionLayer
+      Policies:
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
+      Events:
+        bundlesGet:
+          Type: Api
+          Properties:
+            Path: /bundles
+            Method: GET
+            RestApiId: !Ref ApiDeployment
+        bundlesOptions:
+          Type: Api
+          Properties:
+            Path: /bundles
+            Method: OPTIONS
+            RestApiId: !Ref ApiDeployment
+
   CloudwatchAlarmFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -757,6 +788,36 @@ Resources:
             Auth:
               Authorizer: NONE
               OverrideApiAuth: true
+
+  RegionsGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/region/GET
+      Handler: index.handler
+      Runtime: nodejs20.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameAR
+          LOG_LEVEL: info
+      Layers:
+          - !Ref BaseLayer
+          - !Ref PermissionLayer
+      Policies:
+          - DynamoDBCrudPolicy:
+              TableName: !Ref TableNameAR
+      Events:
+        regionsGet:
+          Type: Api
+          Properties:
+            Path: /regions
+            Method: GET
+            RestApiId: !Ref ApiDeployment
+        regionsOptions:
+          Type: Api
+          Properties:
+            Path: /regions
+            Method: OPTIONS
+            RestApiId: !Ref ApiDeployment
 
   SubAreaGetFunction:
     Type: AWS::Serverless::Function
