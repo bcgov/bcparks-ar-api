@@ -419,18 +419,19 @@ function createCSV(missingRecords, fiscalYearEnd) {
               subAreaRow.push(missingRecord[bundle][park][`${year - 1}${month}`][item] || ''); // 1 year ago
               subAreaRow.push(missingRecord[bundle][park][date][item] || ''); // Current year
 
+              // Business rule change as of 2025-04-04
               // It is considered "missing data" when:
-              // the current year        DOES NOT exist OR it's 0
-              // the previous year       DOES exist,    AND it's not 0
-              // or the year before that DOES exist,    AND it's not 0
-              // or the year before that DOES exist,    AND it's not 0
+              // the current year        DOES NOT exist OR it's null or undefined
+              // the previous year       DOES exist,    AND it's not null or undefined
+              // or the year before that DOES exist,    AND it's not null or undefined
+              // or the year before that DOES exist,    AND it's not null or undefined
               if (
-                (!missingRecord[bundle][park][date][item] ||
+                (!missingRecord[bundle][park][date][item] ??
                   missingRecord[bundle][park][`${year}${month}`][item] == 0) &&
                 ((missingRecord[bundle][park][`${year - 1}${month}`][item] &&
-                  missingRecord[bundle][park][`${year - 1}${month}`][item] !== 0) ||
+                  missingRecord[bundle][park][`${year - 1}${month}`][item] !== 0) ??
                   (missingRecord[bundle][park][`${year - 2}${month}`][item] &&
-                    missingRecord[bundle][park][`${year - 2}${month}`][item] !== 0) ||
+                    missingRecord[bundle][park][`${year - 2}${month}`][item] !== 0) ??
                   (missingRecord[bundle][park][`${year - 3}${month}`][item] &&
                     missingRecord[bundle][park][`${year - 3}${month}`][item] !== 0))
               ) {
