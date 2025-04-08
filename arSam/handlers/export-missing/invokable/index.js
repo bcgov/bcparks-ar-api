@@ -302,9 +302,9 @@ function findMissingRecords(records, fiscalYearDates, activity, subAreaName) {
 
         const requiredFields = EXPORT_VARIANCE_CONFIG[activity];
 
-        // Check if the activity's fields have any values in the current record, or if the value is 0
+        // Check if the activity's fields have any values in the current record
         const missingFields = Object.keys(requiredFields).filter(
-          (field) => !Object.prototype.hasOwnProperty.call(recordCheck, field) || recordCheck[field] == 0
+          (field) => !Object.prototype.hasOwnProperty.call(recordCheck, field)
         );
 
         // Now that we know what fields are missing, check the previous years
