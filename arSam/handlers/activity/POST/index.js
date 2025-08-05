@@ -1,5 +1,5 @@
 const { DateTime } = require('luxon');
-const { 
+const {
   dynamoClient,
   PutItemCommand,
   DeleteItemCommand,
@@ -40,7 +40,7 @@ async function main(event, context, lock = null) {
     permissionObject.roles = JSON.parse(permissionObject?.roles);
     permissionObject.isAdmin = JSON.parse(permissionObject?.isAdmin || false);
     permissionObject.isAuthenticated = JSON.parse(permissionObject?.isAuthenticated || false);
-       
+
     if (!permissionObject.isAuthenticated) {
       logger.info("**NOT AUTHENTICATED, PUBLIC**");
       return sendResponse(403, { msg: "Error: UnAuthenticated." }, context);
@@ -360,13 +360,15 @@ async function handleActivity(body, lock = false, context) {
       KeyConditionExpression: 'pk =:pk AND sk =:sk',
     };
     const configData = (await runQuery(configObj))[0];
-    if (!configData?.orcs || !configData?.parkName) {
+    if (!configData?.orcs || !configData?.parkName || !configData?.subAreaName) {
       throw 'Malformed config object';
     }
+
     body['config'] = configData;
-    body['orcs'] = body['orcs'] ? body['orcs'] : configData.orcs;
-    body['parkName'] = body['parkName'] ? body['parkName'] : configData.parkName;
-    body['subAreaName'] = body['subAreaName'] ? body['subAreaName'] : configData.subAreaName;
+    // We should be using the config data for these fields. Do not allow override if included in body.
+    body['orcs'] =  configData.orcs;
+    body['parkName'] =  configData.parkName;
+    body['subAreaName'] = configData.subAreaName;
 
     body['pk'] = pk;
 
