@@ -302,9 +302,9 @@ function findMissingRecords(records, fiscalYearDates, activity, subAreaName) {
 
         const requiredFields = EXPORT_VARIANCE_CONFIG[activity];
 
-        // Check if the activity's fields have any values in the current record, or if the value is 0
+        // Check if the activity's fields have any values in the current record
         const missingFields = Object.keys(requiredFields).filter(
-          (field) => !Object.prototype.hasOwnProperty.call(recordCheck, field) || recordCheck[field] == 0
+          (field) => !Object.prototype.hasOwnProperty.call(recordCheck, field)
         );
 
         // Now that we know what fields are missing, check the previous years
@@ -414,29 +414,28 @@ function createCSV(missingRecords, fiscalYearEnd) {
             const month = date.slice(4);
 
             for (const item of flattenConfig(EXPORT_VARIANCE_CONFIG)) {
-              subAreaRow.push(missingRecord[bundle][park][`${year - 3}${month}`][item] || ''); // 3 years ago
-              subAreaRow.push(missingRecord[bundle][park][`${year - 2}${month}`][item] || ''); // 2 years ago
-              subAreaRow.push(missingRecord[bundle][park][`${year - 1}${month}`][item] || ''); // 1 year ago
-              subAreaRow.push(missingRecord[bundle][park][date][item] || ''); // Current year
-
+              //Get Value or default will return either the value or an empty string to add to row.
+              subAreaRow.push(getValueOrDefault(missingRecord[bundle][park][`${year - 3}${month}`][item])); // 3 years ago
+              subAreaRow.push(getValueOrDefault(missingRecord[bundle][park][`${year - 2}${month}`][item])); // 2 years ago
+              subAreaRow.push(getValueOrDefault(missingRecord[bundle][park][`${year - 1}${month}`][item])); // 1 year ago
+              subAreaRow.push(getValueOrDefault(missingRecord[bundle][park][date][item])); // current date
+              
+              // Business rule change as of 2025-04-04
               // It is considered "missing data" when:
-              // the current year        DOES NOT exist OR it's 0
-              // the previous year       DOES exist,    AND it's not 0
-              // or the year before that DOES exist,    AND it's not 0
-              // or the year before that DOES exist,    AND it's not 0
+              // the current year        DOES NOT exist OR it's null or undefined
+              // the previous year       DOES exist,    AND it's not null or undefined
+              // or the year before that DOES exist,    AND it's not null or undefined
+              // or the year before that DOES exist,    AND it's not null or undefined
               if (
-                (!missingRecord[bundle][park][date][item] ||
-                  missingRecord[bundle][park][`${year}${month}`][item] == 0) &&
-                ((missingRecord[bundle][park][`${year - 1}${month}`][item] &&
-                  missingRecord[bundle][park][`${year - 1}${month}`][item] !== 0) ||
-                  (missingRecord[bundle][park][`${year - 2}${month}`][item] &&
-                    missingRecord[bundle][park][`${year - 2}${month}`][item] !== 0) ||
-                  (missingRecord[bundle][park][`${year - 3}${month}`][item] &&
-                    missingRecord[bundle][park][`${year - 3}${month}`][item] !== 0))
+                (missingRecord[bundle][park][date][item] ?? '') === '' && // If current record is Null or Undefined &
+                (
+                  (missingRecord[bundle][park][`${year - 1}${month}`][item] ?? '') !== '' || // Year - 1 has data
+                  (missingRecord[bundle][park][`${year - 2}${month}`][item] ?? '') !== '' || // Year - 2 has data
+                  (missingRecord[bundle][park][`${year - 3}${month}`][item] ?? '') !== ''    // Year - 3 has data
+                )
               ) {
-                subAreaRow.push('Missing Data');
+                subAreaRow.push('Missing Data'); // It is missing Data add it to the row
               } else {
-                // Not missing data, add empty space to that column
                 subAreaRow.push('');
               }
             }
@@ -558,4 +557,9 @@ function convertMonth(monthNumber) {
   } else {
     return 'Invalid month number';
   }
+}
+
+function getValueOrDefault(record) {
+  //Return value of record or an empty string
+  return record !== undefined && record !== null ? record : '';
 }
