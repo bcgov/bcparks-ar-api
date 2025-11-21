@@ -32,3 +32,41 @@ warm_containers = "EAGER"
 
 [default.local_start_lambda.parameters]
 warm_containers = "EAGER"
+
+[lza-dev]
+[lza-dev.global.parameters]
+stack_name = "ar-api-lza-dev"
+
+[lza-dev.build.parameters]
+cached = false
+parallel = true
+
+[lza-dev.validate.parameters]
+lint = true
+
+[lza-dev.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+s3_prefix = "ar-api-lza-dev"
+region = "ca-central-1"
+image_repositories = []
+parameter_overrides = [
+  "TableNameAR=ParksAr-lza-dev",
+  "TableNameCacheAR=NameCacheAr-lza-dev",
+  "TableNameConfigAR=ConfigAr-lza-dev",
+  "S3BucketData=parks-ar-export-data-lza-dev",
+  "Stage=lza-dev"
+]
+
+[lza-dev.package.parameters]
+resolve_s3 = true
+
+[lza-dev.sync.parameters]
+watch = true
+
+[lza-dev.local_start_api.parameters]
+warm_containers = "EAGER"
+
+[lza-dev.local_start_lambda.parameters]
+warm_containers = "EAGER"

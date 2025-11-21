@@ -1,0 +1,96 @@
+name: Deploy AR API LZA Dev
+
+run-name: Deploying ${{ github.ref_name }} (API) to lza-dev
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "arSam/**"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-api:
+    runs-on: ubuntu-latest
+    environment: lza-dev
+    strategy:
+      max-parallel: 1
+      matrix:
+        node-version: [20.x]
+    defaults:
+      run:
+        working-directory: "./arSam"
+    steps:
+      ### Checkout GitHub Repo
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      ### Setup AWS SAM
+      - name: Setup AWS SAM
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      ### Assume AWS IAM Role
+      - name: Get AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-region: ${{ vars.AWS_REGION }}
+
+      ### SAM Build
+      - name: Cache SAM Build
+        id: cache-sam-build
+        uses: actions/cache@v3
+        with:
+          path: |
+            **arSam/.aws-sam
+          key: ${{ github.sha }}-arSam-sam-cache
+      - name: Run sam build
+        if: steps.cache-sam-build.outputs.cache-hit != 'true'
+        run: |
+          sam build --cached
+
+      ### SAM Deploy
+      - name: SAM deploy
+        env:
+          STAGE: ${{ vars.AR_API_STAGE }}
+          ACCOUNT_ID: ${{ vars.ACCOUNT_ID }}
+          AWS_ACCOUNT_LIST: ${{ vars.AWS_ACCOUNT_LIST }}
+          SSO_ISSUER: ${{ vars.SSO_ISSUER }}
+          SSO_JWKSURI: ${{ vars.SSO_JWKSURI }}
+          SSO_CLIENT_ID: ${{ secrets.SSO_CLIENT_ID }}
+          SSO_ORIGIN: ${{ vars.SSO_ORIGIN }}
+          S3_BUCKET_DATA: ${{ vars.S3_BUCKET_DATA }}
+          DATA_REGISTER_NAME_ENDPOINT: ${{ secrets.DATA_REGISTER_NAME_ENDPOINT }}
+          DATA_REGISTER_NAME_API_KEY: ${{ secrets.DATA_REGISTER_NAME_API_KEY }}
+          TABLE_NAME_AR: ${{ vars.TABLE_NAME_AR }}
+          TABLE_NAME_CACHE_AR: ${{ vars.TABLE_NAME_CACHE_AR }}
+          TABLE_NAME_CONFIG_AR: ${{ vars.TABLE_NAME_CONFIG_AR }}
+        run: |
+          sam deploy --config-env lza-dev --no-confirm-changeset --no-fail-on-empty-changeset --parameter-overrides \
+            "AccountId=$ACCOUNT_ID" \
+            "Stage=$STAGE" \
+            "SSOIssuerUrl=$SSO_ISSUER" \
+            "SSOJWKSUri=$SSO_JWKSURI" \
+            "SSOClientId=$SSO_CLIENT_ID" \
+            "SSOOrigin=$SSO_ORIGIN" \
+            "AWSAccountList=$AWS_ACCOUNT_LIST" \
+            "S3BucketData=$S3_BUCKET_DATA" \
+            "DataRegisterNameEndpoint=$DATA_REGISTER_NAME_ENDPOINT" \
+            "DataRegisterNameApiKey=$DATA_REGISTER_NAME_API_KEY" \
+            "TableNameAR=$TABLE_NAME_AR" \
+            "TableNameCacheAR=$TABLE_NAME_CACHE_AR" \
+            "TableNameConfigAR=$TABLE_NAME_CONFIG_AR"
+
+      ### Output API Gateway ID for reference
+      - name: Get API Gateway ID
+        run: |
+          API_ID=$(aws apigateway get-rest-apis --region ${{ vars.AWS_REGION }} --query 'items[?name==`ar-api-lza-dev`].id' --output text)
+          echo "API Gateway ID: $API_ID"
+          echo "::notice::API Gateway ID is $API_ID - update AR_API_ID variable in bcparks-ar-admin lza-dev environment"
