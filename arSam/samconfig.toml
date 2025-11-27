@@ -56,7 +56,10 @@ parameter_overrides = [
   "TableNameCacheAR=NameCacheAr-lza-dev",
   "TableNameConfigAR=ConfigAr-lza-dev",
   "S3BucketData=parks-ar-export-data-lza-dev",
-  "Stage=lza-dev"
+  "Stage=lza-dev",
+  "ExportFunctionName=ar-api-lza-dev-ExportInvokableFunction",
+  "VarianceExportFunctionName=ar-api-lza-dev-VarianceExportInvokableFunction",
+  "MissingExportFunctionName=ar-api-lza-dev-MissingExportInvokableFunction"
 ]
 
 [lza-dev.package.parameters]
@@ -94,7 +97,10 @@ parameter_overrides = [
   "TableNameCacheAR=NameCacheAr-lza-test",
   "TableNameConfigAR=ConfigAr-lza-test",
   "S3BucketData=parks-ar-export-data-lza-test",
-  "Stage=lza-test"
+  "Stage=lza-test",
+  "ExportFunctionName=ar-api-lza-test-ExportInvokableFunction",
+  "VarianceExportFunctionName=ar-api-lza-test-VarianceExportInvokableFunction",
+  "MissingExportFunctionName=ar-api-lza-test-MissingExportInvokableFunction"
 ]
 
 [lza-test.package.parameters]
