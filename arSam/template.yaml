@@ -16,6 +16,10 @@ Globals:
         DYNAMODB_ENDPOINT_URL: https://dynamodb.ca-central-1.amazonaws.com
 
 Parameters:
+  AccountId:
+    Type: String
+    Default: ''
+    Description: 'AWS Account ID (optional, for reference only)'
   AWSAccountList:
     Type: String
     Default: 'defaultAccount'
