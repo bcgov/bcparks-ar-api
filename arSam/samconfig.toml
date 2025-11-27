@@ -70,3 +70,41 @@ warm_containers = "EAGER"
 
 [lza-dev.local_start_lambda.parameters]
 warm_containers = "EAGER"
+
+[lza-test]
+[lza-test.global.parameters]
+stack_name = "ar-api-lza-test"
+
+[lza-test.build.parameters]
+cached = false
+parallel = true
+
+[lza-test.validate.parameters]
+lint = true
+
+[lza-test.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+s3_prefix = "ar-api-lza-test"
+region = "ca-central-1"
+image_repositories = []
+parameter_overrides = [
+  "TableNameAR=ParksAr-lza-test",
+  "TableNameCacheAR=NameCacheAr-lza-test",
+  "TableNameConfigAR=ConfigAr-lza-test",
+  "S3BucketData=parks-ar-export-data-lza-test",
+  "Stage=lza-test"
+]
+
+[lza-test.package.parameters]
+resolve_s3 = true
+
+[lza-test.sync.parameters]
+watch = true
+
+[lza-test.local_start_api.parameters]
+warm_containers = "EAGER"
+
+[lza-test.local_start_lambda.parameters]
+warm_containers = "EAGER"
