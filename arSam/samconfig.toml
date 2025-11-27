@@ -84,7 +84,7 @@ lint = true
 
 [lza-test.deploy.parameters]
 capabilities = "CAPABILITY_IAM"
-confirm_changeset = true
+confirm_changeset = false
 resolve_s3 = true
 s3_prefix = "ar-api-lza-test"
 region = "ca-central-1"
