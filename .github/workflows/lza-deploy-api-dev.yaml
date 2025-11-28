@@ -50,7 +50,7 @@ jobs:
         with:
           path: |
             **arSam/.aws-sam
-          key: ${{ github.sha }}-arSam-sam-cache
+          key: ${{ github.sha }}-arSam-sam-cache-${{ hashFiles('arSam/samconfig.toml') }}
       - name: Run sam build
         if: steps.cache-sam-build.outputs.cache-hit != 'true'
         run: |
