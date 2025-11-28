@@ -59,7 +59,8 @@ parameter_overrides = [
   "Stage=lza-dev",
   "ExportFunctionName=ar-api-lza-dev-ExportInvokableFunction",
   "VarianceExportFunctionName=ar-api-lza-dev-VarianceExportInvokableFunction",
-  "MissingExportFunctionName=ar-api-lza-dev-MissingExportInvokableFunction"
+  "MissingExportFunctionName=ar-api-lza-dev-MissingExportInvokableFunction",
+  "NameUpdateRuleName=NameUpdate-lza-dev"
 ]
 
 [lza-dev.package.parameters]
@@ -100,7 +101,8 @@ parameter_overrides = [
   "Stage=lza-test",
   "ExportFunctionName=ar-api-lza-test-ExportInvokableFunction",
   "VarianceExportFunctionName=ar-api-lza-test-VarianceExportInvokableFunction",
-  "MissingExportFunctionName=ar-api-lza-test-MissingExportInvokableFunction"
+  "MissingExportFunctionName=ar-api-lza-test-MissingExportInvokableFunction",
+  "NameUpdateRuleName=NameUpdate-lza-test"
 ]
 
 [lza-test.package.parameters]

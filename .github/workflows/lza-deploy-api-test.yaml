@@ -88,7 +88,8 @@ jobs:
             "TableNameConfigAR=$TABLE_NAME_CONFIG_AR" \
             "ExportFunctionName=ar-api-lza-test-ExportInvokableFunction" \
             "VarianceExportFunctionName=ar-api-lza-test-VarianceExportInvokableFunction" \
-            "MissingExportFunctionName=ar-api-lza-test-MissingExportInvokableFunction"
+            "MissingExportFunctionName=ar-api-lza-test-MissingExportInvokableFunction" \
+            "NameUpdateRuleName=NameUpdate-lza-test"
 
       ### Output API Gateway ID for reference
       - name: Get API Gateway ID

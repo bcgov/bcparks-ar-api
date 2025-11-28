@@ -35,6 +35,9 @@ Parameters:
   MissingExportFunctionName:
     Type:  String
     Default: 'ar-api-MissingExportInvokableFunction'
+  NameUpdateRuleName:
+    Type: String
+    Default: 'NameUpdate'
   ExportExpiryTime:
     Type: String
     Default: '900'
@@ -682,7 +685,7 @@ Resources:
         UpdateNames:
             Type: Schedule
             Properties:
-              Name: "NameUpdate"
+              Name: !Ref NameUpdateRuleName
               Schedule: cron(0 8 * * ? *)
               Description: "Every day at 08:00 UTC (00:00 PDT) = cron(0 8 * * ? *)"
 
