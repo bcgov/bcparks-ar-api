@@ -85,7 +85,10 @@ jobs:
             "DataRegisterNameApiKey=$DATA_REGISTER_NAME_API_KEY" \
             "TableNameAR=$TABLE_NAME_AR" \
             "TableNameCacheAR=$TABLE_NAME_CACHE_AR" \
-            "TableNameConfigAR=$TABLE_NAME_CONFIG_AR"
+            "TableNameConfigAR=$TABLE_NAME_CONFIG_AR" \
+            "ExportFunctionName=ar-api-lza-test-ExportInvokableFunction" \
+            "VarianceExportFunctionName=ar-api-lza-test-VarianceExportInvokableFunction" \
+            "MissingExportFunctionName=ar-api-lza-test-MissingExportInvokableFunction"
 
       ### Output API Gateway ID for reference
       - name: Get API Gateway ID
