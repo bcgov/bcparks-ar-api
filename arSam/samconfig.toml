@@ -116,3 +116,45 @@ warm_containers = "EAGER"
 
 [lza-test.local_start_lambda.parameters]
 warm_containers = "EAGER"
+
+[lza-prod]
+[lza-prod.global.parameters]
+stack_name = "ar-api-lza-prod"
+
+[lza-prod.build.parameters]
+cached = false
+parallel = true
+
+[lza-prod.validate.parameters]
+lint = true
+
+[lza-prod.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+resolve_s3 = true
+s3_prefix = "ar-api-lza-prod"
+region = "ca-central-1"
+image_repositories = []
+parameter_overrides = [
+  "TableNameAR=ParksAr-lza-prod",
+  "TableNameCacheAR=NameCacheAr-lza-prod",
+  "TableNameConfigAR=ConfigAr-lza-prod",
+  "S3BucketData=parks-ar-export-data-lza-prod",
+  "Stage=api",
+  "ExportFunctionName=ar-api-lza-prod-ExportInvokableFunction",
+  "VarianceExportFunctionName=ar-api-lza-prod-VarianceExportInvokableFunction",
+  "MissingExportFunctionName=ar-api-lza-prod-MissingExportInvokableFunction",
+  "NameUpdateRuleName=NameUpdate-lza-prod"
+]
+
+[lza-prod.package.parameters]
+resolve_s3 = true
+
+[lza-prod.sync.parameters]
+watch = true
+
+[lza-prod.local_start_api.parameters]
+warm_containers = "EAGER"
+
+[lza-prod.local_start_lambda.parameters]
+warm_containers = "EAGER"
