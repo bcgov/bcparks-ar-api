@@ -120,8 +120,9 @@ const options = {
   endpoint: DYNAMODB_ENDPOINT_URL
 };
 if (process.env.IS_OFFLINE === 'true') {
-  // If offline point at local
-  options.endpoint = 'http://localhost:8000/';
+  // If offline, still honor the configured local endpoint so SAM containers
+  // can reach Podman/Docker-hosted DynamoDB via host.containers.internal.
+  options.endpoint = DYNAMODB_ENDPOINT_URL;
 }
 const ACTIVE_STATUS = 'active';
 const RESERVED_STATUS = 'reserved';
