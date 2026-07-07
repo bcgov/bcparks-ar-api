@@ -9,7 +9,7 @@ describe("Constants Test", () => {
   
       const constants = require("../constantsLayer");
       // Checks to ensure the value functions returns the data we pass through to it based on the attribute.
-      expect(constants.CSV_SYSADMIN_SCHEMA.length).toEqual(98);
+      expect(constants.CSV_SYSADMIN_SCHEMA.length).toEqual(110);
       for(const row of constants.CSV_SYSADMIN_SCHEMA) {
         expect(row.value({
           region: 1,
@@ -41,6 +41,8 @@ describe("Constants Test", () => {
           otherRevenueGrossSani: 1,
           calc_frontCountryCamping_other_sani_netRevenue: 1,
           otherRevenueElectrical: 1,
+          frontcountryCampingOtherRevenueGrossNonResident: 1,
+          calc_frontCountryCamping_other_nonResident_netRevenue: 1,
           calc_frontCountryCamping_other_electrical_netRevenue: 1,
           otherRevenueShower: 1,
           calc_frontCountryCamping_other_shower_netRevenue: 1,
@@ -49,6 +51,8 @@ describe("Constants Test", () => {
           calc_frontcountryCabins_parties_totalAttendance: 1,
           revenueGrossCamping: 1,
           calc_frontcountryCabins_camping_netRevenue: 1,
+          frontcountryCabinsOtherRevenueGrossNonResident: 1,
+          calc_frontcountryCabins_other_nonResident_netRevenue: 1,
           notes_frontcountryCabins: 1,
           standardRateGroupsTotalPeopleStandard: 1,
           standardRateGroupsTotalPeopleAdults: 1,
@@ -61,6 +65,8 @@ describe("Constants Test", () => {
           youthRateGroupsAttendancePeople: 1,
           youthRateGroupsRevenueGross: 1,
           calc_groupCamping_youthRate_netRevenue: 1,
+          groupCampingOtherRevenueGrossNonResident: 1,
+          calc_groupCamping_other_nonResident_netRevenue: 1,
           notes_groupCamping: 1,
           calc_groupCamping_totalPeople: 1,
           calc_groupCamping_totalGrossRevenue: 1,
@@ -71,6 +77,8 @@ describe("Constants Test", () => {
           people: 1,
           grossCampingRevenue: 1,
           calc_backcountryCamping_camping_netRevenue: 1,
+          backcountryCampingOtherRevenueGrossNonResident: 1,
+          calc_backcountryCamping_other_nonResident_netRevenue: 1,
           notes_backcountryCamping: 1,
           peopleAdult: 1,
           peopleChild: 1,
@@ -78,6 +86,8 @@ describe("Constants Test", () => {
           calc_backcountryCabins_totalPeople: 1,
           revenueFamily: 1,
           calc_backcountryCabins_family_netRevenue: 1,
+          backcountryCabinsOtherRevenueGrossNonResident: 1,
+          calc_backcountryCabins_other_nonResident_netRevenue: 1,
           notes_backcountryCabins: 1,
           calc_backcountry_totalAttendancePeople: 1,
           calc_backcountry_totalGrossRevenue: 1,
@@ -106,6 +116,8 @@ describe("Constants Test", () => {
           calc_boating_boats_boatAttendance: 1,
           boatRevenueGross: 1,
           calc_boating_boats_netRevenue: 1,
+          boatingOtherRevenueGrossNonResident: 1,
+          calc_boating_other_nonResident_netRevenue: 1,
           notes_boating: 1,
           calc_totalAttendancePeople: 1,
           calc_totalGrossRevenue: 1,

@@ -299,6 +299,102 @@ describe("Activity Test", () => {
     });
   });
 
+  test("HandlePost - persists and checks variance for non-resident revenue", async () => {
+    const dynamoClient = new DynamoDBClient({
+      region: REGION,
+      endpoint: ENDPOINT
+    });
+    const activityPOST = require("../POST/index");
+
+    const buildFrontcountryCampingBody = (date, otherRevenueGrossNonResident) => ({
+      orcs: '0041',
+      parkName: 'Cultus Lake Park',
+      subAreaId: '0087',
+      activity: 'Frontcountry Camping',
+      date,
+      subAreaName: 'Maple Bay',
+      campingPartyNightsAttendanceStandard: 1,
+      campingPartyNightsAttendanceSenior: 1,
+      campingPartyNightsAttendanceSocial: 1,
+      campingPartyNightsAttendanceLongStay: 1,
+      winterCampingPartyNightsAttendanceStandard: 1,
+      winterCampingPartyNightsAttendanceSocial: 1,
+      campingPartyNightsRevenueGross: 10,
+      secondCarsAttendanceStandard: 1,
+      secondCarsAttendanceSenior: 1,
+      secondCarsAttendanceSocial: 1,
+      secondCarsRevenueGross: 10,
+      otherRevenueGrossSani: 10,
+      otherRevenueElectrical: 10,
+      otherRevenueGrossNonResident,
+      otherRevenueShower: 10,
+    });
+
+    const firstResponse = await activityPOST.handlePost(
+      {
+        headers: {
+          Authorization: "Bearer " + token,
+        },
+        requestContext: {
+            authorizer: {
+                roles: "[\"sysadmin\"]",
+                isAdmin: true,
+                isAuthenticated: true,
+            }
+        },
+        body: JSON.stringify(buildFrontcountryCampingBody('202201', 10)),
+      },
+      null
+    );
+
+    expect(firstResponse.statusCode).toBe(200);
+
+    const recordCommand = new GetItemCommand({
+      Key: {
+        pk: marshall('0087::Frontcountry Camping'),
+        sk: marshall('202201')
+      },
+      TableName: TABLE_NAME,
+    });
+    const storedRecord = unmarshall((await dynamoClient.send(recordCommand)).Item);
+    expect(storedRecord.otherRevenueGrossNonResident).toBe(10);
+
+    const secondResponse = await activityPOST.handlePost(
+      {
+        headers: {
+          Authorization: "Bearer " + token,
+        },
+        requestContext: {
+            authorizer: {
+                roles: "[\"sysadmin\"]",
+                isAdmin: true,
+                isAuthenticated: true,
+            }
+        },
+        body: JSON.stringify(buildFrontcountryCampingBody('202301', 1000)),
+      },
+      null
+    );
+
+    expect(secondResponse.statusCode).toBe(200);
+
+    const varianceCommand = new GetItemCommand({
+      Key: {
+        pk: marshall('variance::0041::202301'),
+        sk: marshall('0087::Frontcountry Camping')
+      },
+      TableName: TABLE_NAME,
+    });
+    const varianceRecord = unmarshall((await dynamoClient.send(varianceCommand)).Item);
+    expect(varianceRecord.fields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: 'otherRevenueGrossNonResident'
+        })
+      ])
+    );
+  });
+
   test("Handler - 403 POST Not Authenticated", async () => {
     const activityPOST = require("../POST/index");
     const response = await activityPOST.handlePost(

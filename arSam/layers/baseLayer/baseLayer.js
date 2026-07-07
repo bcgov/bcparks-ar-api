@@ -114,14 +114,13 @@ const NAME_CACHE_TABLE_NAME = process.env.NAME_CACHE_TABLE_NAME || 'NameCacheAr-
 const CONFIG_TABLE_NAME = process.env.CONFIG_TABLE_NAME || 'ConfigAr-tests';
 const MAX_TRANSACTION_SIZE = 25;
 const AWS_REGION = process.env.AWS_REGION || 'ca-central-1';
-const DYNAMODB_ENDPOINT_URL = process.env.DYNAMODB_ENDPOINT_URL || 'http://localhost:8000/';
+const DYNAMODB_ENDPOINT_URL = process.env.DYNAMODB_ENDPOINT_URL?.trim();
 const options = {
-  region: AWS_REGION,
-  endpoint: DYNAMODB_ENDPOINT_URL
+  region: AWS_REGION
 };
-if (process.env.IS_OFFLINE === 'true') {
-  // If offline point at local
-  options.endpoint = 'http://localhost:8000/';
+
+if (DYNAMODB_ENDPOINT_URL) {
+  options.endpoint = DYNAMODB_ENDPOINT_URL;
 }
 const ACTIVE_STATUS = 'active';
 const RESERVED_STATUS = 'reserved';

@@ -257,13 +257,16 @@ function formatRecords(records) {
 function createCSV(records) {
   let content = [VARIANCE_CSV_SCHEMA];
   for (const record of records) {
+    const activity = record.sk.split('::')[1] || 'N/A';
+    const valueForActivity = (targetActivity, key) =>
+      activity === targetActivity ? record[key] || '' : '';
     content.push([
       record.bundle || 'N/A',
       record.orcs || 'N/A',
       `"${record.parkName || 'N/A'}"`,
       record.subAreaName || 'N/A',
       record.subAreaId || 'N/A',
-      record.sk.split('::')[1] || 'N/A',
+      activity,
       record.year || 'N/A',
       record.month || 'N/A',
       `"${record.notes || ''}"`,
@@ -282,10 +285,12 @@ function createCSV(records) {
       record['secondCarsRevenueGross'] || '',
       record['otherRevenueGrossSani'] || '',
       record['otherRevenueElectrical'] || '',
+      valueForActivity('Frontcountry Camping', 'otherRevenueGrossNonResident'),
       record['otherRevenueShower'] || '',
       // Frontcountry Cabins
       record['totalAttendanceParties'] || '',
       record['revenueGrossCamping'] || '',
+      valueForActivity('Frontcountry Cabins', 'otherRevenueGrossNonResident'),
       // Group Camping
       record['standardRateGroupsTotalPeopleStandard'] || '',
       record['standardRateGroupsTotalPeopleAdults'] || '',
@@ -295,19 +300,23 @@ function createCSV(records) {
       record['youthRateGroupsAttendanceGroupNights'] || '',
       record['youthRateGroupsAttendancePeople'] || '',
       record['youthRateGroupsRevenueGross'],
+      valueForActivity('Group Camping', 'otherRevenueGrossNonResident'),
       // Backcountry Camping
       record['people'] || '',
       record['grossCampingRevenue'] || '',
+      valueForActivity('Backcountry Camping', 'otherRevenueGrossNonResident'),
       // Backcountry Cabins
       record['peopleAdult'] || '',
       record['peopleChild'] || '',
       record['peopleFamily'] || '',
       record['revenueFamily'] || '',
+      valueForActivity('Backcountry Cabins', 'otherRevenueGrossNonResident'),
       // Boating
       record['boatAttendanceNightsOnDock'] || '',
       record['boatAttendanceNightsOnBouys'] || '',
       record['boatAttendanceMiscellaneous'] || '',
       record['boatRevenueGross'] || '',
+      valueForActivity('Boating', 'otherRevenueGrossNonResident'),
       // Day Use
       record['peopleAndVehiclesTrail'] || '',
       record['peopleAndVehiclesVehicle'] || '',
