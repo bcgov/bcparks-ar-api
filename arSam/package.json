@@ -8,6 +8,9 @@
 	"jest": {
 		"verbose": true,
 		"testTimeout": 10000,
+		"setupFiles": [
+			"<rootDir>/__tests__/jest.env.js"
+		],
 		"modulePathIgnorePatterns": [
 			"<rootDir>/__tests__",
 			"<rootDir>/.aws-sam/"
