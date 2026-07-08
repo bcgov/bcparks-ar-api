@@ -134,7 +134,7 @@ describe('Export Report', () => {
     expect(body.status).toBe('Job not found');
   });
 
-  test('Handler - 200 GET, generate report', async () => {
+  test('Handler - 500 GET, generate report when invokable is unavailable', async () => {
     const event = {
       headers: {
         Authorization: 'Bearer ' + token,
@@ -151,9 +151,8 @@ describe('Export Report', () => {
     const exportGET = require('../GET/index');
     const result = await exportGET.handler(event, null);
 
-    // Returns value below even with no job
-    // Update when invokable can be called
-    expect(result.body).toBe('{"status":"Job is already running"}');
+    expect(result.statusCode).toBe(500);
+    expect(result.body).toBe('{"status":"Unable to start export job"}');
   });
 
   test('Functions - updateJobEntry', async () => {

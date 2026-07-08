@@ -8,6 +8,7 @@ const { updateJobEntry } = require('/opt/functionsLayer');
 const {
   arraySum,
   basicNetRevenue,
+  nonResidentNetRevenue,
   frontcountryCampingPartyAttendance,
   frontcountryCampingSecondCarAttendance,
   frontcountryCabinsPartiesAttendance,
@@ -269,7 +270,7 @@ async function modifyReportForCSV(report) {
 
       report.frontcountryCampingOtherRevenueGrossNonResident =
         report.otherRevenueGrossNonResident;
-      report.calc_frontCountryCamping_other_nonResident_netRevenue = basicNetRevenue(
+      report.calc_frontCountryCamping_other_nonResident_netRevenue = nonResidentNetRevenue(
         [report.otherRevenueGrossNonResident]
       ).result;
 
@@ -292,7 +293,7 @@ async function modifyReportForCSV(report) {
       ]).result;
       report.frontcountryCabinsOtherRevenueGrossNonResident =
         report.otherRevenueGrossNonResident;
-      report.calc_frontcountryCabins_other_nonResident_netRevenue = basicNetRevenue(
+      report.calc_frontcountryCabins_other_nonResident_netRevenue = nonResidentNetRevenue(
         [report.otherRevenueGrossNonResident]
       ).result;
       break;
@@ -328,12 +329,11 @@ async function modifyReportForCSV(report) {
         arraySum([
           report.standardRateGroupsRevenueGross,
           report.youthRateGroupsRevenueGross,
-          report.otherRevenueGrossNonResident,
         ]) || null;
 
       report.groupCampingOtherRevenueGrossNonResident =
         report.otherRevenueGrossNonResident;
-      report.calc_groupCamping_other_nonResident_netRevenue = basicNetRevenue([
+      report.calc_groupCamping_other_nonResident_netRevenue = nonResidentNetRevenue([
         report.otherRevenueGrossNonResident,
       ]).result;
 
@@ -392,7 +392,7 @@ async function modifyReportForCSV(report) {
       ]).result;
       report.backcountryCampingOtherRevenueGrossNonResident =
         report.otherRevenueGrossNonResident;
-      report.calc_backcountryCamping_other_nonResident_netRevenue = basicNetRevenue(
+      report.calc_backcountryCamping_other_nonResident_netRevenue = nonResidentNetRevenue(
         [report.otherRevenueGrossNonResident]
       ).result;
       break;
@@ -411,7 +411,7 @@ async function modifyReportForCSV(report) {
       ]).result;
       report.backcountryCabinsOtherRevenueGrossNonResident =
         report.otherRevenueGrossNonResident;
-      report.calc_backcountryCabins_other_nonResident_netRevenue = basicNetRevenue(
+      report.calc_backcountryCabins_other_nonResident_netRevenue = nonResidentNetRevenue(
         [report.otherRevenueGrossNonResident]
       ).result;
       break;
@@ -433,7 +433,7 @@ async function modifyReportForCSV(report) {
       ]).result;
       report.boatingOtherRevenueGrossNonResident =
         report.otherRevenueGrossNonResident;
-      report.calc_boating_other_nonResident_netRevenue = basicNetRevenue([
+      report.calc_boating_other_nonResident_netRevenue = nonResidentNetRevenue([
         report.otherRevenueGrossNonResident,
       ]).result;
       break;
@@ -506,11 +506,12 @@ async function generateSummaryColumns(table) {
         table[key].secondCarsRevenueGross,
         table[key].otherRevenueGrossSani,
         table[key].otherRevenueElectrical,
-        table[key].otherRevenueShower,
         table[key].frontcountryCampingOtherRevenueGrossNonResident,
+        table[key].otherRevenueShower,
         table[key].revenueGrossCamping,
         table[key].frontcountryCabinsOtherRevenueGrossNonResident,
         table[key].calc_groupCamping_totalGrossRevenue,
+        table[key].groupCampingOtherRevenueGrossNonResident,
       ]) || null;
 
     table[key].calc_frontcountry_totalNetRevenue = basicNetRevenue([
@@ -527,9 +528,9 @@ async function generateSummaryColumns(table) {
     table[key].calc_backcountry_totalGrossRevenue =
       arraySum([
         table[key].revenueFamily,
+        table[key].backcountryCabinsOtherRevenueGrossNonResident,
         table[key].grossCampingRevenue,
         table[key].backcountryCampingOtherRevenueGrossNonResident,
-        table[key].backcountryCabinsOtherRevenueGrossNonResident,
       ]) ||
       null;
 

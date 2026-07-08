@@ -68,6 +68,19 @@ function basicNetRevenue(revenues, customPercent) {
   return res;
 }
 
+function nonResidentNetRevenue(revenues, modifier = 1.05) {
+  let result = null;
+  const gross = arraySum(revenues);
+  const net = totalWithModifier([gross], modifier);
+  if (isValidNumber(gross)) {
+    result = formatMoney(net);
+  }
+  return {
+    result,
+    formula: `Non-resident net revenue = Gross non-resident revenue x ${modifier}`,
+  };
+}
+
 function totalWithModifier(arr, mod) {
   let result = arraySum(arr);
   if (result === undefined) {
@@ -231,6 +244,7 @@ function createPutFormulaConfigObj(
 module.exports = {
   arraySum,
   basicNetRevenue,
+  nonResidentNetRevenue,
   dayUseVehicleAttendance,
   frontcountryCampingPartyAttendance,
   frontcountryCampingSecondCarAttendance,

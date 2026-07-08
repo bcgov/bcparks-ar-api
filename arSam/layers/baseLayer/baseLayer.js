@@ -114,7 +114,9 @@ const NAME_CACHE_TABLE_NAME = process.env.NAME_CACHE_TABLE_NAME || 'NameCacheAr-
 const CONFIG_TABLE_NAME = process.env.CONFIG_TABLE_NAME || 'ConfigAr-tests';
 const MAX_TRANSACTION_SIZE = 25;
 const AWS_REGION = process.env.AWS_REGION || 'ca-central-1';
+const IS_OFFLINE = process.env.IS_OFFLINE && process.env.IS_OFFLINE === 'true';
 const DYNAMODB_ENDPOINT_URL = process.env.DYNAMODB_ENDPOINT_URL?.trim();
+const LAMBDA_ENDPOINT_URL = process.env.LAMBDA_ENDPOINT_URL?.trim();
 const options = {
   region: AWS_REGION
 };
@@ -150,7 +152,12 @@ const RECORD_ACTIVITY_LIST = [
 
 const dynamoClient = new DynamoDBClient(options);
 const s3Client = new S3Client({ region: AWS_REGION });
-const lambda = new Lambda({ region: AWS_REGION });
+const lambdaOptions = { region: AWS_REGION };
+if (IS_OFFLINE) {
+  // Local async invokes can be routed to `sam local start-lambda`.
+  lambdaOptions.endpoint = LAMBDA_ENDPOINT_URL || 'http://127.0.0.1:3002';
+}
+const lambda = new Lambda(lambdaOptions);
 
 // simple way to return a single Item by primary key.
 async function getOne(pk, sk) {
