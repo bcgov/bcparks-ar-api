@@ -227,6 +227,10 @@
           "AttributeType": "N"
         },
         {
+          "AttributeName": "otherRevenueGrossNonResident",
+          "AttributeType": "N"
+        },
+        {
           "AttributeName": "otherRevenueGrossSani",
           "AttributeType": "N"
         },
@@ -1306,6 +1310,9 @@
           "Float"
         ],
         "otherRevenueElectrical": [
+          "Float"
+        ],
+        "otherRevenueGrossNonResident": [
           "Float"
         ],
         "otherRevenueGrossSani": [

@@ -23,7 +23,7 @@ const { runQuery,
   sendResponse,
   logger
 } = require("/opt/baseLayer");
-const { convertRolesToMD5 } = require("/opt/functionsLayer");
+const { convertRolesToMD5, updateJobEntry } = require("/opt/functionsLayer");
 
 const EXPORT_FUNCTION_NAME = process.env.EXPORT_FUNCTION_NAME || "ar-api-ExportInvokableFunction";
 
@@ -141,34 +141,54 @@ exports.handler = async (event, context) => {
         }),
       };
       logger.debug(putObject);
-      let newJob;
       try {
-        newJob = await dynamoClient.send(new PutItemCommand(putObject));
-        // Check if there's already a report being generated.
-        // If there are is no instance of a job or the job is 100% complete, generate a report.
-        logger.debug("Creating a new export job.", newJob);
+        await dynamoClient.send(new PutItemCommand(putObject));
+      } catch (error) {
+        // Conditional put failed because an active job already exists.
+        if (error?.name === "ConditionalCheckFailedException") {
+          logger.info("Export job is already running.", { jobId: sk });
+          return sendResponse(200, { status: "Job is already running" }, context);
+        }
 
-        const params = {
-          FunctionName: EXPORT_FUNCTION_NAME,
-          InvocationType: "Event",
-          LogType: "None",
-          Payload: JSON.stringify({
-            jobId: sk,
-            roles: permissionObject.roles,
-            lastSuccessfulJob: lastSuccessfulJob,
-            dateRangeStart: dateRangeStart,
-            dateRangeEnd: dateRangeEnd,
-          }),
-        };
+        logger.error("Error creating export job entry.", error);
+        return sendResponse(500, { status: "Unable to create export job" }, context);
+      }
+
+      logger.debug("Creating a new export job.", { jobId: sk });
+      const params = {
+        FunctionName: EXPORT_FUNCTION_NAME,
+        InvocationType: "Event",
+        LogType: "None",
+        Payload: JSON.stringify({
+          jobId: sk,
+          roles: permissionObject.roles,
+          lastSuccessfulJob: lastSuccessfulJob,
+          dateRangeStart: dateRangeStart,
+          dateRangeEnd: dateRangeEnd,
+        }),
+      };
+
+      try {
         // Invoke generate report function
         await lambda.invoke(params);
-
-        return sendResponse(200, { status: "Export job created" }, context);
       } catch (error) {
-        // A job already exists.
-        logger.error(error);
-        return sendResponse(200, { status: "Job is already running" }, context);
+        logger.error("Failed to invoke export job.", error);
+        await updateJobEntry(
+          {
+            sk: sk,
+            progressPercentage: 0,
+            key: "",
+            progressDescription: "Job failed to start. Unable to invoke exporter.",
+            progressState: "error",
+            lastSuccessfulJob: lastSuccessfulJob,
+            dateGenerated: new Date().toISOString(),
+          },
+          TABLE_NAME
+        );
+        return sendResponse(500, { status: "Unable to start export job" }, context);
       }
+
+      return sendResponse(200, { status: "Export job created" }, context);
     }
   } catch (error) {
     logger.error(error);

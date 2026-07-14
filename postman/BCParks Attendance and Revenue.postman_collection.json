@@ -290,6 +290,190 @@
 			]
 		},
 		{
+			"name": "Non-Resident Revenue Tests",
+			"description": "Test requests for the new otherRevenueGrossNonResident field across all 6 in-scope activities.",
+			"item": [
+				{
+					"name": "POST Frontcountry Camping - with Non-Resident Revenue",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orcs\": \"{{orcs}}\",\n  \"parkName\": \"{{parkName}}\",\n  \"subAreaId\": \"{{subAreaId}}\",\n  \"subAreaName\": \"{{subAreaName}}\",\n  \"activity\": \"Frontcountry Camping\",\n  \"date\": \"202601\",\n  \"campingPartyNightsAttendanceStandard\": 100,\n  \"campingPartyNightsAttendanceSenior\": 20,\n  \"campingPartyNightsAttendanceSocial\": 5,\n  \"campingPartyNightsAttendanceLongStay\": 3,\n  \"winterCampingPartyNightsAttendanceStandard\": 0,\n  \"winterCampingPartyNightsAttendanceSocial\": 0,\n  \"campingPartyNightsRevenueGross\": 5000,\n  \"secondCarsAttendanceStandard\": 10,\n  \"secondCarsAttendanceSenior\": 2,\n  \"secondCarsAttendanceSocial\": 1,\n  \"secondCarsRevenueGross\": 200,\n  \"otherRevenueGrossSani\": 150,\n  \"otherRevenueElectrical\": 300,\n  \"otherRevenueShower\": 100,\n  \"otherRevenueGrossNonResident\": 750\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}activity",
+							"host": [ "{{base_url}}activity" ]
+						},
+						"description": "Store a Frontcountry Camping record including otherRevenueGrossNonResident. Check response body — the field should be echoed back."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Frontcountry Camping - verify Non-Resident Revenue stored",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}activity?orcs={{orcs}}&subAreaId={{subAreaId}}&activity=Frontcountry Camping&date=202601",
+							"host": [ "{{base_url}}activity" ],
+							"query": [
+								{ "key": "orcs", "value": "{{orcs}}" },
+								{ "key": "subAreaId", "value": "{{subAreaId}}" },
+								{ "key": "activity", "value": "Frontcountry Camping" },
+								{ "key": "date", "value": "202601" }
+							]
+						},
+						"description": "Verify otherRevenueGrossNonResident: 750 is returned in the response body."
+					},
+					"response": []
+				},
+				{
+					"name": "POST Frontcountry Cabins - with Non-Resident Revenue",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orcs\": \"{{orcs}}\",\n  \"parkName\": \"{{parkName}}\",\n  \"subAreaId\": \"{{subAreaId}}\",\n  \"subAreaName\": \"{{subAreaName}}\",\n  \"activity\": \"Frontcountry Cabins\",\n  \"date\": \"202601\",\n  \"totalAttendanceParties\": 40,\n  \"revenueGrossCamping\": 3200,\n  \"otherRevenueGrossNonResident\": 400\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}activity",
+							"host": [ "{{base_url}}activity" ]
+						},
+						"description": "Store a Frontcountry Cabins record including otherRevenueGrossNonResident."
+					},
+					"response": []
+				},
+				{
+					"name": "POST Group Camping - with Non-Resident Revenue",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orcs\": \"{{orcs}}\",\n  \"parkName\": \"{{parkName}}\",\n  \"subAreaId\": \"{{subAreaId}}\",\n  \"subAreaName\": \"{{subAreaName}}\",\n  \"activity\": \"Group Camping\",\n  \"date\": \"202601\",\n  \"standardRateGroupsTotalPeopleStandard\": 5,\n  \"standardRateGroupsTotalPeopleAdults\": 30,\n  \"standardRateGroupsTotalPeopleYouth\": 20,\n  \"standardRateGroupsTotalPeopleKids\": 10,\n  \"standardRateGroupsRevenueGross\": 1500,\n  \"youthRateGroupsAttendanceGroupNights\": 3,\n  \"youthRateGroupsAttendancePeople\": 25,\n  \"youthRateGroupsRevenueGross\": 500,\n  \"otherRevenueGrossNonResident\": 250\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}activity",
+							"host": [ "{{base_url}}activity" ]
+						},
+						"description": "Store a Group Camping record including otherRevenueGrossNonResident."
+					},
+					"response": []
+				},
+				{
+					"name": "POST Backcountry Camping - with Non-Resident Revenue",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orcs\": \"{{orcs}}\",\n  \"parkName\": \"{{parkName}}\",\n  \"subAreaId\": \"{{subAreaId}}\",\n  \"subAreaName\": \"{{subAreaName}}\",\n  \"activity\": \"Backcountry Camping\",\n  \"date\": \"202601\",\n  \"people\": 80,\n  \"grossCampingRevenue\": 1200,\n  \"otherRevenueGrossNonResident\": 350\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}activity",
+							"host": [ "{{base_url}}activity" ]
+						},
+						"description": "Store a Backcountry Camping record including otherRevenueGrossNonResident."
+					},
+					"response": []
+				},
+				{
+					"name": "POST Backcountry Cabins - with Non-Resident Revenue",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orcs\": \"{{orcs}}\",\n  \"parkName\": \"{{parkName}}\",\n  \"subAreaId\": \"{{subAreaId}}\",\n  \"subAreaName\": \"{{subAreaName}}\",\n  \"activity\": \"Backcountry Cabins\",\n  \"date\": \"202601\",\n  \"peopleAdult\": 10,\n  \"peopleChild\": 4,\n  \"peopleFamily\": 3,\n  \"revenueFamily\": 900,\n  \"otherRevenueGrossNonResident\": 200\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}activity",
+							"host": [ "{{base_url}}activity" ]
+						},
+						"description": "Store a Backcountry Cabins record including otherRevenueGrossNonResident."
+					},
+					"response": []
+				},
+				{
+					"name": "POST Boating - with Non-Resident Revenue",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orcs\": \"{{orcs}}\",\n  \"parkName\": \"{{parkName}}\",\n  \"subAreaId\": \"{{subAreaId}}\",\n  \"subAreaName\": \"{{subAreaName}}\",\n  \"activity\": \"Boating\",\n  \"date\": \"202601\",\n  \"boatAttendanceNightsOnDock\": 15,\n  \"boatAttendanceNightsOnBouys\": 8,\n  \"boatAttendanceMiscellaneous\": 3,\n  \"boatRevenueGross\": 1100,\n  \"otherRevenueGrossNonResident\": 300\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}activity",
+							"host": [ "{{base_url}}activity" ]
+						},
+						"description": "Store a Boating record including otherRevenueGrossNonResident."
+					},
+					"response": []
+				},
+				{
+					"name": "POST Frontcountry Camping - NULL Non-Resident Revenue (backward compat)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orcs\": \"{{orcs}}\",\n  \"parkName\": \"{{parkName}}\",\n  \"subAreaId\": \"{{subAreaId}}\",\n  \"subAreaName\": \"{{subAreaName}}\",\n  \"activity\": \"Frontcountry Camping\",\n  \"date\": \"202602\",\n  \"campingPartyNightsAttendanceStandard\": 80,\n  \"campingPartyNightsRevenueGross\": 4000\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}activity",
+							"host": [ "{{base_url}}activity" ]
+						},
+						"description": "Store a record WITHOUT otherRevenueGrossNonResident — verifies backward compatibility. Response should succeed (200) and omit the field."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Frontcountry Camping - verify backward compat (no non-resident field)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}activity?orcs={{orcs}}&subAreaId={{subAreaId}}&activity=Frontcountry Camping&date=202602",
+							"host": [ "{{base_url}}activity" ],
+							"query": [
+								{ "key": "orcs", "value": "{{orcs}}" },
+								{ "key": "subAreaId", "value": "{{subAreaId}}" },
+								{ "key": "activity", "value": "Frontcountry Camping" },
+								{ "key": "date", "value": "202602" }
+							]
+						},
+						"description": "Verify record without otherRevenueGrossNonResident still reads back successfully."
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "KeyCloak",
 			"item": [
 				{
