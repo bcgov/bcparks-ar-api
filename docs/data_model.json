@@ -215,6 +215,18 @@
           "AttributeType": "N"
         },
         {
+          "AttributeName": "summerCampingPartyNightsAttendanceStandard",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "summerCampingPartyNightsAttendanceSocial",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "summerCampingPartyNightsAttendanceLongStay",
+          "AttributeType": "N"
+        },
+        {
           "AttributeName": "campingPartyNightsAttendanceStandard",
           "AttributeType": "N"
         },
