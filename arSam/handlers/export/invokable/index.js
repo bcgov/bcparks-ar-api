@@ -222,8 +222,10 @@ async function modifyReportForCSV(report) {
           [
             report.winterCampingPartyNightsAttendanceStandard,
             report.winterCampingPartyNightsAttendanceSocial,
+            report.offSeasonCampingPartyNightsAttendanceStandard,
+            report.offSeasonCampingPartyNightsAttendanceSocial,
+            report.offSeasonCampingPartyNightsAttendanceSenior,
             report.campingPartyNightsAttendanceStandard,
-            report.campingPartyNightsAttendanceSenior,
             report.campingPartyNightsAttendanceSocial,
             report.campingPartyNightsAttendanceLongStay,
           ],
@@ -234,8 +236,10 @@ async function modifyReportForCSV(report) {
           [
             report.winterCampingPartyNightsAttendanceStandard,
             report.winterCampingPartyNightsAttendanceSocial,
+            report.offSeasonCampingPartyNightsAttendanceStandard,
+            report.offSeasonCampingPartyNightsAttendanceSocial,
+            report.offSeasonCampingPartyNightsAttendanceSenior,
             report.campingPartyNightsAttendanceStandard,
-            report.campingPartyNightsAttendanceSenior,
             report.campingPartyNightsAttendanceSocial,
             report.campingPartyNightsAttendanceLongStay,
           ],
