@@ -500,18 +500,16 @@ async function generateSummaryColumns(table) {
         table[key].calc_groupCamping_totalPeople,
       ]) || null;
 
+    // Keep non-resident revenue as separate export columns; do not roll it into core totals.
     table[key].calc_frontcountry_totalGrossRevenue =
       arraySum([
         table[key].campingPartyNightsRevenueGross,
         table[key].secondCarsRevenueGross,
         table[key].otherRevenueGrossSani,
         table[key].otherRevenueElectrical,
-        table[key].frontcountryCampingOtherRevenueGrossNonResident,
         table[key].otherRevenueShower,
         table[key].revenueGrossCamping,
-        table[key].frontcountryCabinsOtherRevenueGrossNonResident,
         table[key].calc_groupCamping_totalGrossRevenue,
-        table[key].groupCampingOtherRevenueGrossNonResident,
       ]) || null;
 
     table[key].calc_frontcountry_totalNetRevenue = basicNetRevenue([
@@ -528,9 +526,7 @@ async function generateSummaryColumns(table) {
     table[key].calc_backcountry_totalGrossRevenue =
       arraySum([
         table[key].revenueFamily,
-        table[key].backcountryCabinsOtherRevenueGrossNonResident,
         table[key].grossCampingRevenue,
-        table[key].backcountryCampingOtherRevenueGrossNonResident,
       ]) ||
       null;
 
@@ -568,7 +564,6 @@ async function generateSummaryColumns(table) {
         table[key].calc_totalCampingGrossRevenue,
         table[key].calc_dayUse_totalGrossRevenue,
         table[key].boatRevenueGross,
-        table[key].boatingOtherRevenueGrossNonResident,
       ]) || null;
 
     table[key].calc_totalNetRevenue = basicNetRevenue([
