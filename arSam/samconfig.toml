@@ -60,8 +60,7 @@ parameter_overrides = [
   "ExportFunctionName=ar-api-lza-dev-ExportInvokableFunction",
   "VarianceExportFunctionName=ar-api-lza-dev-VarianceExportInvokableFunction",
   "MissingExportFunctionName=ar-api-lza-dev-MissingExportInvokableFunction",
-  "NameUpdateRuleName=NameUpdate-lza-dev"
-]
+ ]
 
 [lza-dev.package.parameters]
 resolve_s3 = true
@@ -102,8 +101,7 @@ parameter_overrides = [
   "ExportFunctionName=ar-api-lza-test-ExportInvokableFunction",
   "VarianceExportFunctionName=ar-api-lza-test-VarianceExportInvokableFunction",
   "MissingExportFunctionName=ar-api-lza-test-MissingExportInvokableFunction",
-  "NameUpdateRuleName=NameUpdate-lza-test"
-]
+ ]
 
 [lza-test.package.parameters]
 resolve_s3 = true
@@ -144,8 +142,7 @@ parameter_overrides = [
   "ExportFunctionName=ar-api-lza-prod-ExportInvokableFunction",
   "VarianceExportFunctionName=ar-api-lza-prod-VarianceExportInvokableFunction",
   "MissingExportFunctionName=ar-api-lza-prod-MissingExportInvokableFunction",
-  "NameUpdateRuleName=NameUpdate-lza-prod"
-]
+ ]
 
 [lza-prod.package.parameters]
 resolve_s3 = true
