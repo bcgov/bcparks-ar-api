@@ -195,10 +195,6 @@
           "AttributeType": "N"
         },
         {
-          "AttributeName": "campingPartyNightsAttendanceLongStay",
-          "AttributeType": "N"
-        },
-        {
           "AttributeName": "winterCampingPartyNightsAttendanceStandard",
           "AttributeType": "N"
         },
@@ -207,7 +203,31 @@
           "AttributeType": "N"
         },
         {
-          "AttributeName": "campingPartyNightsAttendanceSenior",
+          "AttributeName": "offSeasonCampingPartyNightsAttendanceStandard",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "offSeasonCampingPartyNightsAttendanceSocial",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "offSeasonCampingPartyNightsAttendanceSenior",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "summerCampingPartyNightsAttendanceStandard",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "summerCampingPartyNightsAttendanceSocial",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "summerCampingPartyNightsAttendanceLongStay",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "campingPartyNightsAttendanceStandard",
           "AttributeType": "N"
         },
         {
@@ -215,7 +235,7 @@
           "AttributeType": "N"
         },
         {
-          "AttributeName": "campingPartyNightsAttendanceStandard",
+          "AttributeName": "campingPartyNightsAttendanceLongStay",
           "AttributeType": "N"
         },
         {
