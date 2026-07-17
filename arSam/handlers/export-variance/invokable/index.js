@@ -277,6 +277,9 @@ function createCSV(records) {
       record['offSeasonCampingPartyNightsAttendanceStandard'] || '',
       record['offSeasonCampingPartyNightsAttendanceSocial'] || '',
       record['offSeasonCampingPartyNightsAttendanceSenior'] || '',
+      record['summerCampingPartyNightsAttendanceStandard'] || '',
+      record['summerCampingPartyNightsAttendanceSocial'] || '',
+      record['summerCampingPartyNightsAttendanceSenior'] || '',
       record['campingPartyNightsAttendanceStandard'] || '',
       record['campingPartyNightsAttendanceSocial'] || '',
       record['campingPartyNightsAttendanceLongStay'] || '',
@@ -305,6 +308,8 @@ function createCSV(records) {
       valueForActivity('Group Camping', 'otherRevenueGrossNonResident'),
       // Backcountry Camping
       record['people'] || '',
+      record['peopleAdult'] || '',
+      record['peopleYouth'] || '',
       record['grossCampingRevenue'] || '',
       valueForActivity('Backcountry Camping', 'otherRevenueGrossNonResident'),
       // Backcountry Cabins
