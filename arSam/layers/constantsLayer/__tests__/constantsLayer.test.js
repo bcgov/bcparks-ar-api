@@ -80,6 +80,7 @@ describe("Constants Test", () => {
           calc_frontcountry_totalGrossRevenue: 1,
           calc_frontcountry_totalNetRevenue: 1,
           people: 1,
+          peopleYouth: 1,
           grossCampingRevenue: 1,
           calc_backcountryCamping_camping_netRevenue: 1,
           backcountryCampingOtherRevenueGrossNonResident: 1,
