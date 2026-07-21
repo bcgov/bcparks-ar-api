@@ -44,15 +44,15 @@ describe("keycloak utility tests", () => {
       ]);
     });
 
-    test("Calculates non-resident net revenue using gross x 1.05", async () => {
+    test("Calculates non-resident net revenue using gross / 1.05", async () => {
       const utils = require("../formulaLayer");
 
-      expect(utils.nonResidentNetRevenue([100]).result).toBe(105);
-      expect(utils.nonResidentNetRevenue([50, 25]).result).toBe(78.75);
+      expect(utils.nonResidentNetRevenue([100]).result).toBe(95.24);
+      expect(utils.nonResidentNetRevenue([50, 25]).result).toBe(71.43);
       expect(utils.nonResidentNetRevenue([0]).result).toBe(0);
       expect(utils.nonResidentNetRevenue([NaN]).result).toBeNull();
       expect(utils.nonResidentNetRevenue([100]).formula).toBe(
-        "Non-resident net revenue = Gross non-resident revenue x 1.05"
+        "Non-resident net revenue = Gross non-resident revenue / 1.05"
       );
     });
   });
