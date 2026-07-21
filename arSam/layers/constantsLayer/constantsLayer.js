@@ -45,7 +45,8 @@ const EXPORT_VARIANCE_CONFIG = {
     otherRevenueGrossNonResident: 0.2,
   },
   'Backcountry Camping': {
-    people: 0.2,
+    peopleAdult: 0.2,
+    peopleYouth: 0.2,
     grossCampingRevenue: 0.2,
     otherRevenueGrossNonResident: 0.2,
   },
@@ -544,6 +545,20 @@ const CSV_SYSADMIN_SCHEMA = [
     width: 63,
     value: (report) => report.people,
   },
+  // Backcountry Camping - People Adults
+  {
+    column: 'Backcountry Camping - People - Adult',
+    type: Number,
+    width: 63,
+    value: (report) => report.peopleAdult,
+  },
+  // Backcountry Camping - People Youth
+  {
+    column: 'Backcountry Camping - People - Youth',
+    type: Number,
+    width: 63,
+    value: (report) => report.peopleYouth,
+  },
   // Backcountry Camping - Camping
   {
     column: 'Backcountry Camping - Camping - Gross camping revenue',
@@ -899,6 +914,8 @@ MISSING_CSV_HEADERS = [
   'Group Camping - Youth Rate Groups - Gross Revenue',
   'Group Camping - Other Group Camping - Gross Non-Resident Revenue',
   'Backcountry Camping - People',
+  'Backcountry Camping - People - Adult',
+  'Backcountry Camping - People - Youth',
   'Backcountry Camping - Gross Revenue',
   'Backcountry Camping - Other Backcountry Camping - Gross Non-Resident Revenue',
   'Backcountry Cabins - People - Adult',
@@ -965,6 +982,8 @@ VARIANCE_CSV_SCHEMA = [
   'Group Camping - Youth Rate Groups - Gross Revenue',
   'Group Camping - Other Group Camping - Gross Non-Resident Revenue',
   'Backcountry Camping - People',
+  'Backcountry Camping - People - Adult',
+  'Backcountry Camping - People - Youth',
   'Backcountry Camping - Gross Revenue',
   'Backcountry Camping - Other Backcountry Camping - Gross Non-Resident Revenue',
   'Backcountry Cabins - People - Adult',

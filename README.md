@@ -32,7 +32,7 @@ To use the SAM CLI, you need the following tools.
 This project makes use of `dynamodb-local` for local development. You can start an instance of DynamoDB using Docker.
 
 ```
-docker run -d -p 8000:8000 --name dynamodb amazon/dynamodb-local -jar DynamoDBLocal.jar -sharedDb
+docker run -d -p 8000:8000 --network lambda-local --name local-dynamodb amazon/dynamodb-local -jar DynamoDBLocal.jar -sharedDb
 ```
 
 ### AWS Credentials

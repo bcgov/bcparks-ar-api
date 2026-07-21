@@ -118,7 +118,8 @@ Each activity type will have its own different `[activitySpecificFields]`.
 ### Backcountry Camping Activity Record - Specific Fields
 ```js
 {
-  people: <number>.
+  peopleAdult: <number>,
+  peopleYouth: <number>,
   grossCampingRevenue: <number>
 }
 ```
