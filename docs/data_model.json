@@ -131,6 +131,10 @@
           "AttributeType": "N"
         },
         {
+          "AttributeName": "peopleYouth",
+          "AttributeType": "N"
+        },
+        {
           "AttributeName": "standardRateGroupsRevenueGross",
           "AttributeType": "N"
         },
@@ -704,6 +708,12 @@
           },
           "people": {
             "N": "1"
+          },
+          "peopleAdult": {
+            "N": "1"
+          },
+          "peopleYouth": {
+            "N": "1"
           }
         },
         {
@@ -1249,6 +1259,9 @@
           "String"
         ],
         "peopleAdult": [
+          "Int"
+        ],
+        "peopleYouth": [
           "Int"
         ],
         "peopleChild": [

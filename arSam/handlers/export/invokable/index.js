@@ -531,6 +531,8 @@ async function generateSummaryColumns(table) {
       arraySum([
         table[key].calc_backcountryCabins_totalPeople,
         table[key].people,
+        table[key].peopleAdult,
+        table[key].peopleYouth,
       ]) || null;
 
     table[key].calc_backcountry_totalGrossRevenue =

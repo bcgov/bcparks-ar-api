@@ -276,7 +276,8 @@ for YEAR in 202401 202501; do
     \"subAreaId\":                   {\"S\": \"0087\"},
     \"activity\":                    {\"S\": \"Backcountry Camping\"},
     \"isLocked\":                    {\"BOOL\": false},
-    \"people\":                      {\"N\": \"80\"},
+    \"peopleAdult\":                 {\"N\": \"80\"},
+    \"peopleYouth\":                 {\"N\": \"20\"},
     \"grossCampingRevenue\":          {\"N\": \"1200\"},
     \"otherRevenueGrossNonResident\": {\"N\": \"350\"},
     \"config\": {\"M\": {
