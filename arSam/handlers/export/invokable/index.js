@@ -67,7 +67,7 @@ exports.handler = async (event, context) => {
         STATE_DICTIONARY.FETCHING,
         `Fetching all entries for ${roles}`
       );
-      
+
       let roleFilter = null;
 
       if (!roles.includes("sysadmin")) {
@@ -107,7 +107,7 @@ exports.handler = async (event, context) => {
         await updateJobWithState(STATE_DICTIONARY.UPLOAD_TO_S3);
         await uploadToS3();
       }
-      
+
       // success
       LAST_SUCCESSFUL_JOB = {
         key: S3_KEY,
@@ -128,7 +128,9 @@ async function getAllRecords(roles = null, dateRangeStart = null, dateRangeEnd =
   let records = [];
   let subareas = [];
   try {
-    const parks = await getParks(false);
+    // Include all parks here so reopened/new subareas under legacy parks can still export.
+    // Legacy filtering remains enforced at subarea and record level below.
+    const parks = await getParks(true);
     for (const park of parks) {
       if (roles !== null) {
         let result = roles.filter((item) => item.startsWith(park.sk));
@@ -158,7 +160,7 @@ async function getAllRecords(roles = null, dateRangeStart = null, dateRangeEnd =
     for (const subarea of subareas) {
       const subAreaRecords = await getRecords(subarea, subarea.bundle, subarea.section, subarea.region, true, false, dateRangeStart, dateRangeEnd);
       records = records.concat(subAreaRecords);
-    
+
 
     }
     return records;
