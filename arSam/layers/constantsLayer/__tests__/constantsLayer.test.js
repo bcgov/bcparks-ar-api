@@ -9,7 +9,7 @@ describe("Constants Test", () => {
   
       const constants = require("../constantsLayer");
       // Checks to ensure the value functions returns the data we pass through to it based on the attribute.
-      expect(constants.CSV_SYSADMIN_SCHEMA.length).toEqual(116);
+      expect(constants.CSV_SYSADMIN_SCHEMA.length).toEqual(118);
       for(const row of constants.CSV_SYSADMIN_SCHEMA) {
         expect(row.value({
           region: 1,
@@ -26,6 +26,7 @@ describe("Constants Test", () => {
           winterCampingPartyNightsAttendanceSocial: 1,
           offSeasonCampingPartyNightsAttendanceStandard: 1,
           offSeasonCampingPartyNightsAttendanceSocial: 1,
+          offSeasonCampingPartyNightsAttendanceLongStay: 1,
           offSeasonCampingPartyNightsAttendanceSenior: 1,
           summerCampingPartyNightsAttendanceStandard: 1,
           summerCampingPartyNightsAttendanceSocial: 1,
