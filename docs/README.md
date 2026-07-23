@@ -177,6 +177,7 @@ Each activity type will have its own different `[activitySpecificFields]`.
   winterCampingPartyNightsAttendanceSocial: <number>,
   offSeasonCampingPartyNightsAttendanceStandard: <number>,
   offSeasonCampingPartyNightsAttendanceSocial: <number>,
+  offSeasonCampingPartyNightsAttendanceLongStay: <number>,
   offSeasonCampingPartyNightsAttendanceSenior: <number>,
   summerCampingPartyNightsAttendanceStandard: <number>,
   summerCampingPartyNightsAttendanceSocial: <number>,

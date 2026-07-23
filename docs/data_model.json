@@ -215,6 +215,10 @@
           "AttributeType": "N"
         },
         {
+          "AttributeName": "offSeasonCampingPartyNightsAttendanceLongStay",
+          "AttributeType": "N"
+        },
+        {
           "AttributeName": "offSeasonCampingPartyNightsAttendanceSenior",
           "AttributeType": "N"
         },
