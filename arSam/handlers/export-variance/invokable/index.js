@@ -324,7 +324,6 @@ function createCSV(records) {
       record['boatAttendanceNightsOnBouys'] || '',
       record['boatAttendanceMiscellaneous'] || '',
       record['boatRevenueGross'] || '',
-      valueForActivity('Boating', 'otherRevenueGrossNonResident'),
       // Day Use
       record['peopleAndVehiclesTrail'] || '',
       record['peopleAndVehiclesVehicle'] || '',

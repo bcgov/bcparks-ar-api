@@ -63,7 +63,6 @@ const EXPORT_VARIANCE_CONFIG = {
     boatAttendanceNightsOnBouys: 0.2,
     boatAttendanceMiscellaneous: 0.2,
     boatRevenueGross: 0.2,
-    otherRevenueGrossNonResident: 0.2,
   },
   'Day Use': {
     peopleAndVehiclesTrail: 0.2,
@@ -850,19 +849,7 @@ const CSV_SYSADMIN_SCHEMA = [
     backgroundColor: '#aee5ba',
     value: (report) => report.calc_boating_boats_netRevenue,
   },
-  {
-    column: 'Boating - Gross non-resident revenue',
-    type: Number,
-    width: 63,
-    value: (report) => report.boatingOtherRevenueGrossNonResident,
-  },
-  {
-    column: 'Boating - Net non-resident revenue',
-    type: Number,
-    width: 63,
-    backgroundColor: '#aee5ba',
-    value: (report) => report.calc_boating_other_nonResident_netRevenue,
-  },
+
   // Boating - Variance Notes
   {
     column: 'Boating - Variance Notes',
@@ -942,7 +929,6 @@ MISSING_CSV_HEADERS = [
   'Boating - Boat Attendance - Nights On Bouys',
   'Boating - Boat Attendance - Miscellaneous',
   'Boating - Boat Revenue - Gross Revenue',
-  'Boating - Other Boating - Gross Non-Resident Revenue',
   'Day Use - People And Vehicles - Trail Count',
   'Day Use - People And Vehicles - Vehicle Count',
   'Day Use - People And Vehicles - Bus Count',
@@ -1011,7 +997,6 @@ VARIANCE_CSV_SCHEMA = [
   'Boating - Boat Attendance - Nights On Bouys',
   'Boating - Boat Attendance - Miscellaneous',
   'Boating - Boat Revenue - Gross Revenue',
-  'Boating - Other Boating - Gross Non-Resident Revenue',
   'Day Use - People And Vehicles - Trail Count',
   'Day Use - People And Vehicles - Vehicle Count',
   'Day Use - People And Vehicles - Bus Count',
