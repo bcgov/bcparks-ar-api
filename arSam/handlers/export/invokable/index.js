@@ -445,6 +445,11 @@ async function modifyReportForCSV(report) {
       report.calc_boating_boats_netRevenue = basicNetRevenue([
         report.boatRevenueGross,
       ]).result;
+      report.boatingOtherRevenueGrossNonResident =
+        report.otherRevenueGrossNonResident;
+      report.calc_boating_other_nonResident_netRevenue = nonResidentNetRevenue([
+        report.otherRevenueGrossNonResident,
+      ]).result;
       break;
 
     default:
