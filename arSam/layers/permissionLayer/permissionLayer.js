@@ -112,16 +112,39 @@ function verifySecret(tokenString, secret, callback, sendError) {
   });
 }
 
+function normalizeRecordRoles(recordRoles) {
+  if (Array.isArray(recordRoles)) {
+    return recordRoles;
+  }
+
+  if (recordRoles instanceof Set) {
+    return Array.from(recordRoles);
+  }
+
+  // AWS SDK v2 DocumentClient may return set-like objects with a `values` array.
+  if (recordRoles && Array.isArray(recordRoles.values)) {
+    return recordRoles.values;
+  }
+
+  if (typeof recordRoles === 'string') {
+    return [recordRoles];
+  }
+
+  return [];
+}
+
 exports.roleFilter = function (records, roles) {
   return new Promise(async (resolve) => {
+    const safeRoles = Array.isArray(roles) ? roles : [];
     const data = records.filter(record => {
-      logger.debug("record:", record.roles);
-      // Sanity check if `roles` isn't defined on record. Default to readable.
-      if (record?.roles?.length > 0) {
-        return roles.some(role => record.roles.indexOf(role) != -1);
-      } else {
-        return false;
+      const recordRoles = normalizeRecordRoles(record?.roles);
+      logger.debug("record:", recordRoles);
+
+      if (recordRoles.length > 0) {
+        return safeRoles.some(role => recordRoles.indexOf(role) !== -1);
       }
+
+      return false;
     })
     resolve(data);
   })
