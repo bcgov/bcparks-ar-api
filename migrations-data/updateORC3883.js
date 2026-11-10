@@ -176,7 +176,7 @@ async function createVariance(varianceList, date, newORC, newParkName){
             parkName: { S: `${newParkName}` },
             roles: { L: [{S: "sysadmin"}, {S: `${newORC}:${variance.subAreaId}`}] },
             bundle: { S: `${variance.bundle}`},
-            subAreaName:{ S: variance.subAreaName },
+            subAreaName: { S: variance.subAreaName },
             subAreaId: { S: variance.subAreaId },
             notes: { S: variance.notes },
             resolved: {BOOL: variance.resolved },
@@ -261,7 +261,7 @@ async function createNewPark(newORC, newParkName){
             orcs: { S: newORC },
             parkName: { S: newParkName },
             isLegacy: { BOOL: false },
-            roles: { SS: ["sysadmin", newORC] },
+            roles: { L: [{ S: "sysadmin" }, { S: newORC }] },
             subAreas: { L: [] },
         },
     };
