@@ -289,6 +289,63 @@ const CSV_SYSADMIN_SCHEMA = [
     width: 63,
     value: (report) => report.secondCarsAttendanceSocial,
   },
+ // New fields for second cars attendance by season
+  {
+    column: 'Frontcountry Camping - Winter Second Cars - Standard',
+    type: Number,
+    width: 63,
+    value: (report) => report.secondCarsWinterAttendanceStandard,
+  },
+  {
+    column: 'Frontcountry Camping - Winter Second Cars - SSCFE',
+    type: Number,
+    width: 63,
+    value: (report) => report.secondCarsWinterAttendanceSocial,
+  },
+  {
+    column: 'Frontcountry Camping - Off-Season Second Cars - Standard',
+    type: Number,
+    width: 63,
+    value: (report) => report.secondCarsOffSeasonAttendanceStandard,
+  },
+  {
+    column: 'Frontcountry Camping - Off-Season Second Cars - Senior',
+    type: Number,
+    width: 63,
+    value: (report) => report.secondCarsOffSeasonAttendanceSenior,
+  },
+  {
+    column: 'Frontcountry Camping - Off-Season Second Cars - SSCFE',
+    type: Number,
+    width: 63,
+    value: (report) => report.secondCarsOffSeasonAttendanceSocial,
+  },
+  {
+    column: 'Frontcountry Camping - Off-Season Second Cars - Long stay',
+    type: Number,
+    width: 63,
+    value: (report) => report.secondCarsOffSeasonAttendanceLongStay,
+  },
+  {
+    column: 'Frontcountry Camping - Summer Second Cars - Standard',
+    type: Number,
+    width: 63,
+    value: (report) => report.secondCarsSummerAttendanceStandard,
+  },
+  {
+    column: 'Frontcountry Camping - Summer Second Cars - SSCFE',
+    type: Number,
+    width: 63,
+    value: (report) => report.secondCarsSummerAttendanceSocial,
+  },
+  {
+    column: 'Frontcountry Camping - Summer Second Cars - Long stay',
+    type: Number,
+    width: 63,
+    value: (report) => report.secondCarsSummerAttendanceLongStay,
+  },
+
+
   {
     column: 'Frontcountry Camping - Second Cars - Total attendance',
     type: Number,
