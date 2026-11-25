@@ -10,8 +10,13 @@ on:
         required: true
 
 permissions:
+  actions: read
   id-token: write
-  contents: read
+  contents: write
+  packages: write
+  pull-requests: write
+  security-events: write
+  attestations: write
 
 jobs:
   ci:
