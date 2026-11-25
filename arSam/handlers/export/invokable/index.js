@@ -266,6 +266,15 @@ async function modifyReportForCSV(report) {
           report.secondCarsAttendanceStandard,
           report.secondCarsAttendanceSenior,
           report.secondCarsAttendanceSocial,
+          report.secondCarsWinterAttendanceStandard,
+          report.secondCarsWinterAttendanceSocial,
+          report.secondCarsOffSeasonAttendanceStandard,
+          report.secondCarsOffSeasonAttendanceSenior,
+          report.secondCarsOffSeasonAttendanceSocial,
+          report.secondCarsOffSeasonAttendanceLongStay,
+          report.secondCarsSummerAttendanceStandard,
+          report.secondCarsSummerAttendanceSocial,
+          report.secondCarsSummerAttendanceLongStay,
         ]).result;
 
       // Second cars / additional vehicles - NET REVENUE
